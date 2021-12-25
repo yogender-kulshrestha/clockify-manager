@@ -35,13 +35,7 @@ class SendRegistrationMail implements ShouldQueue
     {
         try {
             Log::debug(json_encode($this->user));
-            $sent = Mail::send(['text'=>'mail.registration'], $this->user, function($message) {
-                $message->to($this->user->email, $this->user->name)->subject('Register Successfully.');
-            });
-            if($sent)
-                Log::info('Mail send successfully.');
-            else
-                Log::error('Mail sending failed.');
+            \Mail::to($this->user->email, $this->user->name)->send(new \App\Mail\SendRegistrationMail($this->user));
         } catch (\Exception $ex) {
             Log::error($ex->getMessage());
         }

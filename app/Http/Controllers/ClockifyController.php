@@ -7,7 +7,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use MoIsmailzai\Clockify;
+use App\Helpers\Clockify;
 use Str;
 
 class ClockifyController extends Controller
@@ -20,6 +20,8 @@ class ClockifyController extends Controller
      */
     public function __construct()
     {
+//        $apiEndpoint='https://api.clockify.me/api/v1';
+//        $reportsApiEndpoint='https://reports.api.clockify.me/v1';
         $this->clockify = new Clockify(config('clockify.api_key'), config('clockify.workspace_name'));
     }
     /**
@@ -41,7 +43,7 @@ class ClockifyController extends Controller
                 'image' => $user->profilePicture,
                 'memberships' => $user->memberships,
                 'settings' => $user->settings,
-                'status' => $user->status,
+                'status' => Str::lower($user->status),
             ];
             $find = User::where('email', $user->email)->first();
             if(!$find) {
@@ -79,6 +81,11 @@ class ClockifyController extends Controller
         return $this->clockify->apiRequest('workspaces/'.$this->clockify->workspaceId.'/reports/summary/', json_encode($data));
     }
 
+    public function timeSheets(Request $request)
+    {
+        $userId='61c1c9ad7072ea24657c1d0b';
+        return $this->clockify->apiRequest('workspaces/'.$this->clockify->workspaceId.'/user/'.$userId.'/time-entries');
+    }
     /**
      * Show the form for creating a new resource.
      *

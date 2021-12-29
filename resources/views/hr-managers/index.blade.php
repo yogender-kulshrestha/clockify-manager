@@ -41,18 +41,15 @@
                         <div>
                             <h5 class="mb-0">All HR Managers</h5>
                             <p class="text-sm mb-0">
-
                             </p>
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
                                 <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
-                                <button type="button" class="btn bg-gradient-primary btn-sm mb-0"><i class="fa fa-rotate-270"></i> @</button>
                                 {{--<button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
                                     Import
-                                </button>
-                                <button class="btn btn-outline-primary btn-sm export mb-0 mt-sm-0 mt-1" data-type="csv" type="button" name="button">Export</button>
-                            --}}</div>
+                                </button>--}}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -62,10 +59,11 @@
                             <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                             <tr>
                                 <td>#</td>
-                                <td>Clockify ID</td>
+                                <td>ID</td>
                                 <td>Name</td>
                                 <td>Email</td>
-                                <td>Created At</td>
+                                <td>Status</td>
+                                <td>Registration Date</td>
                                 <td>Action</td>
                             </tr>
                             </thead>
@@ -114,26 +112,36 @@
                         <div class="form-group">
                             <label for="name">Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="name" id="name" placeholder="Enter Name">
-                            <span id="name_error" class="text-danger"></span>
+                            <span id="name_error" class="text-danger text-sm"></span>
                         </div>
                         <div class="form-group">
                             <label for="email">Email <span class="text-danger">*</span></label>
                             <input type="email" class="form-control" name="email" id="email" placeholder="Enter Email">
-                            <span id="email_error" class="text-danger"></span>
+                            <span id="email_error" class="text-danger text-sm"></span>
                         </div>
                         <div class="form-group">
                             <label for="status">Status <span class="text-danger">*</span></label>
-                            <select class="form-control" name="status" id="status" value="">
+                            <select class="form-control" name="status" id="status">
                                 <option value="">-- Select --</option>
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
                             </select>
-                            <span id="email_error" class="text-danger"></span>
+                            <span id="status_error" class="text-danger text-sm"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password <span class="text-danger hidden">*</span></label>
+                            <input type="password" class="form-control" name="password" id="password" placeholder="Enter Password">
+                            <span id="password_error" class="text-danger text-sm"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="password_confirmation">Confirm Password <span class="text-danger hidden">*</span></label>
+                            <input type="password" class="form-control" name="password_confirmation" id="password_confirmation" placeholder="Enter Confirm Password">
+                            <span id="password_confirmation_error" class="text-danger text-sm"></span>
                         </div>
                     </div>
                     <div class="modal-footer text-right">
                         <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" id="add_button" class="btn bg-gradient-primary">Add</button>
+                        <button type="submit" class="btn bg-gradient-primary btn-sm" id="add_button">Add</button>
                     </div>
                 </form>
             </div>
@@ -147,7 +155,7 @@
     <script>
         $(document).ready(function (){
             var datatable = $('#datatable').DataTable({
-                dom: '<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
+                dom: 'B<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
                 //dom: 'Blfrtip',
                 language: {
                     paginate: {
@@ -172,10 +180,17 @@
                 "ajax": {
                     url: '{{ route('hr-managers.index') }}',
                 },
+                "order": [[ 1, "desc" ]],
                 "columns": [
                     {
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex'
+                    },
+                    {
+                        data: 'id',
+                        name: 'id',
+                        defaultContent: '' ,
+                        visible: false
                     },
                     {
                         data: 'name',
@@ -206,21 +221,6 @@
                     },
                 ]
             });
-            /*if (document.getElementById('datatable')) {
-                document.querySelectorAll(".export").forEach(function (el) {
-                    el.addEventListener("click", function (e) {
-                        var type = el.dataset.type;
-                        var data = {
-                            type: type,
-                            filename: "vibie-users-" + type,
-                        };
-                        if (type === "csv") {
-                            data.columnDelimiter = "|";
-                        }
-                        dataTable.export(data);
-                    });
-                });
-            };*/
             $(document).on("click", ".rowadd", function () {
                 $("#form_title").text('Create');
                 $("#id").val('');
@@ -230,6 +230,9 @@
                 $('#name_error').text('');
                 $('#email_error').text('');
                 $('#status_error').text('');
+                $('#password_error').text('');
+                $('#password_confirmation_error').text('');
+                $('.text-danger.hidden').text('*');
                 $("#add_button").text('Add');
             });
             $(document).on("click", ".rowedit", function () {
@@ -237,10 +240,13 @@
                 $("#id").val($(this).data('id'));
                 $("#name").val($(this).data('name'));
                 $("#email").val($(this).data('email'));
-                $("#status").val($(this).data('stauts'));
+                $("#status").val($(this).data('status'));
                 $('#name_error').text('');
                 $('#email_error').text('');
                 $('#status_error').text('');
+                $('#password_error').text('');
+                $('#password_confirmation_error').text('');
+                $('.text-danger.hidden').text('');
                 $("#add_button").text('Update');
             });
             const addForm = '{{ route('hr-managers.store') }}';
@@ -260,6 +266,8 @@
                         $('#name_error').text('');
                         $('#email_error').text('');
                         $('#status_error').text('');
+                        $('#password_error').text('');
+                        $('#password_confirmation_error').text('');
                     },
                     success: function (data) {
                         $("#add_form")[0].reset();
@@ -278,10 +286,12 @@
                         $('#name_error').text(responseData.errors['name']);
                         $('#email_error').text(responseData.errors['email']);
                         $('#status_error').text(responseData.errors['status']);
+                        $('#password_error').text(responseData.errors['password']);
+                        $('#password_confirmation_error').text(responseData.errors['password_confirmation']);
                     }
                 });
             });
-            $('#datatable').on('click', 'tbody .delete', function() {
+            $(document).on('click', '.rowdelete', function() {
                 var id = $(this).data('id');
                 var url = '{{ route('hr-managers.destroy', ':id') }}';
                 url = url.replace(':id', id);
@@ -296,9 +306,13 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            type: "DELETE",
                             url: url,
-                            dataType: "json",
+                            type: "DELETE",
+                            dataType: "JSON",
+                            data:{
+                                'id': id,
+                                '_token': '{{ csrf_token() }}',
+                            },
                             success: function(data) {
                                 //console.log(data);
                                 datatable.draw();

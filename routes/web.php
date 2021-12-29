@@ -1,6 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ClockifyController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\HrController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\ApproverController;
+use App\Http\Controllers\TimeSheetController;
+use App\Http\Controllers\TimeCardController;
+use App\Http\Controllers\RecordController;
+use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,19 +32,21 @@ Auth::routes([
     'verify' => false,
 ]);
 
-Route::get('/clockify/user', [App\Http\Controllers\ClockifyController::class, 'index'])->name('clockify.user');
-Route::get('/clockify/user/time', [App\Http\Controllers\ClockifyController::class, 'timeSheets']);
-Route::get('/clockify/report', [App\Http\Controllers\ClockifyController::class, 'report'])->name('clockify.report');
+//Clockify Routes
+Route::get('/clockify/user', [ClockifyController::class, 'index'])->name('clockify.user');
+Route::get('/clockify/user/time', [ClockifyController::class, 'timeSheets']);
+Route::get('/clockify/report', [ClockifyController::class, 'report'])->name('clockify.report');
 
-//Employee Routes
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-Route::resource('hr-managers', \App\Http\Controllers\HrController::class);
-Route::resource('employees', \App\Http\Controllers\EmployeeController::class);
-Route::resource('approvers', \App\Http\Controllers\ApproverController::class);
-Route::resource('time-sheets', \App\Http\Controllers\TimeSheetController::class);
-Route::resource('time-cards', \App\Http\Controllers\TimeCardController::class);
-Route::resource('records', \App\Http\Controllers\RecordController::class);
-Route::resource('profile', \App\Http\Controllers\ProfileController::class);
+//Routes
+Route::get('/home', [HomeController::class, 'index'])->name('home');
+Route::get('/employees/ajax', [EmployeeController::class, 'employeesAjax'])->name('employees.ajax');
+Route::resource('hr-managers', HrController::class);//->only(['index', 'store', 'destroy']);
+Route::resource('employees', EmployeeController::class);//->only(['index', 'store', 'destroy']);
+Route::resource('approvers', ApproverController::class);
+Route::resource('time-sheets', TimeSheetController::class);
+Route::resource('time-cards', TimeCardController::class);
+Route::resource('records', RecordController::class);
+Route::resource('profile', ProfileController::class);
 
 
 

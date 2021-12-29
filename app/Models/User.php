@@ -46,4 +46,9 @@ class User extends Authenticatable
         'memberships' => 'json',
         'settings' => 'json',
     ];
+
+    public function employees()
+    {
+        return $this->hasMany(Approver::class, 'approver_id', 'id');
+    }
 }

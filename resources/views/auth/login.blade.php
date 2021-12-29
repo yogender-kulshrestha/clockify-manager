@@ -61,10 +61,10 @@
                             <img src="{{ asset('assets/img/shapes/pattern-lines.svg') }}" alt="pattern-lines"
                                  class="position-absolute opacity-4 start-0">
                             <div class="position-relative">
-                                <img class="max-width-500 w-100 position-relative z-index-2"
-                                     src="{{ asset('assets/img/illustrations/chat.png') }}" alt="chat-img">
-                                {{--<img class="max-width-400 w-100 position-relative z-index-2"
-                                     src="{{ asset('assets/img/logo-ct.png')}}" alt="chat-img">--}}
+                                {{--<img class="max-width-500 w-100 position-relative z-index-2"
+                                     src="{{ asset('assets/img/illustrations/chat.png') }}" alt="chat-img">--}}
+                                <img class="max-width-200 w-100 position-relative z-index-2"
+                                     src="{{ asset('assets/img/logo-ct.png')}}" alt="chat-img">
                             </div>
                             <h4 class="mt-5 text-white font-weight-bolder">"Attention is the new currency"</h4>
                             <p class="text-white">The more effortless the writing looks, the more effort the writer

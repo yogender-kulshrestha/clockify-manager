@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateApproverTable extends Migration
+class CreateApproversTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,10 @@ class CreateApproverTable extends Migration
      */
     public function up()
     {
-        Schema::create('approver', function (Blueprint $table) {
+        Schema::create('approvers', function (Blueprint $table) {
             $table->id();
+            $table->bigIncrements('approver_id');
+            $table->bigIncrements('user_id');
             $table->timestamps();
         });
     }

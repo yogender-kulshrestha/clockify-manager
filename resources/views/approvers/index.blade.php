@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('title', 'All Employees')
+@section('title', 'All Approvers')
 
 @section('style')
 @endsection
@@ -25,9 +25,9 @@
                     </svg>
                 </a>
             </li>
-            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Employees</li>
+            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Approvers</li>
         </ol>
-        <h6 class="font-weight-bolder mb-0">All Employees</h6>
+        <h6 class="font-weight-bolder mb-0">All Approvers</h6>
     </nav>
 @endsection
 
@@ -39,7 +39,7 @@
                 <div class="card-header pb-0">
                     <div class="d-lg-flex">
                         <div>
-                            <h5 class="mb-0">All Employees</h5>
+                            <h5 class="mb-0">All Approvers</h5>
                             <p class="text-sm mb-0">
 
                             </p>
@@ -62,10 +62,9 @@
                             <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                             <tr>
                                 <td>#</td>
-                                <td>Clockify ID</td>
                                 <td>Name</td>
                                 <td>Email</td>
-                                <td>Created At</td>
+                                <td>Employees</td>
                                 <td>Action</td>
                             </tr>
                             </thead>
@@ -106,20 +105,29 @@
                 <form id="add_form" autocomplete="off" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-header">
-                        <h5 class="modal-title" id="ModalLabel">Create</h5>
+                        <h5 class="modal-title" id="ModalLabel">Assign Approver</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <input type="hidden" name="id" id="id"/>
                         <div class="form-group">
-                            <label for="name">Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="name" id="name" placeholder="Enter Name">
+                            <label for="approver">Approver <span class="text-danger">*</span></label>
+                            <div id="approver_box">
+                                <select class="form-control" name="approver" id="approver"></select>
+                            </div>
+                            <span id="name_error" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="employees">Employees <span class="text-danger">*</span></label>
+                            <div id="employees_box">
+                                <select class="form-control" name="employees" id="employees" multiple x-placement="No Data Found"></select>
+                            </div>
                             <span id="name_error" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="modal-footer text-right">
                         <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" id="add_button" class="btn bg-gradient-primary">Create</button>
+                        <button type="submit" class="btn bg-gradient-primary btn-sm" id="add_button">Assign</button>
                     </div>
                 </form>
             </div>
@@ -133,7 +141,7 @@
     <script>
         $(document).ready(function (){
             var datatable = $('#datatable').DataTable({
-                dom: '<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
+                dom: 'B<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
                 //dom: 'Blfrtip',
                 language: {
                     paginate: {
@@ -156,17 +164,12 @@
                 "autoWidth": false,
                 "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
                 "ajax": {
-                    url: '{{ route('employees.index') }}',
+                    url: '{{ route('approvers.index') }}',
                 },
                 "columns": [
                     {
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex'
-                    },
-                    {
-                        data: 'clockify_id',
-                        name: 'clockify_id',
-                        defaultContent: ''
                     },
                     {
                         data: 'name',
@@ -179,8 +182,8 @@
                         defaultContent: ''
                     },
                     {
-                        data: 'created_at',
-                        name: 'created_at',
+                        data: 'employees',
+                        name: 'employees',
                         defaultContent: ''
                     },
                     {
@@ -192,21 +195,6 @@
                     },
                 ]
             });
-            /*if (document.getElementById('datatable')) {
-                document.querySelectorAll(".export").forEach(function (el) {
-                    el.addEventListener("click", function (e) {
-                        var type = el.dataset.type;
-                        var data = {
-                            type: type,
-                            filename: "vibie-users-" + type,
-                        };
-                        if (type === "csv") {
-                            data.columnDelimiter = "|";
-                        }
-                        dataTable.export(data);
-                    });
-                });
-            };*/
             $(document).on("click", ".rowadd", function () {
                 $("#form_title").text('Add');
                 $("#id").val('');
@@ -221,7 +209,7 @@
                 $('#name_error').text('');
                 $("#add_button").text('Update');
             });
-            const addForm = '{{ route('employees.store') }}';
+            const addForm = '{{ route('approvers.store') }}';
             $('#add_form').submit(function (e) {
                 e.preventDefault();
                 var form_data = new FormData(this);
@@ -257,7 +245,7 @@
             });
             $('#datatable').on('click', 'tbody .delete', function() {
                 var id = $(this).data('id');
-                var url = '{{ route('employees.destroy', ':id') }}';
+                var url = '{{ route('approvers.destroy', ':id') }}';
                 url = url.replace(':id', id);
                 Swal.fire({
                     title: 'Are you sure?',
@@ -286,6 +274,24 @@
                     }
                 })
             });
+
+            let employees = ['1','3'];
+            employeesAjax(employees);
+            let options = '';
+            function employeesAjax(employees){
+                $.getJSON("{{route('employees.ajax')}}/?employees="+employees, function(json){
+                    options = '<select class="form-control" name="approver" id="approver">' +
+                        '<option value="">-- Select --</option>';
+                    $.each(json.data, function(i,data) {
+                        options +='<option value="'+data.id+'">'+data.name+'</option>';
+                    });
+                    options += '</select>';
+                    $('#approver_box').html(options);
+                });
+            }
+
+
         });
+
     </script>
 @endsection

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Approver;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ class ApproverController extends Controller
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function($query){
-                    return '<a data-id="'.$query->id.'" data-name="'.$query->name.'" data-email="'.$query->email.'" data-employees="'.$query->employees.'" class="mx-1 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
+                    return '<a href="'.route('approvers.edit',['approver'=>$query->id]).'" data-id="'.$query->id.'" data-name="'.$query->name.'" data-email="'.$query->email.'" data-employees="'.$query->employees.'" class="mx-1 rowedit1" data-bs-toggle1="modal" data-bs-target1="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
                         <i class="fas fa-edit text-primary"></i>
                     </a>
                     <a data-id="'.$query->id.'" class="mx-1 rowdelete" data-bs-toggle="tooltip" data-bs-original-title="Delete">
@@ -49,7 +50,9 @@ class ApproverController extends Controller
      */
     public function create()
     {
-        //
+        $notIn = Approver::select('approver_id')->groupBy('approver_id')->get();
+        $approvers = User::select('id','name')->where('role', 'user')->whereNotIn('id', $notIn)->get();
+        return view('approvers.create', compact('approvers'));
     }
 
     /**
@@ -60,35 +63,25 @@ class ApproverController extends Controller
      */
     public function store(Request $request)
     {
-        try {
-            $rules = [
-                'name' => 'required|min:3|max:255',
-                'email' => 'required|email|max:255|unique:users,email,'.$request->id.',id',
-                'status' => 'required|in:active,inactive',
-                'password' => 'required_without:id|confirmed'
-            ];
-            $validator = Validator::make($request->all(), $rules);
-            if ($validator->fails()) {
-                return response()->json(['success' => false, 'errors' => $validator->getMessageBag(), 'message' => 'Something went wrong.'], 422);
-            }
-            $input = $request->only('name', 'email', 'status');
-            if($request->password) {
-                $input['password']=Hash::make($request->password);
-            }
-            $id = [
-                'id' => $request->id,
-                'role' => 'hr',
-            ];
-            $insert = User::updateOrCreate($id, $input);
-            if ($insert) {
-                $message = $request->id ? 'Updated Successfully.' : 'Added Successfully.';
-                return response()->json(['success' => true, 'message' => $message], 200);
-            }
-            $message = $request->id ? 'Updating Failed.' : 'Adding Failed.';
-            return response()->json(['success' => false, 'message' => $message], 200);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+        $rules = [
+            'approver_id' => 'required',
+            'employees' => 'required|array',
+        ];
+        $messages=[
+            'approver_id.required' => 'The approver field is required.'
+        ];
+        $request->validate($rules, $messages);
+
+        $input = $request->only('approver_id');
+        Approver::where($input)->delete();
+        foreach ($request->employees as $employee) {
+            $input['user_id'] = $employee;
+            $insert = Approver::create($input);
         }
+        if ($insert) {
+            return redirect()->to(route('approvers.index'))->withSuccess('Approver assign successfully.');
+        }
+        return redirect()->back()->withError('Approver assigning Failed.')->withInput();
     }
 
     /**
@@ -110,7 +103,17 @@ class ApproverController extends Controller
      */
     public function edit($id)
     {
-        //
+        $data = User::where('role', 'user')->where('id', $id)->first();
+        if($data !== null){
+            $users= User::where('role', 'user')->where('id', '!=', $id)->get();
+            $semployees=Approver::select('user_id')->where('approver_id', $id)->get();
+            $employees=[];
+            foreach ($semployees as $e){
+                $employees[] = $e->user_id;
+            }
+            return view('approvers.edit', compact('data', 'users', 'employees'));
+        }
+        abort(404);
     }
 
     /**
@@ -122,7 +125,20 @@ class ApproverController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $rules = [
+            'employees' => 'required|array',
+        ];
+        $request->validate($rules);
+        Approver::where('approver_id', $id)->delete();
+        $input=['approver_id'=>$id];
+        foreach ($request->employees as $employee) {
+            $input['user_id'] = $employee;
+            $insert = Approver::create($input);
+        }
+        if ($insert) {
+            return redirect()->to(route('approvers.index'))->withSuccess('Updated Successfully.');
+        }
+        return redirect()->back()->withError('Updating Failed.')->withInput();
     }
 
     /**

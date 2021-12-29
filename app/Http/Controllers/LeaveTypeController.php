@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-class TimeCradController extends Controller
+class LeaveTypeController extends Controller
 {
     /**
      * Display a listing of the resource.

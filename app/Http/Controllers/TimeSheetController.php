@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\TimeSheet;
 use App\Models\User;
 use Illuminate\Http\Request;
 use DataTables;
@@ -17,7 +18,7 @@ class TimeSheetController extends Controller
     public function index(Request $request)
     {
         if($request->ajax()) {
-            $data = User::latest()->get();
+            $data = TimeSheet::where('user_id', auth()->user()->clockify_id)->latest()->get();
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function($query){
@@ -31,10 +32,21 @@ class TimeSheetController extends Controller
                         $status = 'badge-danger';
                     }
                     return '<span class="badge badge-sm '.$status.'">'.$query->status.'</span>';
-                })->editColumn('created_at', function ($query) {
-                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->created_at)->format('d M, Y');
+                })->addColumn('start_date', function ($query) {
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->start_time)->format('d M, Y');
+                })->editColumn('start_time', function ($query) {
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->start_time)->format('H:i A');
+                })->addColumn('end_date', function ($query) {
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->end_time)->format('d M, Y');
+                })->editColumn('end_time', function ($query) {
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->end_time)->format('H:i A');
+                })->addColumn('time_duration', function ($query) {
+                    $date_from = Carbon::parse($query->start_time);
+                    $date_to = Carbon::parse($query->end_time);
+                    $diff = $date_from->diff($date_to)->format('%H:%I:%S');;
+                    return $diff;
                 })
-                ->rawColumns(['status','action','created_at'])
+                ->rawColumns(['status','action','start_date','start_time','end_date','end_time','time_duration','created_at'])
                 ->make(true);
         }
         return view('time-sheets.index');

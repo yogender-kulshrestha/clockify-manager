@@ -5,14 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Approver extends Model
+class TimeSheet extends Model
 {
     use HasFactory;
 
     protected $guarded=[];
 
-    public function user()
-    {
-        return $this->hasOne(User::class, 'id', 'user_id');
-    }
+    protected $casts=[
+        'tag_ids' => 'json',
+        'custom_field_values' => 'json',
+    ];
+
+
 }

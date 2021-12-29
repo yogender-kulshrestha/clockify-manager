@@ -46,8 +46,9 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
-                                <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
-                                <button type="button" class="btn bg-gradient-primary btn-sm mb-0"><i class="fa fa-rotate-270"></i> @</button>
+                                <a href="{{route('approvers.create')}}">
+                                    <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle1="modal" data-bs-target1="#modal-create">+&nbsp; New </button>
+                                </a>
                                 {{--<button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
                                     Import
                                 </button>
@@ -289,8 +290,6 @@
                     $('#approver_box').html(options);
                 });
             }
-
-
         });
 
     </script>

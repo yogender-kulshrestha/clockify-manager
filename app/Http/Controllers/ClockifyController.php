@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\SendRegistrationMail;
+use App\Models\TimeSheet;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -83,8 +84,32 @@ class ClockifyController extends Controller
 
     public function timeSheets(Request $request)
     {
-        $userId='61c1c9ad7072ea24657c1d0b';
-        return $this->clockify->apiRequest('workspaces/'.$this->clockify->workspaceId.'/user/'.$userId.'/time-entries');
+        $users = User::whereNotNull('clockify_id')->get();
+        foreach ($users as $user) {
+            $sheets = $this->clockify->apiRequest('workspaces/' . $this->clockify->workspaceId . '/user/' . $user->clockify_id . '/time-entries');
+            $sheets=json_decode($sheets);
+            foreach ($sheets as $sheet){
+                $input = [
+                    'description' => $sheet->description,
+                    'tag_ids' => $sheet->tagIds,
+                    'user_id' => $sheet->userId,
+                    'billable' => $sheet->billable,
+                    'task_id' => $sheet->taskId,
+                    'project_id' => $sheet->projectId,
+                    'start_time' => date('Y-m-d h:i:s', strtotime($sheet->timeInterval->start)),
+                    'end_time' => date('Y-m-d h:i:s', strtotime($sheet->timeInterval->end)),
+                    'duration' => $sheet->timeInterval->duration,
+                    'workspace_id' => $sheet->workspaceId,
+                    'is_locked' => $sheet->isLocked,
+                    'custom_field_values' => $sheet->customFieldValues,
+                ];
+                $id = [
+                    'clockify_id' => $sheet->id,
+                ];
+                TimeSheet::updateOrCreate($id,$input);
+            }
+        }
+        return response()->json(['status' => true, 'message' => 'Time sheet updated successfully.']);
     }
     /**
      * Show the form for creating a new resource.

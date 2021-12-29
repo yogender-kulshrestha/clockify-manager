@@ -61,11 +61,15 @@
                         <table class="table table-flush" id="datatable">
                             <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                             <tr>
-                                <th>#</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Created At</th>
-                                <th>Action</th>
+                                <td>#</td>
+                                <td>ID</td>
+                                <td>Description</td>
+                                <td>Start Date</td>
+                                <td>Start Time</td>
+                                <td>End Date</td>
+                                <td>End Time</td>
+                                <td>Duration</td>
+                                <td>Action</td>
                             </tr>
                             </thead>
                             <tbody class="text-xs">
@@ -132,7 +136,7 @@
     <script>
         $(document).ready(function (){
             var datatable = $('#datatable').DataTable({
-                dom: '<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
+                dom: 'B<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
                 //dom: 'Blfrtip',
                 language: {
                     paginate: {
@@ -157,24 +161,47 @@
                 "ajax": {
                     url: '{{ route('time-sheets.index') }}',
                 },
+                "order": [[ 1, "desc" ]],
                 "columns": [
                     {
                         data: 'DT_RowIndex',
-                        name: 'DT_RowIndex'
-                    },
-                    {
-                        data: 'name',
-                        name: 'name',
+                        name: 'DT_RowIndex',
                         defaultContent: ''
                     },
                     {
-                        data: 'email',
-                        name: 'email',
+                        data: 'id',
+                        name: 'id',
+                        defaultContent: '' ,
+                        visible: false
+                    },
+                    {
+                        data: 'description',
+                        name: 'description',
                         defaultContent: ''
                     },
                     {
-                        data: 'created_at',
-                        name: 'created_at',
+                        data: 'start_date',
+                        name: 'start_date',
+                        defaultContent: ''
+                    },
+                    {
+                        data: 'start_time',
+                        name: 'start_time',
+                        defaultContent: ''
+                    },
+                    {
+                        data: 'end_date',
+                        name: 'end_date',
+                        defaultContent: ''
+                    },
+                    {
+                        data: 'end_time',
+                        name: 'end_time',
+                        defaultContent: ''
+                    },
+                    {
+                        data: 'time_duration',
+                        name: 'time_duration',
                         defaultContent: ''
                     },
                     {
@@ -186,33 +213,32 @@
                     },
                 ]
             });
-            /*if (document.getElementById('datatable')) {
-                document.querySelectorAll(".export").forEach(function (el) {
-                    el.addEventListener("click", function (e) {
-                        var type = el.dataset.type;
-                        var data = {
-                            type: type,
-                            filename: "vibie-users-" + type,
-                        };
-                        if (type === "csv") {
-                            data.columnDelimiter = "|";
-                        }
-                        dataTable.export(data);
-                    });
-                });
-            };*/
             $(document).on("click", ".rowadd", function () {
-                $("#form_title").text('Add');
+                $("#form_title").text('Create');
                 $("#id").val('');
                 $("#name").val('');
+                $("#email").val('');
+                $("#status").val('');
                 $('#name_error').text('');
-                $("#add_button").text('Create');
+                $('#email_error').text('');
+                $('#status_error').text('');
+                $('#password_error').text('');
+                $('#password_confirmation_error').text('');
+                $('.text-danger.hidden').text('*');
+                $("#add_button").text('Add');
             });
             $(document).on("click", ".rowedit", function () {
                 $("#form_title").text('Edit');
                 $("#id").val($(this).data('id'));
                 $("#name").val($(this).data('name'));
+                $("#email").val($(this).data('email'));
+                $("#status").val($(this).data('status'));
                 $('#name_error').text('');
+                $('#email_error').text('');
+                $('#status_error').text('');
+                $('#password_error').text('');
+                $('#password_confirmation_error').text('');
+                $('.text-danger.hidden').text('');
                 $("#add_button").text('Update');
             });
             const addForm = '{{ route('time-sheets.store') }}';
@@ -230,6 +256,10 @@
                     beforeSend: function () {
                         $('#add_button').attr('disabled', 'disabled');
                         $('#name_error').text('');
+                        $('#email_error').text('');
+                        $('#status_error').text('');
+                        $('#password_error').text('');
+                        $('#password_confirmation_error').text('');
                     },
                     success: function (data) {
                         $("#add_form")[0].reset();
@@ -246,10 +276,14 @@
                         $('#add_button').attr('disabled', false);
                         let responseData = data.responseJSON;
                         $('#name_error').text(responseData.errors['name']);
+                        $('#email_error').text(responseData.errors['email']);
+                        $('#status_error').text(responseData.errors['status']);
+                        $('#password_error').text(responseData.errors['password']);
+                        $('#password_confirmation_error').text(responseData.errors['password_confirmation']);
                     }
                 });
             });
-            $('#datatable').on('click', 'tbody .delete', function() {
+            $(document).on('click', '.rowdelete', function() {
                 var id = $(this).data('id');
                 var url = '{{ route('time-sheets.destroy', ':id') }}';
                 url = url.replace(':id', id);
@@ -264,9 +298,13 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            type: "DELETE",
                             url: url,
-                            dataType: "json",
+                            type: "DELETE",
+                            dataType: "JSON",
+                            data:{
+                                'id': id,
+                                '_token': '{{ csrf_token() }}',
+                            },
                             success: function(data) {
                                 //console.log(data);
                                 datatable.draw();

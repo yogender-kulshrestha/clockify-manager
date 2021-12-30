@@ -9,6 +9,7 @@ use App\Http\Controllers\ApproverController;
 use App\Http\Controllers\TimeSheetController;
 use App\Http\Controllers\TimeCardController;
 use App\Http\Controllers\RecordController;
+use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\ProfileController;
 
 /*
@@ -36,6 +37,7 @@ Auth::routes([
 Route::get('/clockify/user', [ClockifyController::class, 'index'])->name('clockify.user');
 Route::get('/clockify/user/time', [ClockifyController::class, 'timeSheets']);
 Route::get('/clockify/report', [ClockifyController::class, 'report'])->name('clockify.report');
+Route::get('/clockify/projects', [ClockifyController::class, 'projects'])->name('clockify.projects');
 
 //Routes
 Route::get('/home', [HomeController::class, 'index'])->name('home');
@@ -46,6 +48,7 @@ Route::resource('approvers', ApproverController::class);
 Route::resource('time-sheets', TimeSheetController::class);
 Route::resource('time-cards', TimeCardController::class);
 Route::resource('records', RecordController::class);
+Route::resource('leaves', LeaveController::class);
 Route::resource('profile', ProfileController::class);
 
 

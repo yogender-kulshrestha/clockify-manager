@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Leave;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use DataTables;
 
 class LeaveController extends Controller
 {
@@ -30,10 +32,7 @@ class LeaveController extends Controller
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function($query){
-                    return '<a href="'.route('employees.show',['employee'=>$query->id]).'" data-bs-toggle="tooltip" data-bs-original-title="View">
-                        <i class="fas fa-eye text-success"></i>
-                    </a>
-                    <a data-id="'.$query->id.'" data-name="'.$query->name.'" data-email="'.$query->email.'" data-status="'.$query->status.'" class="mx-1 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
+                    return '<a data-id="'.$query->id.'" data-name="'.$query->name.'" data-email="'.$query->email.'" data-status="'.$query->status.'" class="mx-1 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
                         <i class="fas fa-edit text-primary"></i>
                     </a>
                     <!--<a data-id="'.$query->id.'" class="mx-1 rowdelete" data-bs-toggle="tooltip" data-bs-original-title="Delete">
@@ -48,11 +47,13 @@ class LeaveController extends Controller
                     return '<span class="badge badge-sm '.$status.'">'.$query->status.'</span>';
                 })->editColumn('created_at', function ($query) {
                     return Carbon::createFromFormat('Y-m-d H:i:s', $query->created_at)->format('d M, Y');
+                })->addColumn('leave_type', function ($query) {
+                    return $query->leave_type->name ?? '';
                 })
-                ->rawColumns(['status','action','created_at'])
+                ->rawColumns(['leave_type','status','action','created_at'])
                 ->make(true);
         }
-        return view('employees.index');
+        return view('leaves.index');
     }
 
     /**

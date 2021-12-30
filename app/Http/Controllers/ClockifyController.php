@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\SendRegistrationMail;
+use App\Models\Project;
 use App\Models\TimeSheet;
 use App\Models\User;
 use Carbon\Carbon;
@@ -82,29 +83,49 @@ class ClockifyController extends Controller
         return $this->clockify->apiRequest('workspaces/'.$this->clockify->workspaceId.'/reports/summary/', json_encode($data));
     }
 
+    public function projects(Request $request)
+    {
+        $rows = $this->clockify->apiRequest('workspaces/' . $this->clockify->workspaceId . '/projects');
+        $rows=json_decode($rows);
+        foreach ($rows as $row){
+            $input = [
+                'name' => $row->name,
+            ];
+            $id = [
+                'clockify_id' => $row->id,
+            ];
+            Project::updateOrCreate($id,$input);
+        }
+        return response()->json(['status' => true, 'message' => 'Projects updated successfully.']);
+    }
+
     public function timeSheets(Request $request)
     {
         $users = User::whereNotNull('clockify_id')->get();
         foreach ($users as $user) {
-            $sheets = $this->clockify->apiRequest('workspaces/' . $this->clockify->workspaceId . '/user/' . $user->clockify_id . '/time-entries');
-            $sheets=json_decode($sheets);
-            foreach ($sheets as $sheet){
+            $rows = $this->clockify->apiRequest('workspaces/' . $this->clockify->workspaceId . '/user/' . $user->clockify_id . '/time-entries');
+            $rows=json_decode($rows);
+            foreach ($rows as $row){
+                $startTime=Carbon::parse(date('Y-m-d h:i:s', strtotime($row->timeInterval->start)));
+                $endTime=Carbon::parse(date('Y-m-d h:i:s', strtotime($row->timeInterval->end)));
+                $diff = $startTime->diff($endTime)->format('%H:%I:%S');;
                 $input = [
-                    'description' => $sheet->description,
-                    'tag_ids' => $sheet->tagIds,
-                    'user_id' => $sheet->userId,
-                    'billable' => $sheet->billable,
-                    'task_id' => $sheet->taskId,
-                    'project_id' => $sheet->projectId,
-                    'start_time' => date('Y-m-d h:i:s', strtotime($sheet->timeInterval->start)),
-                    'end_time' => date('Y-m-d h:i:s', strtotime($sheet->timeInterval->end)),
-                    'duration' => $sheet->timeInterval->duration,
-                    'workspace_id' => $sheet->workspaceId,
-                    'is_locked' => $sheet->isLocked,
-                    'custom_field_values' => $sheet->customFieldValues,
+                    'description' => $row->description,
+                    'tag_ids' => $row->tagIds,
+                    'user_id' => $row->userId,
+                    'billable' => $row->billable,
+                    'task_id' => $row->taskId,
+                    'project_id' => $row->projectId,
+                    'start_time' => $startTime,
+                    'end_time' => $endTime,
+                    'duration_time' => $diff,
+                    'duration' => $row->timeInterval->duration,
+                    'workspace_id' => $row->workspaceId,
+                    'is_locked' => $row->isLocked,
+                    'custom_field_values' => $row->customFieldValues,
                 ];
                 $id = [
-                    'clockify_id' => $sheet->id,
+                    'clockify_id' => $row->id,
                 ];
                 TimeSheet::updateOrCreate($id,$input);
             }

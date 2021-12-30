@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\TimeSheet;
+use App\Models\User;
 use Illuminate\Http\Request;
+use DataTables;
+use Carbon\Carbon;
 
 class TimeCardController extends Controller
 {
@@ -11,9 +15,44 @@ class TimeCardController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        if($request->ajax()) {
+            $data = TimeSheet::where('user_id', auth()->user()->clockify_id)->latest()->get();
+            return Datatables::of($data)
+                ->addIndexColumn()
+                ->addColumn('action', function($query){
+                    return '<a data-id="'.$query->id.'" data-name="'.$query->name.'" class="mx-3 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
+                        <i class="fas fa-edit text-secondary"></i>
+                    </a>';
+                })->editColumn('project', function ($query) {
+                    return $query->project->name ?? '';
+                })->editColumn('status', function ($query) {
+                    if($query->status == 'active'){
+                        $status = 'badge-success';
+                    } else {
+                        $status = 'badge-danger';
+                    }
+                    return '<span class="badge badge-sm '.$status.'">'.$query->status.'</span>';
+                })->addColumn('start_date', function ($query) {
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->start_time)->format('d M, Y');
+                })->editColumn('start_time', function ($query) {
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->start_time)->format('H:i:s A');
+                })->addColumn('end_date', function ($query) {
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->end_time)->format('d M, Y');
+                })->editColumn('end_time', function ($query) {
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->end_time)->format('H:i:s A');
+                })->addColumn('time_duration', function ($query) {
+                    /*$date_from = Carbon::parse($query->start_time);
+                    $date_to = Carbon::parse($query->end_time);
+                    $diff = $date_from->diff($date_to)->format('%H:%I:%S');
+                    return $diff;*/
+                    return $query->duration_time;
+                })
+                ->rawColumns(['status','action','start_date','start_time','end_date','end_time','time_duration','created_at'])
+                ->make(true);
+        }
+        return view('time-cards.index');
     }
 
     /**

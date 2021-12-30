@@ -1,9 +1,8 @@
 @extends('layouts.master')
 
-@section('title', 'All Time Sheets')
+@section('title', 'All Leaves')
 
 @section('style')
-    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css">
 @endsection
 
 @section('breadcrumb')
@@ -26,9 +25,9 @@
                     </svg>
                 </a>
             </li>
-            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Time Sheets</li>
+            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Leaves</li>
         </ol>
-        <h6 class="font-weight-bolder mb-0">All Time Sheets</h6>
+        <h6 class="font-weight-bolder mb-0">All Leaves</h6>
     </nav>
 @endsection
 
@@ -40,16 +39,15 @@
                 <div class="card-header pb-0">
                     <div class="d-lg-flex">
                         <div>
-                            <h5 class="mb-0">All Time Sheets</h5>
+                            <h5 class="mb-0">All Leaves</h5>
                             <p class="text-sm mb-0">
 
                             </p>
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
-                                <input type="text" class="form-control"  id="weekPicker" value="{{$currentWeek}}" />
-                                {{--<button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
-                                <button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
+                                <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
+                                {{--<button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
                                     Import
                                 </button>
                                 <button class="btn btn-outline-primary btn-sm export mb-0 mt-sm-0 mt-1" data-type="csv" type="button" name="button">Export</button>
@@ -63,16 +61,14 @@
                             <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                             <tr>
                                 <td>#</td>
-                                <td>Project</td>
-                                <td>Mon</td>
-                                <td>Tue</td>
-                                <td>Wed</td>
-                                <td>Thu</td>
-                                <td>Fri</td>
-                                <td>Sat</td>
-                                <td>Sun</td>
-                                <td>Total</td>
-                                {{--<td>Action</td>--}}
+                                <td>ID</td>
+                                <td>Leave Title</td>
+                                <td>Leave Type</td>
+                                <td>Date From</td>
+                                <td>Date To</td>
+                                <td>Remarks</td>
+                                <td>Apply On</td>
+                                <td>Action</td>
                             </tr>
                             </thead>
                             <tbody class="text-xs">
@@ -134,14 +130,10 @@
 @endsection
 
 @section('script')
-    <script src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-    <script src="{{asset('js/weekPicker.min.js')}}"></script>
     <!--  Datatable JS  -->
     <script src="{{asset('assets/js/plugins/datatables.js')}}"></script>
     <script>
-        convertToWeekPicker($("#weekPicker"))
         $(document).ready(function (){
-            let time_duration = new Date();
             var datatable = $('#datatable').DataTable({
                 dom: 'B<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
                 //dom: 'Blfrtip',
@@ -166,12 +158,9 @@
                 "autoWidth": false,
                 "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
                 "ajax": {
-                    url: '{{ route('time-sheets.index') }}',
-                    data: function (d) {
-                        d.seletedWeek = $('#weekPicker').val()
-                    },
+                    url: '{{ route('leaves.index') }}',
                 },
-                "order": [[ 1, "asc" ]],
+                "order": [[ 1, "desc" ]],
                 "columns": [
                     {
                         data: 'DT_RowIndex',
@@ -179,66 +168,50 @@
                         defaultContent: ''
                     },
                     {
-                        data: 'project',
-                        name: 'project',
+                        data: 'id',
+                        name: 'id',
+                        defaultContent: '' ,
+                        visible: false
+                    },
+                    {
+                        data: 'title',
+                        name: 'title',
                         defaultContent: ''
                     },
                     {
-                        data: 'one',
-                        name: 'one',
+                        data: 'leave_type',
+                        name: 'leave_type',
                         defaultContent: ''
                     },
                     {
-                        data: 'two',
-                        name: 'two',
+                        data: 'from_date',
+                        name: 'from_date',
                         defaultContent: ''
                     },
                     {
-                        data: 'three',
-                        name: 'three',
+                        data: 'to_date',
+                        name: 'to_date',
                         defaultContent: ''
                     },
                     {
-                        data: 'four',
-                        name: 'four',
+                        data: 'remarks',
+                        name: 'remarks',
                         defaultContent: ''
                     },
                     {
-                        data: 'five',
-                        name: 'five',
+                        data: 'created_at',
+                        name: 'created_at',
                         defaultContent: ''
                     },
                     {
-                        data: 'six',
-                        name: 'six',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'seven',
-                        name: 'seven',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'total',
-                        name: 'total',
-                        defaultContent: ''
-                    },
-                    /*{
                         data: 'action',
                         name: 'action',
                         defaultContent: '',
                         orderable: false,
                         searchable: false
-                    },*/
+                    },
                 ]
             });
-            /*$('body').on('mousemove', '#weekPicker', function() {
-                datatable.draw();
-            });
-            $('body').on('mousemove', '#weekPicker', function() {
-                datatable.draw();
-            });*/
-
             $(document).on("click", ".rowadd", function () {
                 $("#form_title").text('Create');
                 $("#id").val('');
@@ -267,7 +240,7 @@
                 $('.text-danger.hidden').text('');
                 $("#add_button").text('Update');
             });
-            const addForm = '{{ route('time-sheets.store') }}';
+            const addForm = '{{ route('leaves.store') }}';
             $('#add_form').submit(function (e) {
                 e.preventDefault();
                 var form_data = new FormData(this);
@@ -311,7 +284,7 @@
             });
             $(document).on('click', '.rowdelete', function() {
                 var id = $(this).data('id');
-                var url = '{{ route('time-sheets.destroy', ':id') }}';
+                var url = '{{ route('leaves.destroy', ':id') }}';
                 url = url.replace(':id', id);
                 Swal.fire({
                     title: 'Are you sure?',

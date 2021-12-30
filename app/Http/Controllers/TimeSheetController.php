@@ -18,9 +18,28 @@ class TimeSheetController extends Controller
     public function index(Request $request)
     {
         if($request->ajax()) {
-            $data = TimeSheet::where('user_id', auth()->user()->clockify_id)->latest()->get();
+            $user_id=auth()->user()->clockify_id;
+            $seletedWeek = explode('-',$request->seletedWeek);
+            $date = Carbon::now();
+            $date->setISODate($seletedWeek[0],$seletedWeek[1]);
+            $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
+            $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
+            $newDate=Carbon::parse($date->startOfWeek()->format('Y-m-d H:i:s'));
+            $one=Carbon::parse($date->startOfWeek());
+            $two=Carbon::parse($newDate->addDays());
+            $three=Carbon::parse($newDate->addDays());
+            $four=Carbon::parse($newDate->addDays());
+            $five=Carbon::parse($newDate->addDays());
+            $six=Carbon::parse($newDate->addDays());
+            $seven=Carbon::parse($date->endOfWeek());
+            $data=TimeSheet::select('project_id')->groupBy('project_id')->get();
+            //$data = User::where('role', 'user')->orderBy('name')->latest()->get();
+            //$data = TimeSheet::where('user_id', auth()->user()->clockify_id)->latest()->get();
             return Datatables::of($data)
                 ->addIndexColumn()
+                ->addColumn('project', function($query){
+                    return $query->project->name ?? '';
+                })
                 ->addColumn('action', function($query){
                     return '<a data-id="'.$query->id.'" data-name="'.$query->name.'" class="mx-3 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
                         <i class="fas fa-edit text-secondary"></i>
@@ -32,24 +51,43 @@ class TimeSheetController extends Controller
                         $status = 'badge-danger';
                     }
                     return '<span class="badge badge-sm '.$status.'">'.$query->status.'</span>';
-                })->addColumn('start_date', function ($query) {
-                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->start_time)->format('d M, Y');
-                })->editColumn('start_time', function ($query) {
-                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->start_time)->format('H:i A');
-                })->addColumn('end_date', function ($query) {
-                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->end_time)->format('d M, Y');
-                })->editColumn('end_time', function ($query) {
-                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->end_time)->format('H:i A');
-                })->addColumn('time_duration', function ($query) {
-                    $date_from = Carbon::parse($query->start_time);
-                    $date_to = Carbon::parse($query->end_time);
-                    $diff = $date_from->diff($date_to)->format('%H:%I:%S');;
-                    return $diff;
+                })->addColumn('one', function ($query) use($user_id,$one){
+                    $start = $one->copy()->startOfDay()->format('Y-m-d H:i:s');
+                    $end = $one->copy()->endOfDay()->format('Y-m-d H:i:s');
+                    return total_hours($user_id, $query->project_id, $start, $end);
+                })->addColumn('two', function ($query) use($user_id,$two){
+                    $start = $two->copy()->startOfDay()->format('Y-m-d H:i:s');
+                    $end = $two->copy()->endOfDay()->format('Y-m-d H:i:s');
+                    return total_hours($user_id, $query->project_id, $start, $end);
+                })->addColumn('three', function ($query) use($user_id,$three){
+                    $start = $three->copy()->startOfDay()->format('Y-m-d H:i:s');
+                    $end = $three->copy()->endOfDay()->format('Y-m-d H:i:s');
+                    return total_hours($user_id, $query->project_id, $start, $end);
+                })->addColumn('four', function ($query) use($user_id,$four){
+                    $start = $four->copy()->startOfDay()->format('Y-m-d H:i:s');
+                    $end = $four->copy()->endOfDay()->format('Y-m-d H:i:s');
+                    return total_hours($user_id, $query->project_id, $start, $end);
+                })->addColumn('five', function ($query) use($user_id,$five){
+                    $start = $five->copy()->startOfDay()->format('Y-m-d H:i:s');
+                    $end = $five->copy()->endOfDay()->format('Y-m-d H:i:s');
+                    return total_hours($user_id, $query->project_id, $start, $end);
+                })->addColumn('six', function ($query) use($user_id,$six){
+                    $start = $six->copy()->startOfDay()->format('Y-m-d H:i:s');
+                    $end = $six->copy()->endOfDay()->format('Y-m-d H:i:s');
+                    return total_hours($user_id, $query->project_id, $start, $end);
+                })->addColumn('seven', function ($query) use($user_id,$seven){
+                    $start = $seven->copy()->startOfDay()->format('Y-m-d H:i:s');
+                    $end = $seven->copy()->endOfDay()->format('Y-m-d H:i:s');
+                    return total_hours($user_id, $query->project_id, $start, $end);
+                })->addColumn('total', function ($query) use($user_id, $startDate, $endDate){
+                    return total_hours($user_id, $query->project_id, $startDate, $endDate);
                 })
-                ->rawColumns(['status','action','start_date','start_time','end_date','end_time','time_duration','created_at'])
+                ->rawColumns(['status','action','project','one','two','three','four','six','seven','total','created_at'])
                 ->make(true);
         }
-        return view('time-sheets.index');
+        $now = Carbon::now();
+        $currentWeek = $now->year.'-'.$now->weekOfYear;
+        return view('time-sheets.index', compact('currentWeek'));
     }
 
     /**

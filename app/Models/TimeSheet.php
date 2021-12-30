@@ -16,5 +16,8 @@ class TimeSheet extends Model
         'custom_field_values' => 'json',
     ];
 
-
+    public function project()
+    {
+        return $this->hasOne(Project::class,'clockify_id','project_id');
+    }
 }

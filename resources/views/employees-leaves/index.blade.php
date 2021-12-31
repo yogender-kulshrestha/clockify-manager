@@ -47,6 +47,12 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
+                                <select id="select_user_id" class="p-1">
+                                    <option value="" selected disabled>-- Select Employee --</option>
+                                    @foreach($users as $user)
+                                        <option value="{{$user->id}}">{{$user->name}}</option>
+                                    @endforeach
+                                </select>
                                 <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
                                 {{--<button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
                                     Import
@@ -63,6 +69,7 @@
                             <tr>
                                 <td>#</td>
                                 <td>ID</td>
+                                <td>Employee</td>
                                 <td>Leave Title</td>
                                 <td>Leave Type</td>
                                 <td>Date From</td>
@@ -114,6 +121,16 @@
                     </div>
                     <div class="modal-body">
                         <input type="hidden" name="id" id="id"/>
+                        <div class="form-group">
+                            <label for="title">Employee <span class="text-danger">*</span></label>
+                            <select id="user_id" class="form-control" name="user_id">
+                                <option value="" selected disabled>-- Select Employee --</option>
+                                @foreach($users as $user)
+                                    <option value="{{$user->id}}">{{$user->name}}</option>
+                                @endforeach
+                            </select>
+                            <span id="user_id_error" class="text-danger"></span>
+                        </div>
                         <div class="form-group">
                             <label for="title">Title <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="title" id="title" placeholder="Enter Title">
@@ -198,7 +215,10 @@
                 "autoWidth": false,
                 "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
                 "ajax": {
-                    url: '{{ route('leaves.index') }}',
+                    url: '{{ route('employees-leaves.index') }}',
+                    data: function (d) {
+                        d.user_id = $('#select_user_id').val()
+                    },
                 },
                 "order": [[ 1, "desc" ]],
                 "columns": [
@@ -212,6 +232,11 @@
                         name: 'id',
                         defaultContent: '' ,
                         visible: false
+                    },
+                    {
+                        data: 'employee',
+                        name: 'employee',
+                        defaultContent: '' ,
                     },
                     {
                         data: 'title',
@@ -252,15 +277,20 @@
                     },
                 ]
             });
+            $(document).on('change', '#select_user_id', function() {
+                datatable.draw();
+            });
             $(document).on("click", ".rowadd", function () {
                 $("#form_title").text('Create');
                 $("#id").val('');
+                $("#user_id").val('');
                 $("#title").val('');
                 $("#leave_type_id").val('');
                 $("#daterange").val('');
                 $("#date_from").val('');
                 $("#date_to").val('');
                 $("#remarks").val('');
+                $('#user_id_error').text('');
                 $('#title_error').text('');
                 $('#leave_type_id_error').text('');
                 $('#date_from_error').text('');
@@ -272,12 +302,14 @@
             $(document).on("click", ".rowedit", function () {
                 $("#form_title").text('Edit');
                 $("#id").val($(this).data('id'));
+                $("#user_id").val($(this).data('user_id'));
                 $("#title").val($(this).data('title'));
                 $("#leave_type_id").val($(this).data('leave_type_id'));
                 $("#daterange").val(new Date($(this).data('date_from')).toLocaleDateString("en-US")+' - '+new Date($(this).data('date_to')).toLocaleDateString("en-US"));
                 $("#date_from").val($(this).data('date_from'));
                 $("#date_to").val($(this).data('date_to'));
                 $("#remarks").val($(this).data('remarks'));
+                $('#user_id_error').text('');
                 $('#title_error').text('');
                 $('#leave_type_id_error').text('');
                 $('#date_from_error').text('');
@@ -286,7 +318,7 @@
                 $('.text-danger.hidden').text('');
                 $("#add_button").text('Update');
             });
-            const addForm = '{{ route('leaves.store') }}';
+            const addForm = '{{ route('employees-leaves.store') }}';
             $('#add_form').submit(function (e) {
                 e.preventDefault();
                 var form_data = new FormData(this);
@@ -300,6 +332,7 @@
                     headers: {"X-CSRF-Token": $('meta[name="csrf-token"]').attr('content')},
                     beforeSend: function () {
                         $('#add_button').attr('disabled', 'disabled');
+                        $('#user_id_error').text('');
                         $('#title_error').text('');
                         $('#leave_type_id_error').text('');
                         $('#date_from_error').text('');
@@ -320,6 +353,7 @@
                     error: function (data) {
                         $('#add_button').attr('disabled', false);
                         let responseData = data.responseJSON;
+                        $('#user_id_error').text(responseData.errors['user_id']);
                         $('#title_error').text(responseData.errors['title']);
                         $('#leave_type_id_error').text(responseData.errors['leave_type_id']);
                         $('#date_from_error').text(responseData.errors['date_from']);
@@ -330,7 +364,7 @@
             });
             $(document).on('click', '.rowdelete', function() {
                 var id = $(this).data('id');
-                var url = '{{ route('leaves.destroy', ':id') }}';
+                var url = '{{ route('employees-leaves.destroy', ':id') }}';
                 url = url.replace(':id', id);
                 Swal.fire({
                     title: 'Are you sure?',

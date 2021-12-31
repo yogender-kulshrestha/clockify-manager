@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Leave;
 use App\Models\LeaveType;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use DataTables;
 use Validator;
 
-class LeaveController extends Controller
+class EmployeesLeaveController extends Controller
 {
     /**
      * Create a new controller instance.
@@ -30,16 +31,20 @@ class LeaveController extends Controller
     public function index(Request $request)
     {
         if($request->ajax()) {
-            $data = Leave::where('user_id', auth()->user()->id)->latest()->get();
+            $data = Leave::query();
+            if ($request->user_id && $request->user_id > 0){
+                $data->where('user_id', $request->user_id);
+            }
+            $data=$data->latest()->get();
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function($query){
-                    return '<a data-id="'.$query->id.'" data-title="'.$query->title.'" data-leave_type_id="'.$query->leave_type_id.'" data-date_from="'.$query->date_from.'" data-date_to="'.$query->date_to.'" data-remarks="'.$query->remarks.'" data-status="'.$query->status.'" class="mx-1 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
+                    return '<a data-id="'.$query->id.'" data-user_id="'.$query->user_id.'" data-title="'.$query->title.'" data-leave_type_id="'.$query->leave_type_id.'" data-date_from="'.$query->date_from.'" data-date_to="'.$query->date_to.'" data-remarks="'.$query->remarks.'" data-status="'.$query->status.'" class="mx-1 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
                         <i class="fas fa-edit text-primary"></i>
                     </a>
-                    <!--<a data-id="'.$query->id.'" class="mx-1 rowdelete" data-bs-toggle="tooltip" data-bs-original-title="Delete">
+                    <a data-id="'.$query->id.'" class="mx-1 rowdelete" data-bs-toggle="tooltip" data-bs-original-title="Delete">
                         <i class="fas fa-trash text-danger"></i>
-                    </a>-->';
+                    </a>';
                 })->editColumn('status', function ($query) {
                     if($query->status == 'active'){
                         $status = 'badge-success';
@@ -51,12 +56,15 @@ class LeaveController extends Controller
                     return Carbon::createFromFormat('Y-m-d H:i:s', $query->created_at)->format('d M, Y');
                 })->addColumn('leave_type', function ($query) {
                     return $query->leave_type->name ?? '';
+                })->addColumn('employee', function ($query) {
+                    return $query->user->name ?? '';
                 })
                 ->rawColumns(['leave_type','status','action','created_at'])
                 ->make(true);
         }
         $leave_categories = LeaveType::all();
-        return view('leaves.index', compact('leave_categories'));
+        $users=User::where('role', 'user')->get();
+        return view('employees-leaves.index', compact('leave_categories', 'users'));
     }
 
     /**
@@ -79,17 +87,20 @@ class LeaveController extends Controller
     {
         try {
             $rules = [
+                'user_id' => 'required',
                 'title' => 'required|min:3|max:255',
                 'leave_type_id' => 'required|exists:leave_types,id',
                 'date_from' => 'required',
                 'date_to' => 'required',
             ];
-            $validator = Validator::make($request->all(), $rules);
+            $messages = [
+                'user_id.required' => 'The employee field is required.',
+            ];
+            $validator = Validator::make($request->all(), $rules, $messages);
             if ($validator->fails()) {
                 return response()->json(['success' => false, 'errors' => $validator->getMessageBag(), 'message' => 'Something went wrong.'], 422);
             }
-            $input = $request->only('title', 'leave_type_id', 'date_from', 'date_to', 'remarks');
-            $input['user_id'] = auth()->user()->id;
+            $input = $request->only('user_id', 'title', 'leave_type_id', 'date_from', 'date_to', 'remarks');
             $id = [
                 'id' => $request->id,
             ];

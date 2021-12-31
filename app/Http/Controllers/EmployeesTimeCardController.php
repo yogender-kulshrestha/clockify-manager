@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use DataTables;
 use Carbon\Carbon;
 
-class TimeCardController extends Controller
+class EmployeesTimeCardController extends Controller
 {
     /**
      * Create a new controller instance.
@@ -28,7 +28,7 @@ class TimeCardController extends Controller
     public function index(Request $request)
     {
         if($request->ajax()) {
-            $data = TimeSheet::where('user_id', auth()->user()->clockify_id)->latest()->get();
+            $data = TimeSheet::where('user_id', $request->user_id)->latest()->get();
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function($query){
@@ -62,7 +62,8 @@ class TimeCardController extends Controller
                 ->rawColumns(['status','action','start_date','start_time','end_date','end_time','time_duration','created_at'])
                 ->make(true);
         }
-        return view('time-cards.index');
+        $users = User::where('role', 'user')->get();
+        return view('employees-time-cards.index', compact('users'));
     }
 
     /**

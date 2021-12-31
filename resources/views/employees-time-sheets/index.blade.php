@@ -1,9 +1,8 @@
 @extends('layouts.master')
 
-@section('title', 'All Leaves')
+@section('title', 'All Time Sheets')
 
 @section('style')
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 @endsection
 
 @section('breadcrumb')
@@ -26,9 +25,9 @@
                     </svg>
                 </a>
             </li>
-            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Leaves</li>
+            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Time Sheets</li>
         </ol>
-        <h6 class="font-weight-bolder mb-0">All Leaves</h6>
+        <h6 class="font-weight-bolder mb-0">All Time Sheets</h6>
     </nav>
 @endsection
 
@@ -40,15 +39,31 @@
                 <div class="card-header pb-0">
                     <div class="d-lg-flex">
                         <div>
-                            <h5 class="mb-0">All Leaves</h5>
+                            <h5 class="mb-0">All Time Sheets</h5>
                             <p class="text-sm mb-0">
 
                             </p>
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
-                                <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
-                                {{--<button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <select id="employee" class="form-control">
+                                                @foreach($users as $user)
+                                                    <option value="{{$user->clockify_id}}">{{$user->name}}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <input class="form-control" type="week" value="{{$currentWeek}}" id="weekPicker">
+                                        </div>
+                                    </div>
+                                </div>
+                                {{--<button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
                                     Import
                                 </button>
                                 <button class="btn btn-outline-primary btn-sm export mb-0 mt-sm-0 mt-1" data-type="csv" type="button" name="button">Export</button>
@@ -62,14 +77,16 @@
                             <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                             <tr>
                                 <td>#</td>
-                                <td>ID</td>
-                                <td>Leave Title</td>
-                                <td>Leave Type</td>
-                                <td>Date From</td>
-                                <td>Date To</td>
-                                <td>Remarks</td>
-                                <td>Apply On</td>
-                                <td>Action</td>
+                                <td>Project</td>
+                                <td>Mon</td>
+                                <td>Tue</td>
+                                <td>Wed</td>
+                                <td>Thu</td>
+                                <td>Fri</td>
+                                <td>Sat</td>
+                                <td>Sun</td>
+                                <td>Total</td>
+                                {{--<td>Action</td>--}}
                             </tr>
                             </thead>
                             <tbody class="text-xs">
@@ -115,37 +132,14 @@
                     <div class="modal-body">
                         <input type="hidden" name="id" id="id"/>
                         <div class="form-group">
-                            <label for="title">Title <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="title" id="title" placeholder="Enter Title">
-                            <span id="title_error" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="leave_type_id">Leave Type <span class="text-danger">*</span></label>
-                            <select class="form-control" name="leave_type_id" id="leave_type_id" placeholder="Select Leave Type">
-                                <option value="" disabled selected>-- Select --</option>
-                                @foreach($leave_categories as $category)
-                                <option value="{{$category->id}}">{{$category->name}}</option>
-                                @endforeach
-                            </select>
-                            <span id="leave_type_id_error" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="daterange">Date From - Date To <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="daterange" id="daterange" value="" />
-                            <input type="hidden" class="form-control" name="date_from" id="date_from" placeholder="Enter Date From">
-                            <span id="date_from_error" class="text-danger"></span>
-                            <input type="hidden" class="form-control" name="date_to" id="date_to" placeholder="Enter Date To">
-                            <span id="date_to_error" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="remarks">Remarks <span class="text-danger">*</span></label>
-                            <textarea class="form-control" name="remarks" id="remarks" placeholder="Enter Remarks"></textarea>
-                            <span id="remarks_error" class="text-danger"></span>
+                            <label for="name">Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="name" id="name" placeholder="Enter Name">
+                            <span id="name_error" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="modal-footer text-right">
                         <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn bg-gradient-primary btn-sm" id="add_button">Add</button>
+                        <button type="submit" id="add_button" class="btn bg-gradient-primary">Create</button>
                     </div>
                 </form>
             </div>
@@ -154,26 +148,11 @@
 @endsection
 
 @section('script')
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <!--  Datatable JS  -->
     <script src="{{asset('assets/js/plugins/datatables.js')}}"></script>
     <script>
-        $(function() {
-            $('input[name="daterange"]').daterangepicker({
-                "startDate": "{{Carbon\Carbon::now()->format('m/d/Y')}}",
-                //"endDate": "12/31/2021",
-                "opens": "center",
-                "drops": "down"
-            }, function(start, end, label) {
-                $('#date_from').val(start.format('YYYY-MM-DD'));
-                $('#date_to').val(end.format('YYYY-MM-DD'));
-                console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
-            });
-        });
-    </script>
-    <script>
         $(document).ready(function (){
+            let time_duration = new Date();
             var datatable = $('#datatable').DataTable({
                 dom: 'B<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
                 //dom: 'Blfrtip',
@@ -198,9 +177,13 @@
                 "autoWidth": false,
                 "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
                 "ajax": {
-                    url: '{{ route('leaves.index') }}',
+                    url: '{{ route('employees-time-sheets.index') }}',
+                    data: function (d) {
+                        d.seletedWeek = $('#weekPicker').val();
+                        d.user_id = $('#employee').val();
+                    },
                 },
-                "order": [[ 1, "desc" ]],
+                "order": [[ 1, "asc" ]],
                 "columns": [
                     {
                         data: 'DT_RowIndex',
@@ -208,85 +191,92 @@
                         defaultContent: ''
                     },
                     {
-                        data: 'id',
-                        name: 'id',
-                        defaultContent: '' ,
-                        visible: false
-                    },
-                    {
-                        data: 'title',
-                        name: 'title',
+                        data: 'project',
+                        name: 'project',
                         defaultContent: ''
                     },
                     {
-                        data: 'leave_type',
-                        name: 'leave_type',
+                        data: 'one',
+                        name: 'one',
                         defaultContent: ''
                     },
                     {
-                        data: 'date_from',
-                        name: 'date_from',
+                        data: 'two',
+                        name: 'two',
                         defaultContent: ''
                     },
                     {
-                        data: 'date_to',
-                        name: 'date_to',
+                        data: 'three',
+                        name: 'three',
                         defaultContent: ''
                     },
                     {
-                        data: 'remarks',
-                        name: 'remarks',
+                        data: 'four',
+                        name: 'four',
                         defaultContent: ''
                     },
                     {
-                        data: 'created_at',
-                        name: 'created_at',
+                        data: 'five',
+                        name: 'five',
                         defaultContent: ''
                     },
                     {
+                        data: 'six',
+                        name: 'six',
+                        defaultContent: ''
+                    },
+                    {
+                        data: 'seven',
+                        name: 'seven',
+                        defaultContent: ''
+                    },
+                    {
+                        data: 'total',
+                        name: 'total',
+                        defaultContent: ''
+                    },
+                    /*{
                         data: 'action',
                         name: 'action',
                         defaultContent: '',
                         orderable: false,
                         searchable: false
-                    },
+                    },*/
                 ]
             });
+            $(document).on('change', '#weekPicker, #employee', function() {
+                datatable.draw();
+            });
+
             $(document).on("click", ".rowadd", function () {
                 $("#form_title").text('Create');
                 $("#id").val('');
-                $("#title").val('');
-                $("#leave_type_id").val('');
-                $("#daterange").val('');
-                $("#date_from").val('');
-                $("#date_to").val('');
-                $("#remarks").val('');
-                $('#title_error').text('');
-                $('#leave_type_id_error').text('');
-                $('#date_from_error').text('');
-                $('#date_to_error').text('');
-                $('#remarks_error').text('');
+                $("#name").val('');
+                $("#email").val('');
+                $("#status").val('');
+                $('#name_error').text('');
+                $('#email_error').text('');
+                $('#status_error').text('');
+                $('#password_error').text('');
+                $('#password_confirmation_error').text('');
                 $('.text-danger.hidden').text('*');
                 $("#add_button").text('Add');
             });
             $(document).on("click", ".rowedit", function () {
                 $("#form_title").text('Edit');
                 $("#id").val($(this).data('id'));
-                $("#title").val($(this).data('title'));
-                $("#leave_type_id").val($(this).data('leave_type_id'));
-                $("#daterange").val(new Date($(this).data('date_from')).toLocaleDateString("en-US")+' - '+new Date($(this).data('date_to')).toLocaleDateString("en-US"));
-                $("#date_from").val($(this).data('date_from'));
-                $("#date_to").val($(this).data('date_to'));
-                $("#remarks").val($(this).data('remarks'));
-                $('#title_error').text('');
-                $('#leave_type_id_error').text('');
-                $('#date_from_error').text('');
-                $('#date_to_error').text('');
-                $('#remarks_error').text('');
+                $("#name").val($(this).data('name'));
+                $("#email").val($(this).data('email'));
+                $("#status").val($(this).data('status'));
+                $('#name_error').text('');
+                $('#email_error').text('');
+                $('#status_error').text('');
+                $('#password_error').text('');
+                $('#password_confirmation_error').text('');
                 $('.text-danger.hidden').text('');
                 $("#add_button").text('Update');
             });
-            const addForm = '{{ route('leaves.store') }}';
+            const addForm = '{{ route('employees-time-sheets.store') }}';
             $('#add_form').submit(function (e) {
                 e.preventDefault();
                 var form_data = new FormData(this);
@@ -300,11 +290,11 @@
                     headers: {"X-CSRF-Token": $('meta[name="csrf-token"]').attr('content')},
                     beforeSend: function () {
                         $('#add_button').attr('disabled', 'disabled');
-                        $('#title_error').text('');
-                        $('#leave_type_id_error').text('');
-                        $('#date_from_error').text('');
-                        $('#date_to_error').text('');
-                        $('#remarks_error').text('');
+                        $('#name_error').text('');
+                        $('#email_error').text('');
+                        $('#status_error').text('');
+                        $('#password_error').text('');
+                        $('#password_confirmation_error').text('');
                     },
                     success: function (data) {
                         $("#add_form")[0].reset();
@@ -320,17 +310,17 @@
                     error: function (data) {
                         $('#add_button').attr('disabled', false);
                         let responseData = data.responseJSON;
-                        $('#title_error').text(responseData.errors['title']);
-                        $('#leave_type_id_error').text(responseData.errors['leave_type_id']);
-                        $('#date_from_error').text(responseData.errors['date_from']);
-                        $('#date_to_error').text(responseData.errors['date_to']);
-                        $('#remarks_error').text(responseData.errors['remarks']);
+                        $('#name_error').text(responseData.errors['name']);
+                        $('#email_error').text(responseData.errors['email']);
+                        $('#status_error').text(responseData.errors['status']);
+                        $('#password_error').text(responseData.errors['password']);
+                        $('#password_confirmation_error').text(responseData.errors['password_confirmation']);
                     }
                 });
             });
             $(document).on('click', '.rowdelete', function() {
                 var id = $(this).data('id');
-                var url = '{{ route('leaves.destroy', ':id') }}';
+                var url = '{{ route('employees-time-sheets.destroy', ':id') }}';
                 url = url.replace(':id', id);
                 Swal.fire({
                     title: 'Are you sure?',

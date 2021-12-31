@@ -3,7 +3,6 @@
 @section('title', 'All Time Sheets')
 
 @section('style')
-    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css">
 @endsection
 
 @section('breadcrumb')
@@ -47,7 +46,9 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
-                                <input type="text" class="form-control"  id="weekPicker" value="{{$currentWeek}}" />
+                                <div class="form-group">
+                                    <input class="form-control" type="week" value="{{$currentWeek}}" id="weekPicker">
+                                </div>
                                 {{--<button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
                                 <button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
                                     Import
@@ -134,12 +135,9 @@
 @endsection
 
 @section('script')
-    <script src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-    <script src="{{asset('js/weekPicker.min.js')}}"></script>
     <!--  Datatable JS  -->
     <script src="{{asset('assets/js/plugins/datatables.js')}}"></script>
     <script>
-        convertToWeekPicker($("#weekPicker"))
         $(document).ready(function (){
             let time_duration = new Date();
             var datatable = $('#datatable').DataTable({
@@ -232,12 +230,9 @@
                     },*/
                 ]
             });
-            /*$('body').on('mousemove', '#weekPicker', function() {
+            $(document).on('change', '#weekPicker', function() {
                 datatable.draw();
             });
-            $('body').on('mousemove', '#weekPicker', function() {
-                datatable.draw();
-            });*/
 
             $(document).on("click", ".rowadd", function () {
                 $("#form_title").text('Create');

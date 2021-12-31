@@ -9,7 +9,7 @@ use DataTables;
 use Carbon\Carbon;
 use Str;
 
-class TimeSheetController extends Controller
+class EmployeesTimeSheetController extends Controller
 {
     /**
      * Create a new controller instance.
@@ -29,10 +29,10 @@ class TimeSheetController extends Controller
     public function index(Request $request)
     {
         if($request->ajax()) {
-            $user_id=auth()->user()->clockify_id;
-            $seletedWeek = explode('-',$request->seletedWeek);
+            $user_id=$request->user_id;
+            $seletedWeek = explode('-',Str::replace('W','',$request->seletedWeek));
             $date = Carbon::now();
-            $date->setISODate($seletedWeek[0],Str::replace('W', '', $seletedWeek[1]));
+            $date->setISODate($seletedWeek[0],$seletedWeek[1]);
             $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
             $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
             $newDate=Carbon::parse($date->startOfWeek()->format('Y-m-d H:i:s'));
@@ -98,7 +98,8 @@ class TimeSheetController extends Controller
         }
         $now = Carbon::now();
         $currentWeek = $now->year.'-W'.$now->weekOfYear;
-        return view('time-sheets.index', compact('currentWeek'));
+        $users = User::where('role', 'user')->get();
+        return view('employees-time-sheets.index', compact('currentWeek', 'users'));
     }
 
     /**

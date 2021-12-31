@@ -11,6 +11,10 @@ use App\Http\Controllers\TimeCardController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\EmployeesTimeSheetController;
+use App\Http\Controllers\EmployeesTimeCardController;
+use App\Http\Controllers\EmployeesRecordController;
+use App\Http\Controllers\EmployeesLeaveController;
 
 /*
 |--------------------------------------------------------------------------
@@ -51,5 +55,9 @@ Route::resource('records', RecordController::class);
 Route::resource('leaves', LeaveController::class);
 Route::resource('profile', ProfileController::class);
 
+Route::resource('employees-time-sheets', EmployeesTimeSheetController::class);
+Route::resource('employees-time-cards', EmployeesTimeCardController::class);
+Route::resource('employees-records', EmployeesRecordController::class);
+Route::resource('employees-leaves', EmployeesLeaveController::class);
 
 

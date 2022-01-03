@@ -97,7 +97,8 @@ class TimeSheetController extends Controller
                 ->make(true);
         }
         $now = Carbon::now();
-        $currentWeek = $now->year.'-W'.$now->weekOfYear;
+        $weekOfYear=($now->weekOfYear < 10) ? '0'.$now->weekOfYear : $now->weekOfYear;
+        $currentWeek = $now->year.'-W'.$weekOfYear;
         return view('time-sheets.index', compact('currentWeek'));
     }
 

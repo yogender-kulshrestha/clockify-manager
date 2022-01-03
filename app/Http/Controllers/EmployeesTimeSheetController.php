@@ -97,8 +97,9 @@ class EmployeesTimeSheetController extends Controller
                 ->make(true);
         }
         $now = Carbon::now();
-        $currentWeek = $now->year.'-W'.$now->weekOfYear;
-        $users = User::where('role', 'user')->get();
+        $weekOfYear=($now->weekOfYear < 10) ? '0'.$now->weekOfYear : $now->weekOfYear;
+        $currentWeek = $now->year.'-W'.$weekOfYear;
+        $users = my_employees();//User::where('role', 'user')->get();
         return view('employees-time-sheets.index', compact('currentWeek', 'users'));
     }
 

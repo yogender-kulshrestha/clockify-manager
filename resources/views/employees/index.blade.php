@@ -63,10 +63,11 @@
                             <tr>
                                 <td>#</td>
                                 <th>ID</th>
-                                <td>Clockify ID</td>
+                                {{--<td>Clockify ID</td>--}}
                                 <td>Name</td>
                                 <td>Email</td>
                                 <td>Registration Date</td>
+                                <td>Status</td>
                                 <td>Action</td>
                             </tr>
                             </thead>
@@ -195,11 +196,11 @@
                         defaultContent: '' ,
                         visible: false
                     },
-                    {
+                    /*{
                         data: 'clockify_id',
                         name: 'clockify_id',
                         defaultContent: ''
-                    },
+                    },*/
                     {
                         data: 'name',
                         name: 'name',
@@ -213,6 +214,11 @@
                     {
                         data: 'created_at',
                         name: 'created_at',
+                        defaultContent: ''
+                    },
+                    {
+                        data: 'status',
+                        name: 'status',
                         defaultContent: ''
                     },
                     {

@@ -2,6 +2,8 @@
 
 use App\Models\TimeSheet;
 use Carbon\CarbonInterval;
+use App\Models\User;
+use App\Models\Approver;
 
 function total_hours($user_id, $project_id, $date_from, $date_to)
 {
@@ -21,4 +23,14 @@ function total_hours($user_id, $project_id, $date_from, $date_to)
 function total_earnings($user_id, $date_from, $date_to)
 {
     return $user_id.' '.$date_from.' '.$date_to;
+}
+
+function my_employees() {
+    if(auth()->user()->role == 'admin' || auth()->user()->role == 'hr') {
+        return User::where('role', 'user')->latest()->get();
+    } elseif(auth()->user()->role == 'user') {
+        return User::where('role', 'user')->whereIn('id', Approver::select('user_id')->where('approver_id', auth()->user()->id)->get())->latest()->get();
+    } else {
+        return [];
+    }
 }

@@ -29,7 +29,7 @@ class EmployeeController extends Controller
     public function index(Request $request)
     {
         if($request->ajax()) {
-            $data = User::where('role', 'user')->latest()->get();
+            $data = my_employees();//User::where('role', 'user')->latest()->get();
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function($query){

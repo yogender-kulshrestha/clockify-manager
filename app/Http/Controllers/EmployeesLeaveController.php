@@ -63,7 +63,7 @@ class EmployeesLeaveController extends Controller
                 ->make(true);
         }
         $leave_categories = LeaveType::all();
-        $users=User::where('role', 'user')->get();
+        $users=my_employees();//User::where('role', 'user')->get();
         return view('employees-leaves.index', compact('leave_categories', 'users'));
     }
 

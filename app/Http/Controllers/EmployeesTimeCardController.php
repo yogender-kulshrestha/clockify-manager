@@ -28,6 +28,13 @@ class EmployeesTimeCardController extends Controller
     public function index(Request $request)
     {
         if($request->ajax()) {
+            if($request->seletedWeek) {
+                $seletedWeek = explode('-', Str::replace('W', '', $request->seletedWeek));
+                $date = Carbon::now();
+                $date->setISODate($seletedWeek[0], $seletedWeek[1]);
+                $startDate = $date->startOfWeek()->format('Y-m-d H:i:s');
+                $endDate = $date->endOfWeek()->format('Y-m-d H:i:s');
+            }
             $data = TimeSheet::where('user_id', $request->user_id)->latest()->get();
             return Datatables::of($data)
                 ->addIndexColumn()
@@ -62,7 +69,7 @@ class EmployeesTimeCardController extends Controller
                 ->rawColumns(['status','action','start_date','start_time','end_date','end_time','time_duration','created_at'])
                 ->make(true);
         }
-        $users = User::where('role', 'user')->get();
+        $users = my_employees();//User::where('role', 'user')->get();
         return view('employees-time-cards.index', compact('users'));
     }
 

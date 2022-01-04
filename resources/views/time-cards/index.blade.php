@@ -57,6 +57,7 @@
                                             <input name="date_from" id="date_from" type="hidden"/>
                                             <input name="date_to" id="date_to" type="hidden"/>
                                             <input name="daterange" class="form-control" type="text" value="" id="datePicker">
+                                            {{--<input name="weekPicker" class="form-control" type="week" value="{{$currentWeek}}" id="weekPicker">--}}
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -93,6 +94,9 @@
                             </tbody>
                         </table>
                     </div>
+                    {{--<div class="text-center">
+                        <input type="submit" class="submitReport" id="submitReport" class="btn btn-success btn-sm"/>
+                    </div>--}}
                 </div>
             </div>
         </div>
@@ -225,7 +229,8 @@
                     url: '{{ route('time-cards.index') }}',
                     data: function (d) {
                         d.date_from = $('#date_from').val(),
-                        d.date_to = $('#date_to').val()
+                        d.date_to = $('#date_to').val(),
+                        d.seletedWeek = $('#weekPicker').val()
                     }
                 },
                 "order": [[ 4, "desc" ],[ 5, "desc" ]],
@@ -295,7 +300,7 @@
                     startDate: startOf,
                     endDate: endOf,
                     locale: {
-                        format: 'MM/DD/YYYY hh:mm A'
+                        format: 'MM/DD/YYYY HH:mm:ii'
                     }
                 });
             }
@@ -354,7 +359,8 @@
                 //$("#start_time").val($(this).data('start_time'));
                 //$("#end_time").val($(this).data('end_time'));
                 //$("#duration").val($(this).data('start_time')+' - '+$(this).data('end_time'));
-                timeDuration(moment($(this).data('start_time')).format('MM/DD/YYYY HH:ii A'), moment($(this).data('end_time')).format('MM/DD/YYYY HH:ii A'));
+                console($(this).data('start_time'));
+                timeDuration(moment($(this).data('start_time')).format('MM/DD/YYYY HH:mm:ii'), moment($(this).data('end_time')).format('MM/DD/YYYY HH:mm:ii'));
                 $('#project_id_error').text('');
                 $('#description_error').text('');
                 $('#duration_error').text('');

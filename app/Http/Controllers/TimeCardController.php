@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use DataTables;
 use Carbon\Carbon;
 use Validator;
+use Str;
 
 class TimeCardController extends Controller
 {
@@ -30,6 +31,14 @@ class TimeCardController extends Controller
     public function index(Request $request)
     {
         if($request->ajax()) {
+            /*$seletedWeek = explode('-',$request->seletedWeek);
+            $date = Carbon::now();
+            $date->setISODate($seletedWeek[0],Str::replace('W', '', $seletedWeek[1]));
+            $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
+            $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
+            $data = TimeSheet::whereDate('start_time', '>=', $startDate)
+                ->whereDate('start_time', '<=', $endDate)
+                ->where('user_id', auth()->user()->clockify_id)->latest()->get();*/
             $data = TimeSheet::query();
             if($request->date_from && $request->date_to) {
                 $data->whereDate('start_time', '>=', $request->date_from)->whereDate('start_time', '<=', $request->date_to);
@@ -68,8 +77,11 @@ class TimeCardController extends Controller
                 ->rawColumns(['status','action','start_date','start_time','end_date','end_time','time_duration','created_at'])
                 ->make(true);
         }
+        $now = Carbon::now();
+        $weekOfYear=($now->weekOfYear < 10) ? '0'.$now->weekOfYear : $now->weekOfYear;
+        $currentWeek = $now->year.'-W'.$weekOfYear;
         $projects = Project::all();
-        return view('time-cards.index', compact('projects'));
+        return view('time-cards.index', compact('projects', 'currentWeek'));
     }
 
     /**

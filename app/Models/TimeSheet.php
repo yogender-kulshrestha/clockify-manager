@@ -20,4 +20,9 @@ class TimeSheet extends Model
     {
         return $this->hasOne(Project::class,'clockify_id','project_id');
     }
+
+    public function workspace()
+    {
+        return $this->hasOne(Workspace::class,'clockify_id','workspace_id');
+    }
 }

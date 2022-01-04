@@ -15,6 +15,7 @@ use App\Http\Controllers\EmployeesTimeSheetController;
 use App\Http\Controllers\EmployeesTimeCardController;
 use App\Http\Controllers\EmployeesRecordController;
 use App\Http\Controllers\EmployeesLeaveController;
+use App\Http\Controllers\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,6 +31,10 @@ use App\Http\Controllers\EmployeesLeaveController;
 Route::get('/', function () {
     return view('auth.login');
 });
+Route::get('/signin', function () {
+    return view('auth.login');
+})->name('signin');
+Route::post('signin', [AuthController::class, 'login']);
 
 Auth::routes([
     'register' => false,
@@ -38,10 +43,15 @@ Auth::routes([
 ]);
 
 //Clockify Routes
-Route::get('/clockify/user', [ClockifyController::class, 'index'])->name('clockify.user');
-Route::get('/clockify/user/time', [ClockifyController::class, 'timeSheets']);
-Route::get('/clockify/report', [ClockifyController::class, 'report'])->name('clockify.report');
+Route::get('/clockify/workspaces', [ClockifyController::class, 'workspaces'])->name('clockify.workspaces');
+Route::get('/clockify/users', [ClockifyController::class, 'users'])->name('clockify.users');
 Route::get('/clockify/projects', [ClockifyController::class, 'projects'])->name('clockify.projects');
+Route::get('/clockify/user/times', [ClockifyController::class, 'timeSheets']);
+
+Route::get('/clockify/user', [ClockifyController::class, 'index'])->name('clockify.user');
+Route::get('/clockify/user/time', [ClockifyController::class, 'timeSheet']);
+Route::get('/clockify/report', [ClockifyController::class, 'report'])->name('clockify.report');
+Route::get('/clockify/project', [ClockifyController::class, 'project'])->name('clockify.project');
 
 //Routes
 Route::get('/home', [HomeController::class, 'index'])->name('home');

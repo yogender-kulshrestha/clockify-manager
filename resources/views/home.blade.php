@@ -25,10 +25,10 @@
                     </svg>
                 </a>
             </li>
-            <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
-            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Default</li>
+            {{--<li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Home</a></li>
+            --}}<li class="breadcrumb-item text-sm text-dark active" aria-current="page">Home</li>
         </ol>
-        <h6 class="font-weight-bolder mb-0">Default</h6>
+        <h6 class="font-weight-bolder mb-0">Home</h6>
     </nav>
 @endsection
 

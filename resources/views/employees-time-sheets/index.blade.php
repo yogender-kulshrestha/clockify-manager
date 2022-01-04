@@ -77,6 +77,7 @@
                             <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                             <tr>
                                 <td>#</td>
+                                <td>Workspace</td>
                                 <td>Project</td>
                                 <td>Mon</td>
                                 <td>Tue</td>
@@ -188,6 +189,11 @@
                     {
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
+                        defaultContent: ''
+                    },
+                    {
+                        data: 'workspace',
+                        name: 'workspace',
                         defaultContent: ''
                     },
                     {

@@ -32,7 +32,7 @@ class ClockifyController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $users = $this->clockify->apiRequest('workspaces/'.$this->clockify->workspaceId.'/users');
         $users = json_decode($users);
@@ -60,7 +60,7 @@ class ClockifyController extends Controller
         return response()->json(['status' => true, 'message' => 'User list updated successfully.']);
     }
 
-    public function report()
+    public function report(Request $request)
     {
         return $this->clockify->getReportByDay(Carbon::now()->format('Y-m-d'));
         $data = [
@@ -134,7 +134,7 @@ class ClockifyController extends Controller
         return response()->json(['status' => true, 'message' => 'Time sheet updated successfully.']);
     }
 
-    public function workspaces()
+    public function workspaces(Request $request)
     {
         $workspaces = $this->clockify->apiRequest('workspaces');
         $rows = json_decode($workspaces);
@@ -155,7 +155,7 @@ class ClockifyController extends Controller
         return response()->json(['status' => true, 'message' => 'Workspace list updated successfully.']);
     }
 
-    public function users()
+    public function users(Request $request)
     {
         $workspaces = Workspace::all();
         foreach ($workspaces as $workspace) {
@@ -207,7 +207,7 @@ class ClockifyController extends Controller
 
     public function timeSheets(Request $request)
     {
-        $workspaces = Workspace::offset(6)->limit(1)->get();
+        $workspaces = Workspace::get();
         foreach ($workspaces as $workspace) {
             $users = User::whereNotNull('clockify_id')->get();
             foreach ($users as $user) {

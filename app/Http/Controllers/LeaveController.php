@@ -41,8 +41,10 @@ class LeaveController extends Controller
                         <i class="fas fa-trash text-danger"></i>
                     </a>-->';
                 })->editColumn('status', function ($query) {
-                    if($query->status == 'active'){
+                    if($query->status == 'approved'){
                         $status = 'badge-success';
+                    } elseif($query->status == 'in review'){
+                        $status = 'badge-warning';
                     } else {
                         $status = 'badge-danger';
                     }

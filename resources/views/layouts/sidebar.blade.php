@@ -220,14 +220,16 @@
                                 </g>
                             </svg>
                         </div>
-                        <span class="nav-link-text ms-1">Employees</span>
+                        <span class="nav-link-text ms-1">
+                            @if(auth()->user()->role == 'user') For Approving @else Employees @endif
+                        </span>
                     </a>
                     <div class="collapse {{Route::is('employees.*') || Route::is('employees-*') ? 'show' : ''}}" id="users">
                         <ul class="nav ms-4 ps-3">
                             <li class="nav-item {{Route::is('employees.*') ? 'active' : ''}}">
                                 <a class="nav-link {{Route::is('employees.*') ? 'active' : ''}}" href="{{route('employees.index')}}">
                                     <span class="sidenav-mini-icon"> E </span>
-                                    <span class="sidenav-normal"> All Employees </span>
+                                    <span class="sidenav-normal"> Employees </span>
                                 </a>
                             </li>
                             <li class="nav-item {{Route::is('employees-time-sheets.*') ? 'active' : ''}}">
@@ -242,12 +244,12 @@
                                     <span class="sidenav-normal"> Time Cards </span>
                                 </a>
                             </li>
-                            <li class="nav-item {{Route::is('employees-records.*') ? 'active' : ''}}">
+                            {{--<li class="nav-item {{Route::is('employees-records.*') ? 'active' : ''}}">
                                 <a class="nav-link {{Route::is('employees-records.*') ? 'active' : ''}}" href="{{route('employees-records.index')}}">
                                     <span class="sidenav-mini-icon"> R </span>
                                     <span class="sidenav-normal"> Records </span>
                                 </a>
-                            </li>
+                            </li>--}}
                             @if(auth()->user()->role == 'admin')
                             <li class="nav-item {{Route::is('employees-leaves.*') ? 'active' : ''}}">
                                 <a class="nav-link {{Route::is('employees-leaves.*') ? 'active' : ''}}" href="{{route('employees-leaves.index')}}">

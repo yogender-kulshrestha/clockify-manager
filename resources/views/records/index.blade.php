@@ -46,8 +46,8 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
-                                {{--<button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New User Category</button>
-                                --}}{{--<button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
+                                <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
+                                {{--<button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
                                     Import
                                 </button><button class="btn btn-outline-primary btn-sm export mb-0 mt-sm-0 mt-1" data-type="csv" type="button" name="button">Export</button>
                             --}}</div>
@@ -63,12 +63,13 @@
                                 <th>Record Type</th>
                                 <th>Modified Date</th>
                                 <th>Description</th>
+                                <th>Remarks</th>
                                 <th>Status</th>
                                 <th>Action</th>
                             </tr>
                             </thead>
                             <tbody class="text-xs">
-                            <tr>
+                            {{--<tr>
                                 <td>1</td>
                                 <td>Approval Request</td>
                                 <td>31-Dec-2021</td>
@@ -95,7 +96,7 @@
                                         <option>View</option>
                                     </select>
                                 </td>
-                            </tr>
+                            </tr>--}}
                             </tbody>
                         </table>
                     </div>
@@ -132,21 +133,41 @@
                 <form id="add_form" autocomplete="off" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-header">
-                        <h5 class="modal-title" id="ModalLabel">Create</h5>
-                        <i class="fas fa-upload ms-3"></i>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <h5 class="modal-title" id="form_title">Create</h5>
                     </div>
                     <div class="modal-body">
                         <input type="hidden" name="id" id="id"/>
+                        <input type="hidden" name="user_id" value="{{auth()->user()->clockify_id}}">
                         <div class="form-group">
-                            <label for="name">Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="name" id="name" placeholder="Enter Name">
-                            <span id="name_error" class="text-danger"></span>
+                            <label for="record_type">Record Type <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="record_type" id="record_type" placeholder="Enter Record Type">
+                            <span id="record_type_error" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Description <span class="text-danger">*</span></label>
+                            <textarea class="form-control" name="description" id="description" placeholder="Enter Description"></textarea>
+                            <span id="description_error" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Status <span class="text-danger">*</span></label>
+                            <select class="form-control" name="status" id="status" placeholder="Select Status" required>
+                                <option value="" disabled selected>-- Select --</option>
+                                <option value="submitted">Submitted</option>
+                                <option value="in review">In Review</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                            <span id="status_error" class="text-danger"></span>
+                        </div>
+                        <div class="form-group" disabled="">
+                            <label for="remarks">Remarks <span class="text-danger">*</span></label>
+                            <textarea class="form-control" name="remarks" id="remarks" placeholder="Enter Remarks"></textarea>
+                            <span id="remarks_error" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="modal-footer text-right">
                         <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" id="add_button" class="btn bg-gradient-primary">Create</button>
+                        <button type="submit" class="btn bg-gradient-primary btn-sm" id="add_button">Add</button>
                     </div>
                 </form>
             </div>
@@ -159,7 +180,7 @@
     <script src="{{asset('assets/js/plugins/datatables.js')}}"></script>
     <script>
         $(document).ready(function (){
-            $('#datatable').DataTable({
+            /*$('#datatable').DataTable({
                 dom: '<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
                 //dom: 'Blfrtip',
                 language: {
@@ -181,8 +202,8 @@
                 //"lengthChange": false,
                 "autoWidth": false,
                 "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
-            });
-            var datatable = $('#datatable1').DataTable({
+            });*/
+            var datatable = $('#datatable').DataTable({
                 dom: '<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
                 //dom: 'Blfrtip',
                 language: {
@@ -206,7 +227,7 @@
                 "autoWidth": false,
                 "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
                 "ajax": {
-                    url: '{{ route('time-sheets.index') }}',
+                    url: '{{ route('records.index') }}',
                 },
                 "columns": [
                     {
@@ -214,13 +235,23 @@
                         name: 'DT_RowIndex'
                     },
                     {
-                        data: 'name',
-                        name: 'name',
+                        data: 'record_type',
+                        name: 'record_type',
                         defaultContent: ''
                     },
                     {
-                        data: 'created_at',
-                        name: 'created_at',
+                        data: 'updated_at',
+                        name: 'updated_at',
+                        defaultContent: ''
+                    },
+                    {
+                        data: 'description',
+                        name: 'description',
+                        defaultContent: ''
+                    },
+                    {
+                        data: 'remarks',
+                        name: 'remarks',
                         defaultContent: ''
                     },
                     {
@@ -255,18 +286,24 @@
             $(document).on("click", ".rowadd", function () {
                 $("#form_title").text('Add');
                 $("#id").val('');
-                $("#name").val('');
-                $('#name_error').text('');
+                $("#record_type").val('');
+                $("#description").val('');
+                $("#remarks").val('');
+                $("#status").val('');
+                $('#record_type_error').text('');
                 $("#add_button").text('Create');
             });
             $(document).on("click", ".rowedit", function () {
                 $("#form_title").text('Edit');
                 $("#id").val($(this).data('id'));
-                $("#name").val($(this).data('name'));
-                $('#name_error').text('');
+                $("#record_type").val($(this).data('record_type'));
+                $("#description").val($(this).data('description'));
+                $("#remarks").val($(this).data('remarks'));
+                $("#status").val($(this).data('status'));
+                $('#record_type_error').text('');
                 $("#add_button").text('Update');
             });
-            const addForm = '{{ route('time-sheets.store') }}';
+            const addForm = '{{ route('records.store') }}';
             $('#add_form').submit(function (e) {
                 e.preventDefault();
                 var form_data = new FormData(this);
@@ -302,7 +339,7 @@
             });
             $('#datatable').on('click', 'tbody .delete', function() {
                 var id = $(this).data('id');
-                var url = '{{ route('time-sheets.destroy', ':id') }}';
+                var url = '{{ route('records.destroy', ':id') }}';
                 url = url.replace(':id', id);
                 Swal.fire({
                     title: 'Are you sure?',

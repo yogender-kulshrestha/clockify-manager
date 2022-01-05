@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Record;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -36,10 +37,10 @@ class EmployeeController extends Controller
                     return '<a data-id="'.$query->id.'" data-name="'.$query->name.'" data-email="'.$query->email.'" data-status="'.$query->status.'" class="mx-1 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
                         <i class="fas fa-edit text-primary"></i>
                     </a>
-                    <!--<a href="'.route('employees.show',['employee'=>$query->id]).'" data-bs-toggle="tooltip" data-bs-original-title="View">
+                    <a href="'.route('employees.show',['employee'=>$query->id]).'" data-bs-toggle="tooltip" data-bs-original-title="View">
                         <i class="fas fa-eye text-success"></i>
                     </a>
-                    <a data-id="'.$query->id.'" class="mx-1 rowdelete" data-bs-toggle="tooltip" data-bs-original-title="Delete">
+                    <!--<a data-id="'.$query->id.'" class="mx-1 rowdelete" data-bs-toggle="tooltip" data-bs-original-title="Delete">
                         <i class="fas fa-trash text-danger"></i>
                     </a>-->';
                 })->editColumn('status', function ($query) {
@@ -112,9 +113,39 @@ class EmployeeController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($id, Request $request)
     {
-        //
+        if ($request->ajax()) {
+            $data = Record::where('user_id', $request->user_id)->latest()->get();
+            return Datatables::of($data)
+                ->addIndexColumn()
+                ->addColumn('action', function ($query) {
+                    return '<a data-id="' . $query->id . '" data-record_type="' . $query->record_type . '" data-description="' . $query->description . '" data-remarks="' . $query->remarks . '" data-status="' . $query->status . '" class="mx-1 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
+                        <i class="fas fa-edit text-primary"></i>
+                    </a>
+                    <!--<a data-id="' . $query->id . '" class="mx-1 rowdelete" data-bs-toggle="tooltip" data-bs-original-title="Delete">
+                        <i class="fas fa-trash text-danger"></i>
+                    </a>-->';
+                })->editColumn('status', function ($query) {
+                    if ($query->status == 'active') {
+                        $status = 'badge-success';
+                    } else {
+                        $status = 'badge-danger';
+                    }
+                    return '<span class="badge badge-sm ' . $status . '">' . $query->status . '</span>';
+                })->editColumn('created_at', function ($query) {
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->created_at)->format('d M, Y');
+                })->editColumn('updated_at', function ($query) {
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->updated_at)->format('d M, Y');
+                })
+                ->rawColumns(['status', 'action', 'created_at', 'updated_at'])
+                ->make(true);
+        }
+        $data = User::find($id);
+        if ($data) {
+            return view('employees.show', compact('data'));
+        }
+        abort(404);
     }
 
     /**

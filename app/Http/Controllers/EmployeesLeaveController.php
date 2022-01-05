@@ -46,8 +46,10 @@ class EmployeesLeaveController extends Controller
                         <i class="fas fa-trash text-danger"></i>
                     </a>';
                 })->editColumn('status', function ($query) {
-                    if($query->status == 'active'){
+                    if($query->status == 'approved'){
                         $status = 'badge-success';
+                    } elseif($query->status == 'in review'){
+                        $status = 'badge-warning';
                     } else {
                         $status = 'badge-danger';
                     }
@@ -92,6 +94,7 @@ class EmployeesLeaveController extends Controller
                 'leave_type_id' => 'required|exists:leave_types,id',
                 'date_from' => 'required',
                 'date_to' => 'required',
+                'status' => 'required',
             ];
             $messages = [
                 'user_id.required' => 'The employee field is required.',
@@ -100,7 +103,7 @@ class EmployeesLeaveController extends Controller
             if ($validator->fails()) {
                 return response()->json(['success' => false, 'errors' => $validator->getMessageBag(), 'message' => 'Something went wrong.'], 422);
             }
-            $input = $request->only('user_id', 'title', 'leave_type_id', 'date_from', 'date_to', 'remarks');
+            $input = $request->only('user_id', 'title', 'leave_type_id', 'date_from', 'date_to', 'remarks', 'status');
             $id = [
                 'id' => $request->id,
             ];

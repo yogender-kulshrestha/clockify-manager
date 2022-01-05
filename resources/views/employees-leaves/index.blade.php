@@ -85,6 +85,7 @@
                                 <td>Date To</td>
                                 <td>Remarks</td>
                                 <td>Apply On</td>
+                                <td>Status</td>
                                 <td>Action</td>
                             </tr>
                             </thead>
@@ -167,6 +168,16 @@
                             <label for="remarks">Remarks <span class="text-danger">*</span></label>
                             <textarea class="form-control" name="remarks" id="remarks" placeholder="Enter Remarks"></textarea>
                             <span id="remarks_error" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Status <span class="text-danger">*</span></label>
+                            <select class="form-control" name="status" id="status" placeholder="Select Status">
+                                <option value="" disabled selected>-- Select --</option>
+                                <option value="in review">In Review</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                            <span id="status_error" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="modal-footer text-right">
@@ -278,6 +289,11 @@
                         defaultContent: ''
                     },
                     {
+                        data: 'status',
+                        name: 'status',
+                        defaultContent: ''
+                    },
+                    {
                         data: 'action',
                         name: 'action',
                         defaultContent: '',
@@ -299,12 +315,14 @@
                 $("#date_from").val('');
                 $("#date_to").val('');
                 $("#remarks").val('');
+                $("#status").val('');
                 $('#user_id_error').text('');
                 $('#title_error').text('');
                 $('#leave_type_id_error').text('');
                 $('#date_from_error').text('');
                 $('#date_to_error').text('');
                 $('#remarks_error').text('');
+                $('#status_error').text('');
                 $('.text-danger.hidden').text('*');
                 $("#add_button").text('Add');
             });
@@ -318,12 +336,14 @@
                 $("#date_from").val($(this).data('date_from'));
                 $("#date_to").val($(this).data('date_to'));
                 $("#remarks").val($(this).data('remarks'));
+                $("#status").val($(this).data('status'));
                 $('#user_id_error').text('');
                 $('#title_error').text('');
                 $('#leave_type_id_error').text('');
                 $('#date_from_error').text('');
                 $('#date_to_error').text('');
                 $('#remarks_error').text('');
+                $('#status_error').text('');
                 $('.text-danger.hidden').text('');
                 $("#add_button").text('Update');
             });
@@ -347,6 +367,7 @@
                         $('#date_from_error').text('');
                         $('#date_to_error').text('');
                         $('#remarks_error').text('');
+                        $('#status_error').text('');
                     },
                     success: function (data) {
                         $("#add_form")[0].reset();
@@ -368,6 +389,7 @@
                         $('#date_from_error').text(responseData.errors['date_from']);
                         $('#date_to_error').text(responseData.errors['date_to']);
                         $('#remarks_error').text(responseData.errors['remarks']);
+                        $('#status_error').text(responseData.errors['status']);
                     }
                 });
             });

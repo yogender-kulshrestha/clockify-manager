@@ -69,6 +69,7 @@
                                 <td>Date To</td>
                                 <td>Remarks</td>
                                 <td>Apply On</td>
+                                <td>Status</td>
                                 <td>Action</td>
                             </tr>
                             </thead>
@@ -241,6 +242,11 @@
                     {
                         data: 'created_at',
                         name: 'created_at',
+                        defaultContent: ''
+                    },
+                    {
+                        data: 'status',
+                        name: 'status',
                         defaultContent: ''
                     },
                     {

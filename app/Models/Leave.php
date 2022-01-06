@@ -13,7 +13,7 @@ class Leave extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'clockify_id');
     }
 
     public function leave_type()

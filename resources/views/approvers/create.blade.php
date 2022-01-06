@@ -49,15 +49,15 @@
                                     <div class="row mt-3">
                                         <div class="col-12 mt-sm-0">
                                             <div class="text-start">
-                                                <label class="mt-3">Title</label>
+                                                <label class="mt-3">Approver</label>
                                                 <select name="approver_id" id="approver_id" class="form-control" placeholder="Select a Approver" required value="{{old('approver_id')}}">
                                                     <option value="" selected disabled>-- Select --</option>
                                                     @foreach($approvers as $approver)
-                                                    <option value="{{$approver->id}}">{{$approver->name}}</option>
+                                                    <option value="{{$approver->clockify_id}}">{{$approver->name}}</option>
                                                     @endforeach
                                                 </select>
                                                 @error('approver_id')
-                                                <span class="text-danger text-xs">{{ $message }}dfdsggzsfhzs</span><br/>
+                                                <span class="text-danger text-xs">{{ $message }}</span><br/>
                                                 @enderror
                                                 <label class="mt-3">Employees</label>
                                                 <select name="employees[]" value="{{old('employees')}}" id="employees" class="form-control" placeholder="Select Employees" multiple required>
@@ -94,7 +94,7 @@
                 //options = '<select class="form-control" name="approver" id="approver">' +
                 //options = '<option value="" disabled>-- Select --</option>';
                 $.each(json.data, function(i,data) {
-                    options +='<option value="'+data.id+'">'+data.name+'</option>';
+                    options +='<option value="'+data.clockify_id+'">'+data.name+'</option>';
                 });
                 //options += '</select>';
                 $('#employees').html(options);

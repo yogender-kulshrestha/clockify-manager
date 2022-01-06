@@ -61,7 +61,7 @@ class ApproverController extends Controller
     public function create()
     {
         $notIn = Approver::select('approver_id')->groupBy('approver_id')->get();
-        $approvers = User::select('id','name')->where('role', 'user')->whereNotIn('id', $notIn)->get();
+        $approvers = User::where('role', 'user')->whereNotIn('clockify_id', $notIn)->get();
         return view('approvers.create', compact('approvers'));
     }
 

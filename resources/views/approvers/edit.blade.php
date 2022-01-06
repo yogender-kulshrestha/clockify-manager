@@ -50,7 +50,7 @@
                                         <div class="col-12 mt-sm-0">
                                             <div class="text-start">
                                                 <label class="mt-3">Title</label>
-                                                <input name="approver_id" type="hidden" value="{{$data->id}}" id="approver_id" class="form-control"/>
+                                                <input name="approver_id" type="hidden" value="{{$data->clockify_id}}" id="approver_id" class="form-control"/>
                                                 <input type="text" value="{{$data->name}}" class="form-control" readonly disabled/>
                                                 @error('approver_id')
                                                 <span class="text-danger text-xs">{{ $message }}</span><br/>
@@ -58,7 +58,7 @@
                                                 <label class="mt-3">Employees</label>
                                                 <select name="employees[]" value="{{old('employees')}}" id="employees" class="form-control" placeholder="Select Employees" multiple required>
                                                     @foreach($users as $user)
-                                                    <option value="{{$user->id}}" @if(in_array($user->id, $employees)) selected @endif>{{$user->name}}</option>
+                                                    <option value="{{$user->clockify_id}}" @if(in_array($user->clockify_id, $employees)) selected @endif>{{$user->name}}</option>
                                                     @endforeach
                                                 </select>
                                                 @error('employees')

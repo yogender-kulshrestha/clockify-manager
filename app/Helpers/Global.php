@@ -2,8 +2,10 @@
 
 use App\Models\TimeSheet;
 use Carbon\CarbonInterval;
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Approver;
+use App\Models\Leave;
 
 function total_hours($user_id, $project_id, $date_from, $date_to)
 {
@@ -46,5 +48,33 @@ function my_employees() {
         return User::where('role', 'user')->whereIn('id', Approver::select('user_id')->where('approver_id', auth()->user()->id)->get())->latest()->get();
     } else {
         return [];
+    }
+}
+
+function leave_description($leave_id) {
+    $leave = Leave::find($leave_id);
+    if($leave) {
+        if($leave->user_id == auth()->user()->clockify_id) {
+            $date = ($leave->date_from == $leave->date_to) ? Carbon::parse($leave->date_from)->format('d M Y') : Carbon::parse($leave->date_from)->format('d').'-'.Carbon::parse($leave->date_to)->format('d M Y');
+            return 'Leave Request '.$date;
+        } else {
+            $user = $leave->user->name;
+            $date = ($leave->date_from == $leave->date_to) ? Carbon::parse($leave->date_from)->format('d M Y') : Carbon::parse($leave->date_from)->format('d').'-'.Carbon::parse($leave->date_to)->format('d M Y');
+            return '['.$user.'] Leave Request '.$date;
+        }
+    }
+}
+
+function timecard_description($leave_id) {
+    $leave = Leave::find($leave_id);
+    if($leave) {
+        if($leave->user_id == auth()->user()->clockify_id) {
+            $date = ($leave->date_from == $leave->date_to) ? Carbon::parse($leave->date_from)->format('d M Y') : Carbon::parse($leave->date_from)->format('d').'-'.Carbon::parse($leave->date_to)->format('d M Y');
+            return 'Leave Request '.$date;
+        } else {
+            $user = $leave->user->name;
+            $date = ($leave->date_from == $leave->date_to) ? Carbon::parse($leave->date_from)->format('d M Y') : Carbon::parse($leave->date_from)->format('d').'-'.Carbon::parse($leave->date_to)->format('d M Y');
+            return '['.$user.'] Leave Request '.$date;
+        }
     }
 }

@@ -49,6 +49,6 @@ class User extends Authenticatable
 
     public function employees()
     {
-        return $this->hasMany(Approver::class, 'approver_id', 'id');
+        return $this->hasMany(Approver::class, 'approver_id', 'clockify_id');
     }
 }

@@ -73,13 +73,20 @@ Route::resource('employees-leaves', EmployeesLeaveController::class);
 Route::name('employee.')->prefix('employee')->group(function(){
     Route::get('/home', [EmployeeController::class, 'home'])->name('home');
     Route::get('/records', [EmployeeController::class, 'records'])->name('records');
+
     Route::get('/request-leave', [EmployeeController::class, 'requestLeave'])->name('request-leave');
     Route::post('/request-leave', [EmployeeController::class, 'storeRequestLeave']);
     Route::get('/leave/{id}/view', [EmployeeController::class, 'viewRequestLeave'])->name('leave.view');
     Route::get('/leave/{id}/edit', [EmployeeController::class, 'editRequestLeave'])->name('leave.edit');
     Route::get('/leave/{id}/review', [EmployeeController::class, 'reviewRequestLeave'])->name('leave.review');
+
     Route::get('/timecard', [EmployeeController::class, 'timecard'])->name('timecard');
-    Route::get('/timecard/{id}/view', [EmployeeController::class, 'timecard'])->name('timecard.view');
-    Route::get('/timecard/{id}/edit', [EmployeeController::class, 'timecard'])->name('timecard.edit');
-    Route::get('/timecard/{id}/review', [EmployeeController::class, 'timecard'])->name('timecard.review');
+    Route::post('/timecard', [EmployeeController::class, 'addTimeCard']);
+    Route::post('/timecard/create', [EmployeeController::class, 'createTimeCard'])->name('timecard.create');
+    Route::get('/timecard/{week}/submit', [EmployeeController::class, 'forSubmitTimeCard'])->name('timecard.submit');
+    Route::post('/timecard/{week}/submit', [EmployeeController::class, 'submitTimecard']);
+
+    Route::post('/timecard/{week}/view', [EmployeeController::class, 'timecard'])->name('timecard.view');
+    Route::get('/timecard/{week}/edit', [EmployeeController::class, 'timecard'])->name('timecard.edit');
+    Route::get('/timecard/{week}/review', [EmployeeController::class, 'timecard'])->name('timecard.review');
 });

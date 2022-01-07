@@ -6,8 +6,11 @@ use App\Models\Approver;
 use App\Models\Leave;
 use App\Models\LeaveType;
 use App\Models\Record;
+use App\Models\TimeCard;
+use App\Models\TimeSheet;
 use App\Models\User;
 use Carbon\Carbon;
+use Carbon\CarbonInterval;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use DataTables;
@@ -82,9 +85,9 @@ class EmployeeController extends Controller
                         return 'Approver Request ['.ucfirst($query->record_type).']';
                     }
                 })->editColumn('created_at', function ($query) {
-                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->created_at)->format('d M, Y');
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->created_at)->format('d-M-Y');
                 })->editColumn('updated_at', function ($query) {
-                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->updated_at)->format('d M, Y');
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->updated_at)->format('d-M-Y');
                 })->editColumn('description', function ($query) {
                     if($query->type == 'leave'){
                         return leave_description($query->description);
@@ -184,7 +187,169 @@ class EmployeeController extends Controller
 
     public function timecard(Request $request)
     {
-        return view('employee.timecard');
+        if($request->ajax()) {
+            $data = TimeSheet::query()->whereDate('start_time', '>=', $request->start_time)
+                ->whereDate('start_time', '<=', $request->end_time)
+                ->where('user_id', auth()->user()->clockify_id)->latest()->get();
+            return Datatables::of($data)
+                ->addIndexColumn()
+                ->addColumn('action', function($query){
+                    return '<a data-id="'.$query->id.'" data-remarks="'.$query->employee_remarks.'" data-description="'.$query->description.'" data-start_time="'.$query->start_time.'" data-end_time="'.$query->end_time.'" class="rowedit btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
+                        Edit
+                    </a>
+                    <a data-id="'.$query->id.'" data-project_id="'.$query->project_id.'" data-description="'.$query->description.'" data-start_time="'.$query->start_time.'" data-end_time="'.$query->end_time.'" class="rowedit btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
+                        Request Exception
+                    </a>';
+                })->editColumn('project', function ($query) {
+                    return $query->project->name ?? '';
+                })->editColumn('status', function ($query) {
+                    if($query->status == 'active'){
+                        $status = 'badge-success';
+                    } else {
+                        $status = 'badge-danger';
+                    }
+                    return '<span class="badge badge-sm '.$status.'">'.$query->status.'</span>';
+                })->addColumn('start_date', function ($query) {
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->start_time)->format('Y-m-d');
+                })->editColumn('start_time', function ($query) {
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->start_time)->format('H:i');
+                })->addColumn('end_date', function ($query) {
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->end_time)->format('Y-m-d');
+                })->editColumn('end_time', function ($query) {
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->end_time)->format('H:i');
+                })->addColumn('time_duration', function ($query) {
+                    return CarbonInterval::seconds($query->duration_time)->cascade()->forHumans();
+                })
+                ->rawColumns(['status','action','start_date','start_time','end_date','end_time','time_duration','created_at'])
+                ->make(true);
+        }
+        $now = Carbon::now();
+        $weekOfYear=($now->weekOfYear < 10) ? '0'.$now->weekOfYear : $now->weekOfYear;
+        $currentWeek = $now->year.'-W'.$weekOfYear;
+        $date = Carbon::now();
+        $date->setISODate($now->year,$weekOfYear);
+        $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
+        $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
+        return view('employee.timecard', compact('currentWeek','startDate','endDate'));
+    }
+
+    public function addTimeCard(Request $request)
+    {
+        try {
+            $rules = [
+                'description' => 'required|max:255',
+                'start_time' => 'required',
+                'end_time' => 'required',
+            ];
+            $validator = Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'errors' => $validator->getMessageBag(), 'message' => 'Something went wrong.'], 422);
+            }
+            $date_from = Carbon::parse($request->start_time);
+            $date_to = Carbon::parse($request->end_time);
+            $diff = $date_from->diffInSeconds($date_to);
+            $input = $request->only( 'description', 'start_time', 'end_time', 'employee_remarks');
+            $input['duration']=$diff;
+            $input['duration_time']=$diff;
+            $input['clockify_id']=time();
+            $input['billable']='0';
+            $input['workspace_id']=time();
+            $input['is_locked']='0';
+            $input['custom_field_values']=[];
+            $input['user_id']=auth()->user()->clockify_id;
+            $id = [
+                'id' => $request->id,
+            ];
+            $insert = TimeSheet::updateOrCreate($id, $input);
+            if ($insert) {
+                $message = $request->id ? 'Updated Successfully.' : 'Added Successfully.';
+                return response()->json(['success' => true, 'message' => $message], 200);
+            }
+            $message = $request->id ? 'Updating Failed.' : 'Adding Failed.';
+            return response()->json(['success' => false, 'message' => $message], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+        }
+    }
+
+    public function createTimeCard(Request $request)
+    {
+        $rules = [
+            'start_time' => 'required',
+        ];
+        $request->validate($rules);
+        $start=Carbon::parse($request->start_time);
+        $end=Carbon::parse($start->copy()->endOfDay()->format('Y-m-d H:i:s'));
+        $start->subDay();
+        $end->subDay();
+        for($i=0;$i<7;$i++){
+            $start->addDay();
+            $end->addDay().'<br/>';
+            $sheets = TimeSheet::whereDate('start_time', '>=', $start)
+                ->whereDate('start_time', '<=', $end)
+                ->where('user_id', auth()->user()->clockify_id)->latest()->get();
+            $flags = '';
+            $net_hours = 0;
+            $employee_remarks = '';
+            foreach ($sheets as $sheet) {
+                $flags .= $sheet->description ? $sheet->description.', ' : '';
+                $net_hours += $sheet->duration_time ?? 0;
+                $employee_remarks .= $sheet->employee_remarks ? $sheet->employee_remarks.', ' : '';
+            }
+            $now = Carbon::parse($start);
+            $weekOfYear=($now->weekOfYear < 10) ? '0'.$now->weekOfYear : $now->weekOfYear;
+            $currentWeek = $now->year.'-W'.$weekOfYear;
+            $ot_hours = 0;
+            /*if($net_hours > 10) {
+                $ot_hours = $net_hours-10;
+            }*/
+            $id = [
+                'user_id' => auth()->user()->clockify_id,
+                'date' => $start->format('Y-m-d'),
+            ];
+            $input = [
+                'week' => $currentWeek,
+                'flags' => $flags,
+                'ot_hours' => $ot_hours,
+                'net_hours' => $net_hours,
+                'employee_remarks' => $employee_remarks
+            ];
+            $insert = TimeCard::updateOrCreate($id, $input);
+            if($insert) {
+                return redirect()->to(route('employee.timecard.submit',['week' => $currentWeek]))->withSuccess('Time card create successfully.');
+            }
+            return redirect()->back()->withError('Timecard not create.');
+            /*$dt = Carbon::now();
+            $hours = $dt->diffInHours($dt->copy()->addSeconds($net_hours));
+            $minutes = $dt->diffInMinutes($dt->copy()->addSeconds($net_hours)->subHours($hours));
+            if($minutes <= 15) {
+            } elseif ($minutes > 15 || $minutes <= 30) {
+            } elseif ($minutes > 30 || $minutes <= 45) {
+            } else {
+            }*/
+        }
+    }
+
+    public function forSubmitTimeCard($week)
+    {
+        $rows=TimeCard::where('user_id', auth()->user()->clockify_id)->where('week', $week)->get();
+        if($rows !== null) {
+            $net_hours = TimeCard::where('week', $week)->groupBy('week')->sum('net_hours');
+            $ot_hours = TimeCard::where('week', $week)->groupBy('week')->sum('ot_hours');
+            $short_hours = TimeCard::where('week', $week)->groupBy('week')->sum('short_hours');
+            $unpaid_hours = TimeCard::where('week', $week)->groupBy('week')->sum('unpaid_hours');
+            $net_hours = CarbonInterval::seconds($net_hours)->cascade()->forHumans(['parts' => 1, 'short' => true]);
+            $ot_hours = CarbonInterval::seconds($ot_hours)->cascade()->forHumans(['parts' => 1, 'short' => true]);
+            $short_hours = CarbonInterval::seconds($short_hours)->cascade()->forHumans(['parts' => 1, 'short' => true]);
+            $unpaid_hours = CarbonInterval::seconds($unpaid_hours)->cascade()->forHumans(['parts' => 1, 'short' => true]);
+            return view('employee.timecard-submit', compact('week','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours'));
+        }
+        return redirect()->back()->withError('Please create timecard first.');
+    }
+
+    public function submitTimeCard(Request $request)
+    {
+        return view('employee.timesheet');
     }
 
     public function timesheet(Request $request)

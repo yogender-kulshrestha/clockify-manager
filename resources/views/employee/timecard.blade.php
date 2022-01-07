@@ -1,10 +1,9 @@
 
 @extends('layouts.master')
 
-@section('title', 'All Time Cards')
+@section('title', 'Time Card')
 
 @section('style')
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 @endsection
 
 @section('breadcrumb')
@@ -27,9 +26,9 @@
                     </svg>
                 </a>
             </li>
-            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Time Cards</li>
+            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Time Card</li>
         </ol>
-        <h6 class="font-weight-bolder mb-0">All Time Cards</h6>
+        <h6 class="font-weight-bolder mb-0">Time Cards</h6>
     </nav>
 @endsection
 
@@ -41,35 +40,20 @@
                 <div class="card-header pb-0">
                     <div class="d-lg-flex">
                         <div>
-                            <h5 class="mb-0">All Time Cards</h5>
+                            <h5 class="mb-0">Time Card</h5>
                             <p class="text-sm mb-0">
 
                             </p>
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            {{--<div id="reportrange" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
-                                                <i class="fa fa-calendar"></i>&nbsp;
-                                                <span></span> <i class="fa fa-caret-down"></i>
-                                            </div>--}}
-                                            <input name="date_from" id="date_from" type="hidden"/>
-                                            <input name="date_to" id="date_to" type="hidden"/>
-                                            <input name="daterange" class="form-control" type="text" value="" id="datePicker">
-                                            {{--<input name="weekPicker" class="form-control" type="week" value="{{$currentWeek}}" id="weekPicker">--}}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
-                                        {{--<button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
-                                            Import
-                                        </button>
-                                        <button class="btn btn-outline-primary btn-sm export mb-0 mt-sm-0 mt-1" data-type="csv" type="button" name="button">Export</button>
-                                    --}}
-                                    </div>
-                                </div>
+                                <a href="{{route('employee.home')}}" class="btn bg-gradient-primary btn-sm mb-0"> Return to Home </a>
+                                <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
+                                {{--<button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
+                                Import
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm export mb-0 mt-sm-0 mt-1" data-type="csv" type="button" name="button">Export</button>
+                        --}}
                             </div>
                         </div>
                     </div>
@@ -81,23 +65,30 @@
                             <tr>
                                 <td>#</td>
                                 <td>ID</td>
-                                <td>Project</td>
-                                <td>Description</td>
+                                <td style="max-width: 40% !important;">Description</td>
                                 <td>Start Date</td>
                                 <td>Start Time</td>
                                 <td>End Date</td>
                                 <td>End Time</td>
                                 <td>Duration</td>
+                                <td>Error</td>
+                                <td>Remarks</td>
                                 <td>Action</td>
                             </tr>
                             </thead>
                             <tbody class="text-xs">
                             </tbody>
                         </table>
+                        <div class="text-center">
+                            <form id="submit_form" method="POST" action="{{route('employee.timecard.create')}}">
+                                @csrf
+                                <input type="hidden" name="start_time" value="{{$startDate}}"/>
+                                <input type="hidden" name="end_time" value="{{$endDate}}"/>
+                                <input type="hidden" name="week" value="{{$currentWeek}}"/>
+                                <input type="submit" value="Create Timecard" id="submit_button" class="btn btn-success btn-sm"/>
+                            </form>
+                        </div>
                     </div>
-                    {{--<div class="text-center">
-                        <input type="submit" class="submitReport" id="submitReport" class="btn btn-success btn-sm"/>
-                    </div>--}}
                 </div>
             </div>
         </div>
@@ -137,32 +128,25 @@
                     <div class="modal-body">
                         <input type="hidden" name="id" id="id"/>
                         <div class="form-group">
-                            <label for="project_id">Project <span class="text-danger">*</span></label>
-                            <select class="form-control" name="project_id" id="project_id" placeholder="Select Project">
-                            <option value="" selected>-- Select Project --</option>
-                            @foreach($projects as $project)
-                                <option value="{{$project->clockify_id}}">{{$project->name ?? ''}}</option>
-                            @endforeach
-                            </select>
-                            <span id="project_id_error" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
                             <label for="description">Description <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="description" id="description" placeholder="Enter Description">
+                            <textarea class="form-control" name="description" id="description" placeholder="Enter Description"></textarea>
                             <span id="description_error" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <input type="hidden" name="start_time" id="start_time"/>
-                            <input type="hidden" name="end_time" id="end_time"/>
-                            <label for="duration">Duration <span class="text-danger">*</span></label>
-                            <input type="duration" class="form-control" name="duration" id="duration" placeholder="Select Duration">
-                            <span id="duration_error" class="text-danger"></span>
+                            <label for="duration">From <span class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" name="start_time" id="start_time"/>
+                            <span id="start_time_error" class="text-danger"></span>
                         </div>
-                        {{--<div class="form-group">
-                            <label for="name">Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="name" id="name" placeholder="Enter Name">
-                            <span id="name_error" class="text-danger"></span>
-                        </div>--}}
+                        <div class="form-group">
+                            <label for="duration">To <span class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" name="end_time" id="end_time"/>
+                            <span id="end_time_error" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="remarks">Remarks <span class="text-danger">*</span></label>
+                            <textarea class="form-control" name="employee_remarks" id="remarks" placeholder="Enter Remarks"></textarea>
+                            <span id="remarks_error" class="text-danger"></span>
+                        </div>
                     </div>
                     <div class="modal-footer text-right">
                         <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
@@ -175,37 +159,13 @@
 @endsection
 
 @section('script')
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <!--  Datatable JS  -->
     <script src="{{asset('assets/js/plugins/datatables.js')}}"></script>
-    <script type="text/javascript">
-        $(function() {
-            var start = moment().subtract(29, 'days');
-            var end = moment();
-            function cb(start, end) {
-                $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-            }
-            $('#reportrange').daterangepicker({
-                startDate: start,
-                endDate: end,
-                ranges: {
-                    'Today': [moment(), moment()],
-                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-                    'This Month': [moment().startOf('month'), moment().endOf('month')],
-                    'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-                }
-            }, cb);
-            cb(start, end);
-        });
-    </script>
     <script>
         $(document).ready(function (){
             var datatable = $('#datatable').DataTable({
-                dom: 'B<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
-                //dom: 'Blfrtip',
+                //dom: 'B<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
+                dom: 'f',
                 language: {
                     paginate: {
                         next: '›',
@@ -214,7 +174,7 @@
                 },
                 "select": true,
                 "paging": true,
-                "pageLength": "10",
+                "pageLength": "-1",
                 "lengthMenu": [
                     [5, 10, 25, 50, 100, 1000, -1],
                     [5, 10, 25, 50, 100, 1000, 'ALL']
@@ -223,18 +183,20 @@
                 "serverSide": true,
                 "searching": true,
                 "responsive": true,
-                //"lengthChange": false,
+                "lengthChange": false,
+                'ordering': false,
                 "autoWidth": false,
                 "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
                 "ajax": {
-                    url: '{{ route('time-cards.index') }}',
+                    url: '{{ route('employee.timecard') }}',
                     data: function (d) {
-                        d.date_from = $('#date_from').val(),
-                        d.date_to = $('#date_to').val(),
-                        d.seletedWeek = $('#weekPicker').val()
+                        d.start_time = '2010-10-30',
+                        /*d.start_time = '{{$startDate}}',*/
+                        d.end_time = '{{$endDate}}',
+                        d.seletedWeek = '{{$currentWeek}}'
                     }
                 },
-                "order": [[ 4, "desc" ],[ 5, "desc" ]],
+                "order": [[ 3, "desc" ],[ 4, "desc" ]],
                 "columns": [
                     {
                         data: 'DT_RowIndex',
@@ -246,11 +208,6 @@
                         name: 'id',
                         defaultContent: '' ,
                         visible: false
-                    },
-                    {
-                        data: 'project',
-                        name: 'project',
-                        defaultContent: ''
                     },
                     {
                         data: 'description',
@@ -283,6 +240,16 @@
                         defaultContent: ''
                     },
                     {
+                        data: 'time_error',
+                        name: 'time_error',
+                        defaultContent: ''
+                    },
+                    {
+                        data: 'employee_remarks',
+                        name: 'employee_remarks',
+                        defaultContent: ''
+                    },
+                    {
                         data: 'action',
                         name: 'action',
                         defaultContent: '',
@@ -292,84 +259,52 @@
                 ]
             });
 
-            function timeDuration(startOf, endOf)
-            {
-                //$('#start_time').val(startOf.format('YYYY-MM-DD HH:ii:ss'));
-                //$('#end_time').val(endOf.format('YYYY-MM-DD HH:ii:ss'));
-                $('input[name="duration"]').daterangepicker({
-                    timePicker: true,
-                    startDate: startOf,
-                    endDate: endOf,
-                    locale: {
-                        format: 'MM/DD/YYYY HH:mm:ii'
-                    }
-                });
-            }
+            $('#start_time').attr('min', '{{\Carbon\Carbon::parse($startDate)->format('Y-m-d\TH:i')}}');
+            $('#start_time').attr('max', '{{\Carbon\Carbon::parse($endDate)->format('Y-m-d\TH:i')}}');
+            $('#end_time').attr('min', '{{\Carbon\Carbon::parse($startDate)->format('Y-m-d\TH:i')}}');
+            $('#end_time').attr('max', '{{\Carbon\Carbon::parse($endDate)->format('Y-m-d\TH:i')}}');
 
-            $(function() {
-                $('#date_from').val('{{Carbon\Carbon::now()->startOfMonth()->format('Y-m-d')}}');
-                $('#date_to').val('{{Carbon\Carbon::now()->endOfMonth()->format('Y-m-d')}}');
-                datatable.draw();
-                $('input[name="daterange"]').daterangepicker({
-                    "startDate": "{{Carbon\Carbon::now()->startOfMonth()->format('m/d/Y')}}",
-                    "endDate": "{{Carbon\Carbon::now()->endOfMonth()->format('m/d/Y')}}",
-                    "opens": "center",
-                    "drops": "down",
-                    //autoUpdateInput: false,
-                }, function(start, end, label) {
-                    $('#date_from').val(start.format('YYYY-MM-DD'));
-                    $('#date_to').val(end.format('YYYY-MM-DD'));
-                    //console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
-                    datatable.draw();
-                });
-                /*$('input[name="duration"]').daterangepicker({
-                    timePicker: true,
-                    startDate: moment().startOf('hour'),
-                    endDate: moment().startOf('hour').add(10, 'hour'),
-                    locale: {
-                        format: 'MM/DD/YYYY hh:mm A'
-                    }
-                });*/
-                timeDuration(moment().startOf('hour'), moment().startOf('hour').add(10, 'hour'));
+            /*$("#start_time").on('change', function () {
+                var minDate = new Date($(this).val()).toISOString().slice(0, -5);
+                $('#end_time').attr('min', minDate);
             });
 
-            $(document).on('change', '#duration', function (){
-                const myArray = $(this).val().split(" - ");
-                $('#start_time').val(myArray[0]);
-                $('#end_time').val(myArray[1]);
-            });
+            $("#end_time").on('change', function () {
+                var maxDate = new Date($(this).val()).toISOString().slice(0, -5);
+                $('#start_time').attr('max', maxDate);
+            });*/
 
             $(document).on("click", ".rowadd", function () {
                 $("#form_title").text('Create');
                 $("#id").val('');
-                $("#project_id").val('');
                 $("#description").val('');
-                timeDuration(moment().startOf('hour'), moment().startOf('hour').add(10, 'hour'));
-                $('#project_id_error').text('');
+                $("#start_time").val('');
+                $("#end_time").val('');
+                $("#remarks").val('');
                 $('#description_error').text('');
-                $('#duration_error').text('');
+                $('#start_time_error').text('');
                 $('#end_time_error').text('');
+                $('#remarks_error').text('');
                 $('.text-danger.hidden').text('*');
                 $("#add_button").text('Add');
             });
             $(document).on("click", ".rowedit", function () {
                 $("#form_title").text('Edit');
                 $("#id").val($(this).data('id'));
-                $("#project_id").val($(this).data('project_id'));
                 $("#description").val($(this).data('description'));
-                //$("#start_time").val($(this).data('start_time'));
-                //$("#end_time").val($(this).data('end_time'));
-                //$("#duration").val($(this).data('start_time')+' - '+$(this).data('end_time'));
-                console($(this).data('start_time'));
-                timeDuration(moment($(this).data('start_time')).format('MM/DD/YYYY HH:mm:ii'), moment($(this).data('end_time')).format('MM/DD/YYYY HH:mm:ii'));
-                $('#project_id_error').text('');
+                //console.log($(this).data('start_time'));
+                //console.log(new Date($(this).data('start_time')).toISOString().slice(0, -5));
+                $("#start_time").val(new Date($(this).data('start_time')).toISOString().slice(0, -5));
+                $("#end_time").val(new Date($(this).data('end_time')).toISOString().slice(0, -5));
+                $("#remarks").val($(this).data('remarks'));
                 $('#description_error').text('');
-                $('#duration_error').text('');
+                $('#start_time_error').text('');
                 $('#end_time_error').text('');
+                $('#remarks_error').text('');
                 $('.text-danger.hidden').text('');
                 $("#add_button").text('Update');
             });
-            const addForm = '{{ route('time-cards.store') }}';
+            const addForm = '{{ route('employee.timecard') }}';
             $('#add_form').submit(function (e) {
                 e.preventDefault();
                 var form_data = new FormData(this);
@@ -383,10 +318,10 @@
                     headers: {"X-CSRF-Token": $('meta[name="csrf-token"]').attr('content')},
                     beforeSend: function () {
                         $('#add_button').attr('disabled', 'disabled');
-                        $('#project_id_error').text('');
                         $('#description_error').text('');
                         $('#duration_error').text('');
                         $('#end_time_error').text('');
+                        $('#remarks_error').text('');
                         $('.text-danger.hidden').text('');
                     },
                     success: function (data) {
@@ -403,10 +338,10 @@
                     error: function (data) {
                         $('#add_button').attr('disabled', false);
                         let responseData = data.responseJSON;
-                        $('#project_id_error').text(responseData.errors['project_id']);
                         $('#description_error').text(responseData.errors['description']);
                         $('#duration_error').text(responseData.errors['start_time']);
                         $('#end_time_error').text(responseData.errors['end_time']);
+                        $('#remarks_error').text(responseData.errors['employee_remarks']);
                     }
                 });
             });

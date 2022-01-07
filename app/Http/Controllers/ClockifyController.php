@@ -109,7 +109,7 @@ class ClockifyController extends Controller
             foreach ($rows as $row){
                 $startTime=Carbon::parse(date('Y-m-d h:i:s', strtotime($row->timeInterval->start)));
                 $endTime=Carbon::parse(date('Y-m-d h:i:s', strtotime($row->timeInterval->end)));
-                $diff = $startTime->diff($endTime)->format('%H:%I:%S');;
+                $diff = $startTime->diff($endTime)->format('%H:%I:%S');
                 $input = [
                     'description' => $row->description,
                     'tag_ids' => $row->tagIds,
@@ -209,7 +209,8 @@ class ClockifyController extends Controller
     {
         $workspaces = Workspace::get();
         foreach ($workspaces as $workspace) {
-            $users = User::whereNotNull('clockify_id')->get();
+            $users = User::whereNotNull('clockify_id')//->get();
+                ->whereIn('clockify_id', ['609935adba9fdd7cafab3447','60aaf97e79793e3042ff8975'])->get();
             foreach ($users as $user) {
                 $rows = $this->clockify->apiRequest('workspaces/'.$workspace->clockify_id.'/user/' . $user->clockify_id . '/time-entries');
                 $rows = json_decode($rows);
@@ -217,7 +218,7 @@ class ClockifyController extends Controller
                     foreach ($rows as $row) {
                         $startTime = Carbon::parse(date('Y-m-d h:i:s', strtotime($row->timeInterval->start)));
                         $endTime = Carbon::parse(date('Y-m-d h:i:s', strtotime($row->timeInterval->end)));
-                        $diff = $startTime->diff($endTime)->format('%H:%I:%S');;
+                        $diff = $startTime->diffInSeconds($endTime);
                         $input = [
                             'description' => $row->description,
                             'tag_ids' => $row->tagIds,
@@ -225,8 +226,8 @@ class ClockifyController extends Controller
                             'billable' => $row->billable,
                             'task_id' => $row->taskId,
                             'project_id' => $row->projectId,
-                            'start_time' => $startTime,
-                            'end_time' => $endTime,
+                            'start_time' => $endTime,
+                            'end_time' => $startTime,
                             'duration_time' => $diff,
                             'duration' => $row->timeInterval->duration,
                             'workspace_id' => $row->workspaceId,

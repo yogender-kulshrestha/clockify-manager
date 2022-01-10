@@ -47,7 +47,11 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
-                                <a href="{{route('employee.home')}}" class="btn bg-gradient-primary btn-sm mb-0"> Return to Home </a>
+                                <a href="{{route('employee.home')}}" class="btn bg-gradient-primary btn-sm mb-0"> Return to Dashboard </a>
+                            </div>
+                        </div>
+                        <div class="ms-auto my-auto mt-lg-0 mt-4">
+                            <div class="ms-auto my-auto">
                             </div>
                         </div>
                     </div>
@@ -55,12 +59,13 @@
                 <div class="card-body px-0 pb-0">
                     <div class="px-5">
                         <h5>Name :- {{auth()->user()->name ?? ''}}</h5>
-                        <h5>Date &nbsp; :- {{\Carbon\Carbon::now()->format('d M, Y')}}</h5>
+                        <h5>Date &nbsp; :- {{\Carbon\Carbon::now()->format('d-M-Y')}}</h5>
                         <form id="add_form" autocomplete="off" enctype="multipart/form-data">
                             @csrf
                             <div class="row">
                                 <input type="hidden" name="id" id="id"/>
                                 <input type="hidden" name="status" id="status" value="Submitted"/>
+                                <input type="hidden" name="user_id" id="user_id" value="{{auth()->user()->clockify_id}}"/>
                                 {{--<div class="form-group">
                                     <label for="title">Title <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" name="title" id="title" placeholder="Enter Title">

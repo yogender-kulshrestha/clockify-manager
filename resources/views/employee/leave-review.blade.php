@@ -47,20 +47,25 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
-                                <a href="{{route('employee.home')}}" class="btn bg-gradient-primary btn-sm mb-0"> Return to Home </a>
+                                <a href="{{route('employee.home')}}" class="btn bg-gradient-primary btn-sm mb-0"> Return to Dashboard </a>
+                            </div>
+                        </div>
+                        <div class="ms-auto my-auto mt-lg-0 mt-4">
+                            <div class="ms-auto my-auto">
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="card-body px-0 pb-0">
                     <div class="px-5">
-                        <h5>Name :- {{auth()->user()->name ?? ''}}</h5>
-                        <h5>Date &nbsp; :- {{\Carbon\Carbon::parse($data->updated_at)->format('d M, Y')}}</h5>
+                        <h5>Name :- {{$data->user->name ?? ''}}</h5>
+                        <h5>Date &nbsp; :- {{\Carbon\Carbon::parse($data->updated_at)->format('d-M-Y')}}</h5>
                         <form id="add_form" autocomplete="off" enctype="multipart/form-data">
                             @csrf
                             <div class="row">
                                 <input type="hidden" name="id" id="id" value="{{$data->id}}"/>
                                 <input type="hidden" name="status" id="status" value="Approved"/>
+                                <input type="hidden" name="user_id" id="user_id" value="{{$data->user_id}}"/>
                                 {{--<div class="form-group">
                                     <label for="title">Title <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" name="title" id="title" placeholder="Enter Title">
@@ -114,8 +119,8 @@
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <button type="submit" value="Approved" style="float: right;" class="btn bg-gradient-dark btn-sm" id="add_button">Approve</button>
-                                    <button type="submit" value="Revise and Resubmit" style="float: right;" class="btn bg-gradient-dark btn-sm mx-2" id="add2_button">Revise/Resubmit</button>
+                                    <button type="submit" value="Approved" style="float: right;" class="btn btn-success btn-sm" id="add_button">Approve</button>
+                                    <button type="submit" value="Revise and Resubmit" style="float: right;" class="btn btn-danger btn-sm mx-2" id="add2_button">Revise/Resubmit</button>
                                 </div>
                             </div>
                         </form>

@@ -14,10 +14,10 @@
                                 <p class="mb-0">Enter your email and password to login</p>
                             </div>
                             <div class="card-body">
-                                <form method="POST" action="{{ route('signin') }}" role="form">
+                                <form method="POST" action="{{ route('login') }}" role="form">
                                     @csrf
-                                    <div class="mb-3">
-                                        <select name="role" id="role" class="form-control form-control-lg @error('role') is-invalid @enderror" {{--autocomplete="role"--}} autofocus>
+                                    {{--<div class="mb-3">
+                                        <select name="role" id="role" class="form-control form-control-lg @error('role') is-invalid @enderror" --}}{{--autocomplete="role"--}}{{-- autofocus>
                                             <option value="">-- Select your Role -- </option>
                                             <option value="admin" @if(old('role') == 'admin') selected @endif>Super Admin</option>
                                             <option value="hr" @if(old('role') == 'hr') selected @endif>HR</option>
@@ -28,7 +28,7 @@
                                             <strong>{{ $message }}</strong>
                                         </span>
                                         @enderror
-                                    </div>
+                                    </div>--}}
                                     <div class="mb-3">
                                         <input type="email" name="email" value="{{ old('email') }}" class="form-control form-control-lg @error('email') is-invalid @enderror" placeholder="Email"
                                                aria-label="Email" {{--autocomplete="email"--}} autofocus>

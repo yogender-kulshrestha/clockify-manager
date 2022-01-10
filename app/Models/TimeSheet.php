@@ -25,4 +25,9 @@ class TimeSheet extends Model
     {
         return $this->hasOne(Workspace::class,'clockify_id','workspace_id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'clockify_id');
+    }
 }

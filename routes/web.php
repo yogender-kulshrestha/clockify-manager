@@ -83,10 +83,11 @@ Route::name('employee.')->prefix('employee')->group(function(){
     Route::get('/timecard', [EmployeeController::class, 'timecard'])->name('timecard');
     Route::post('/timecard', [EmployeeController::class, 'addTimeCard']);
     Route::post('/timecard/create', [EmployeeController::class, 'createTimeCard'])->name('timecard.create');
+    Route::get('/timecard/exception', [EmployeeController::class, 'statusTimeCard'])->name('timecard.exception');
     Route::get('/timecard/{week}/submit', [EmployeeController::class, 'forSubmitTimeCard'])->name('timecard.submit');
     Route::post('/timecard/{week}/submit', [EmployeeController::class, 'submitTimecard']);
 
-    Route::post('/timecard/{week}/view', [EmployeeController::class, 'timecard'])->name('timecard.view');
-    Route::get('/timecard/{week}/edit', [EmployeeController::class, 'timecard'])->name('timecard.edit');
-    Route::get('/timecard/{week}/review', [EmployeeController::class, 'timecard'])->name('timecard.review');
+    Route::get('/timecard/{week}/view', [EmployeeController::class, 'viewTimecard'])->name('timecard.view');
+    Route::get('/timecard/{week}/edit', [EmployeeController::class, 'editTimecard'])->name('timecard.edit');
+    Route::get('/timecard/{week}/review', [EmployeeController::class, 'reviewTimecard'])->name('timecard.review');
 });

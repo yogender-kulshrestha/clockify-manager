@@ -55,26 +55,28 @@ function leave_description($leave_id) {
     $leave = Leave::find($leave_id);
     if($leave) {
         if($leave->user_id == auth()->user()->clockify_id) {
-            $date = ($leave->date_from == $leave->date_to) ? Carbon::parse($leave->date_from)->format('d M Y') : Carbon::parse($leave->date_from)->format('d').'-'.Carbon::parse($leave->date_to)->format('d M Y');
+            $date = ($leave->date_from == $leave->date_to) ? Carbon::parse($leave->date_from)->format('M d Y') : Carbon::parse($leave->date_from)->format('M d').'-'.Carbon::parse($leave->date_to)->format('d Y');
             return 'Leave Request '.$date;
         } else {
             $user = $leave->user->name;
-            $date = ($leave->date_from == $leave->date_to) ? Carbon::parse($leave->date_from)->format('d M Y') : Carbon::parse($leave->date_from)->format('d').'-'.Carbon::parse($leave->date_to)->format('d M Y');
+            $date = ($leave->date_from == $leave->date_to) ? Carbon::parse($leave->date_from)->format('M d Y') : Carbon::parse($leave->date_from)->format('M d').'-'.Carbon::parse($leave->date_to)->format('d Y');
             return '['.$user.'] Leave Request '.$date;
         }
     }
 }
 
-function timecard_description($leave_id) {
-    $leave = Leave::find($leave_id);
-    if($leave) {
-        if($leave->user_id == auth()->user()->clockify_id) {
-            $date = ($leave->date_from == $leave->date_to) ? Carbon::parse($leave->date_from)->format('d M Y') : Carbon::parse($leave->date_from)->format('d').'-'.Carbon::parse($leave->date_to)->format('d M Y');
-            return 'Leave Request '.$date;
-        } else {
-            $user = $leave->user->name;
-            $date = ($leave->date_from == $leave->date_to) ? Carbon::parse($leave->date_from)->format('d M Y') : Carbon::parse($leave->date_from)->format('d').'-'.Carbon::parse($leave->date_to)->format('d M Y');
-            return '['.$user.'] Leave Request '.$date;
-        }
+function timecard_description($week, $user_id, $user_name) {
+    $seletedWeek = explode('-',Str::replace('W','',$week));
+    $date = Carbon::now();
+    $date->setISODate($seletedWeek[0],$seletedWeek[1]);
+    if($date->startOfWeek()->format('Y') == $date->endOfWeek()->format('Y')) {
+        $data = $date->startOfWeek()->format('M d').' - '.$date->endOfWeek()->format('M d Y');
+    } else {
+        $data = $date->startOfWeek()->format('M d Y').' - '.$date->endOfWeek()->format('M d Y');
+    }
+    if($user_id == auth()->user()->clockify_id) {
+        return 'Week of '.$data;
+    } else {
+        return '['.$user_name.'] Week of '.$data;
     }
 }

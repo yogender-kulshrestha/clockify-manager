@@ -47,15 +47,19 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
-                                <a href="{{route('employee.home')}}" class="btn bg-gradient-primary btn-sm mb-0"> Return to Home </a>
+                                <a href="{{route('employee.home')}}" class="btn bg-gradient-primary btn-sm mb-0"> Return to Dashboard </a>
+                            </div>
+                        </div>
+                        <div class="ms-auto my-auto mt-lg-0 mt-4">
+                            <div class="ms-auto my-auto">
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="card-body px-0 pb-0">
                     <div class="px-5">
-                        <h5>Name :- {{auth()->user()->name ?? ''}}</h5>
-                        <h5>Date &nbsp; :- {{\Carbon\Carbon::parse($data->updated_at)->format('d M, Y')}}</h5>
+                        <h5>Name :- {{$data->user->name ?? ''}}</h5>
+                        <h5>Date &nbsp; :- {{\Carbon\Carbon::parse($data->updated_at)->format('d-M-Y')}}</h5>
                         <form id="add_form" autocomplete="off" enctype="multipart/form-data">
                             @csrf
                             <div class="row">

@@ -32,7 +32,15 @@ class EmployeeController extends Controller
 
     public function home()
     {
-        return view('employee.home');
+        $now = Carbon::now()->subWeek();
+        $weekOfYear=($now->weekOfYear < 10) ? '0'.$now->weekOfYear : $now->weekOfYear;
+        $currentWeek = $now->year.'-W'.$weekOfYear;
+        $date = Carbon::now();
+        $date->setISODate($now->year,$weekOfYear);
+        $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
+        $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
+        $weekCount=1;
+        return view('employee.home', compact('weekCount','currentWeek', 'startDate', 'endDate'));
     }
 
     public function records(Request $request)
@@ -427,7 +435,7 @@ class EmployeeController extends Controller
             $unpaid_hours = $dt->diffInHours($dt->copy()->addSeconds($unpaid_hours));
             return view('employee.timecard-view', compact('data','week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours'));
         }
-        return redirect()->to(route('employee.home'))->withError('Please create timecard first.');
+        return redirect()->to(route('employee.records'))->withError('Please create timecard first.');
     }
 
     public function editTimecard($id)
@@ -453,7 +461,7 @@ class EmployeeController extends Controller
             $unpaid_hours = $dt->diffInHours($dt->copy()->addSeconds($unpaid_hours));
             return view('employee.timecard-edit', compact('data','week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours'));
         }
-        return redirect()->to(route('employee.home'))->withError('Please create timecard first.');
+        return redirect()->to(route('employee.records'))->withError('Please create timecard first.');
     }
 
     public function reviewTimecard($id)
@@ -479,7 +487,12 @@ class EmployeeController extends Controller
             $unpaid_hours = $dt->diffInHours($dt->copy()->addSeconds($unpaid_hours));
             return view('employee.timecard-review', compact('data','week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours'));
         }
-        return redirect()->to(route('employee.home'))->withError('Please create timecard first.');
+        return redirect()->to(route('employee.records'))->withError('Please create timecard first.');
+    }
+
+    public function submitReviewTimesheet(Request $request)
+    {
+        return view('employee.timesheet');
     }
 
     public function timesheet(Request $request)

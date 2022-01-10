@@ -1,4 +1,3 @@
-
 @extends('layouts.master')
 
 @section('title', 'Time Card')
@@ -151,7 +150,7 @@
                             <span id="end_time_error" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <label for="remarks">Remarks <span class="text-danger">*</span></label>
+                            <label for="remarks">Remarks <span class="text-danger d-none">*</span></label>
                             <textarea class="form-control" name="employee_remarks" id="remarks" placeholder="Enter Remarks"></textarea>
                             <span id="remarks_error" class="text-danger"></span>
                         </div>

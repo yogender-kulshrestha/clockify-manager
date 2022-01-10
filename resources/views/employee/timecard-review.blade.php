@@ -82,45 +82,44 @@
                         <h5>Date &nbsp; :- {{\Carbon\Carbon::parse($startDate)->format('d-M-Y')}} - {{\Carbon\Carbon::parse($endDate)->format('d-M-Y')}}</h5>
                     </div>
                     <div class="table-responsive p-3">
-                        <table class="table table-flush" id="datatable">
-                            <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                            <tr>
-                                <td>Date</td>
-                                <td>Flags</td>
-                                <td>OT Hours</td>
-                                <td>Net Hours</td>
-                                <td>Employee Remarks</td>
-                                <td>Approver Remarks</td>
-                                {{--<td>Action</td>--}}
-                            </tr>
-                            </thead>
-                            <tbody class="text-xs">
-                            @foreach($rows as $k=>$row)
-                                @php
-                                    $dt = \Carbon\Carbon::now();
-                                    $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($row->ot_hours));
-                                    $ot_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->ot_hours)->subHours($ot_hours));
-                                    $net_hours = $dt->diffInHours($dt->copy()->addSeconds($row->net_hours));
-                                    $net_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->net_hours)->subHours($net_hours));
-                                @endphp
-                                <tr @if($row->exception == 1 ) style="background-color: rgba(255,0,0,0.3);" @endif>
-                                    <td>{{$row->date}}</td>
-                                    <td>{{$row->flags}}</td>
-                                    <td>{{$ot_hours}}:{{$ot_minutes}}</td>
-                                    <td>{{$net_hours}}:{{$net_minutes}}</td>
-                                    <td>{{$row->employee_remarks}}</td>
-                                    <td>
-                                        <input type="hidden" name="remarks[{{$k}}]['id']" value="{{$row->id}}">
-                                        <textarea name="remarks[{{$k}}]['remarks']">{{$row->approver_remarks}}</textarea>
-                                    </td>
+                        <form id="add_form" method="POST" action="{{route('employee.timecard.review', ['week' => $week])}}">
+                            @csrf
+                            <table class="table table-flush" id="datatable">
+                                <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                <tr>
+                                    <td>Date</td>
+                                    <td>Flags</td>
+                                    <td>OT Hours</td>
+                                    <td>Net Hours</td>
+                                    <td>Employee Remarks</td>
+                                    <td>Approver Remarks</td>
+                                    {{--<td>Action</td>--}}
                                 </tr>
-                            @endforeach
-                            </tbody>
-                        </table>
-                        <div class="text-center">
-                            <form id="add_form" method="POST" action="{{route('employee.timecard.submit', ['week' => $week])}}">
-                            {{--<form action="#">--}}
-                                @csrf
+                                </thead>
+                                <tbody class="text-xs">
+                                @foreach($rows as $k=>$row)
+                                    @php
+                                        $dt = \Carbon\Carbon::now();
+                                        $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($row->ot_hours));
+                                        $ot_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->ot_hours)->subHours($ot_hours));
+                                        $net_hours = $dt->diffInHours($dt->copy()->addSeconds($row->net_hours));
+                                        $net_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->net_hours)->subHours($net_hours));
+                                    @endphp
+                                    <tr @if($row->exception == 1 ) style="background-color: rgba(255,0,0,0.3);" @endif>
+                                        <td>{{$row->date}}</td>
+                                        <td>{{$row->flags}}</td>
+                                        <td>{{$ot_hours}}:{{$ot_minutes}}</td>
+                                        <td>{{$net_hours}}:{{$net_minutes}}</td>
+                                        <td>{{$row->employee_remarks}}</td>
+                                        <td>
+                                            <input type="hidden" name="remarks[{{$k}}]['id']" value="{{$row->id}}">
+                                            <textarea name="remarks[{{$k}}]['remarks']">{{$row->approver_remarks}}</textarea>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                            <div class="text-center">
                                 <input type="hidden" name="start_time" value="{{$startDate}}"/>
                                 <input type="hidden" name="end_time" value="{{$endDate}}"/>
                                 <input type="hidden" name="week" value="{{$week}}"/>
@@ -128,8 +127,8 @@
                                 <input type="hidden" name="status" id="status" value="Approved"/>
                                 <input type="submit" value="Revise and Resubmit" id="submit_button" class="btn btn-danger btn-sm"/>
                                 <input type="submit" value="Approved" id="submit_button" class="btn btn-success btn-sm"/>
-                            </form>
-                        </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>

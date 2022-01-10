@@ -178,7 +178,7 @@
                         $('#modal-create').modal('hide');
                         if (data.success === true) {
                             toastr.success(data.message);
-                            window.location.href = "{{route('employee.home')}}";
+                            window.location.href = "{{route('employee.records')}}";
                         } else {
                             toastr.error(data.message);
                         }

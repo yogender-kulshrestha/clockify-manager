@@ -199,7 +199,6 @@ class Clockify
         } else {
             return $result;
         }
-
     }
 
     public function getCurlObject($url, $headers, $payload, $headerFunction = false)

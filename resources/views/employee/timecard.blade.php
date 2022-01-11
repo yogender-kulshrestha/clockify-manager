@@ -203,7 +203,7 @@
                         d.seletedWeek = '{{$currentWeek}}'
                     }
                 },
-                "order": [[ 3, "desc" ],[ 4, "desc" ]],
+                "order": [[ 2, "asc" ],[ 3, "asc" ]],
                 "columns": [
                     {
                         data: 'DT_RowIndex',

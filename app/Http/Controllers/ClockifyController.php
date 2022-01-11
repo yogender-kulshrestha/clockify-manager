@@ -207,17 +207,25 @@ class ClockifyController extends Controller
 
     public function timeSheets(Request $request)
     {
+        $dayOfTheWeek = Carbon::now()->dayOfWeek;
+        $weekday = $dayOfTheWeek-1;
+        if($dayOfTheWeek == 0) {
+            $weekday = $dayOfTheWeek-1;
+        }
+        $data = [
+            'start' => Carbon::now()->startOfDay()->subDay($weekday)->toISOString()
+        ];
         $workspaces = Workspace::get();
         foreach ($workspaces as $workspace) {
-            $users = User::whereNotNull('clockify_id')//->get();
-                ->whereIn('clockify_id', ['609935adba9fdd7cafab3447','60aaf97e79793e3042ff8975'])->get();
+            $users = User::whereNotNull('clockify_id')->get();
+                //->whereIn('clockify_id', ['609935adba9fdd7cafab3447','60aaf97e79793e3042ff8975'])->get();
             foreach ($users as $user) {
                 $rows = $this->clockify->apiRequest('workspaces/'.$workspace->clockify_id.'/user/' . $user->clockify_id . '/time-entries');
                 $rows = json_decode($rows);
                 if(!empty($rows) && count($rows) > 0) {
                     foreach ($rows as $row) {
                         $startTime = Carbon::parse(date('Y-m-d h:i:s', strtotime($row->timeInterval->start)));
-                        $endTime = Carbon::parse(date('Y-m-d h:i:s', strtotime($row->timeInterval->end)));
+                        $endTime = Carbon::parse(date('Y-m-d h:i:s', strtotime($row->timeInterval->end ?? Carbon::now())));
                         $diff = $startTime->diffInSeconds($endTime);
                         $input = [
                             'description' => $row->description,

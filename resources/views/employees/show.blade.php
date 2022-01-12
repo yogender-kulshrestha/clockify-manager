@@ -44,17 +44,34 @@
 
                             </p>
                         </div>
+                        {{--<div class="ms-auto my-auto mt-lg-0 mt-4">
+                            <div class="ms-auto my-auto">
+                                <a href="{{route('employee.home')}}" class="btn bg-gradient-primary btn-sm mb-0"> Return to Dashboard </a>
+                            </div>
+                        </div>--}}
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
-                            <div class="ms-auto my-auto p-4" style="border: #0a001f 2px solid;">
-                                Total Hours :- {{total_working_hours($data->clockify_id, '2010-01-01 00:00:00', '2022-01-01 00:00:00')}}
-                                <br>Leave Hours :- 0
-                                <br>Short Hours :- 0
-                                <br>Unpaid Hours :- 0
-                                {{--<button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
-                                --}}{{--<button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
-                                    Import
-                                </button><button class="btn btn-outline-primary btn-sm export mb-0 mt-sm-0 mt-1" data-type="csv" type="button" name="button">Export</button>
-                            --}}</div>
+                            <div class="ms-auto my-auto">
+                                <table class="border text-sm mt-3 w-100" style="min-width: 150px;">
+                                    <tbody class="">
+                                    <tr>
+                                        <td>Total Hours</td>
+                                        <td>{{total_working_hours($data->clockify_id, '2010-01-01 00:00:00', '2022-01-01 00:00:00')}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Leave Hours</td>
+                                        <td>{{00}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Short Hours</td>
+                                        <td>{{00}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Unpaid Hours</td>
+                                        <td>{{00}}</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -63,13 +80,13 @@
                         <table class="table table-flush" id="datatable">
                             <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                             <tr>
-                                <th>#</th>
-                                <th>Record Type</th>
-                                <th>Modified Date</th>
-                                <th>Description</th>
-                                <th>Remarks</th>
-                                <th>Status</th>
-                                <th>Action</th>
+                                <td>#</td>
+                                <td>Record Type</td>
+                                <td>Modified Date</td>
+                                <td>Description</td>
+                                {{--<td>Remarks</td>--}}
+                                <td>Status</td>
+                                <td>Action</td>
                             </tr>
                             </thead>
                             <tbody class="text-xs">
@@ -256,11 +273,11 @@
                         name: 'description',
                         defaultContent: ''
                     },
-                    {
+                    /*{
                         data: 'remarks',
                         name: 'remarks',
                         defaultContent: ''
-                    },
+                    },*/
                     {
                         data: 'status',
                         name: 'status',
@@ -271,7 +288,8 @@
                         name: 'action',
                         defaultContent: '',
                         orderable: false,
-                        searchable: false
+                        searchable: false,
+                        visible: false
                     },
                 ]
             });

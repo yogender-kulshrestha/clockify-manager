@@ -1,4 +1,4 @@
-@extends('layouts.master')
+@extends('employee.master')
 
 @section('title', 'All Records')
 

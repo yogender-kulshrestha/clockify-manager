@@ -14,7 +14,7 @@
                                 <p class="mb-0">Enter your email and password to login</p>
                             </div>
                             <div class="card-body">
-                                <form method="POST" action="{{ route('login') }}" role="form">
+                                <form method="POST" action="{{ route('signin') }}" role="form">
                                     @csrf
                                     {{--<div class="mb-3">
                                         <select name="role" id="role" class="form-control form-control-lg @error('role') is-invalid @enderror" --}}{{--autocomplete="role"--}}{{-- autofocus>

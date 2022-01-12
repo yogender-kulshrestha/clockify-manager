@@ -606,7 +606,7 @@ class EmployeeController extends Controller
                     return '<a data-id="'.$query->id.'" data-name="'.$query->name.'" data-email="'.$query->email.'" data-status="'.$query->status.'" class="mx-1 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
                         <i class="fas fa-edit text-primary"></i>
                     </a>
-                    <a href="'.route('employees.show',['employee'=>$query->id]).'" data-bs-toggle="tooltip" data-bs-original-title="View">
+                    <a href="'.route('employees.show',['employee'=>$query->clockify_id]).'" data-bs-toggle="tooltip" data-bs-original-title="View">
                         <i class="fas fa-eye text-success"></i>
                     </a>
                     <!--<a data-id="'.$query->id.'" class="mx-1 rowdelete" data-bs-toggle="tooltip" data-bs-original-title="Delete">
@@ -677,30 +677,66 @@ class EmployeeController extends Controller
         if ($request->ajax()) {
             $data = Record::where('user_id', $request->user_id)->latest()->get();
             return Datatables::of($data)
-                ->addIndexColumn()
-                ->addColumn('action', function ($query) {
-                    return '<a data-id="' . $query->id . '" data-record_type="' . $query->record_type . '" data-description="' . $query->description . '" data-remarks="' . $query->remarks . '" data-status="' . $query->status . '" class="mx-1 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
-                        <i class="fas fa-edit text-primary"></i>
-                    </a>
-                    <!--<a data-id="' . $query->id . '" class="mx-1 rowdelete" data-bs-toggle="tooltip" data-bs-original-title="Delete">
-                        <i class="fas fa-trash text-danger"></i>
-                    </a>-->';
+                ->addIndexColumn()->addColumn('action', function($query) {
+                    if($query->user_id == auth()->user()->clockify_id) {
+                        if($query->record_type == 'leave'){
+                            if($query->status == 'Revise and Resubmit'){
+                                $action='<a href="'.route('employee.leave.edit',["id"=>$query->description]).'" class="btn btn-dark btn-sm">Edit</a>';
+                            } else {
+                                $action='<a href="'.route('employee.leave.view',["id"=>$query->description]).'" class="btn btn-dark btn-sm">View</a>';
+                            }
+                        } else {
+                            if($query->status == 'Revise and Resubmit'){
+                                $action='<a href="'.route('employee.timecard.edit',["week"=>$query->id]).'" class="btn btn-dark btn-sm">Edit</a>';
+                            } else {
+                                $action='<a href="'.route('employee.timecard.view',["week"=>$query->id]).'" class="btn btn-dark btn-sm">View</a>';
+                            }
+                        }
+                    } else {
+                        if($query->record_type == 'leave'){
+                            if($query->status == 'Submitted'){
+                                $action='<a href="'.route('employee.leave.review',["id"=>$query->description]).'" class="btn btn-dark btn-sm">Review</a>';
+                            } else {
+                                $action='<a href="'.route('employee.leave.view',["id"=>$query->description]).'" class="btn btn-dark btn-sm">View</a>';
+                            }
+                        } else {
+                            if($query->status == 'Submitted'){
+                                $action='<a href="'.route('employee.timecard.review',["week"=>$query->id]).'" class="btn btn-dark btn-sm">Review</a>';
+                            } else {
+                                $action='<a href="'.route('employee.timecard.view',["week"=>$query->id]).'" class="btn btn-dark btn-sm">View</a>';
+                            }
+                        }
+                    }
+                    return $action;
                 })->editColumn('status', function ($query) {
-                    if ($query->status == 'active') {
+                    /*if($query->status == 'active'){
                         $status = 'badge-success';
                     } else {
                         $status = 'badge-danger';
                     }
-                    return '<span class="badge badge-sm ' . $status . '">' . $query->status . '</span>';
+                    return '<span class="badge badge-sm '.$status.'">'.$query->status.'</span>';*/
+                    return '<span>'.$query->status.'</span>';
+                })->editColumn('record_type', function ($query) {
+                    if($query->user_id == auth()->user()->clockify_id) {
+                        return ucfirst($query->record_type);
+                    } else {
+                        return 'Approver Request ['.ucfirst($query->record_type).']';
+                    }
                 })->editColumn('created_at', function ($query) {
-                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->created_at)->format('d M, Y');
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->created_at)->format('d-M-Y');
                 })->editColumn('updated_at', function ($query) {
-                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->updated_at)->format('d M, Y');
-                })
-                ->rawColumns(['status', 'action', 'created_at', 'updated_at'])
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->updated_at)->format('d-M-Y');
+                })->editColumn('description', function ($query) {
+                    if(Str::lower($query->record_type) == 'timecard'){
+                        $name = $query->user->name ?? '';
+                        return timecard_description($query->description, $query->user_id, $name);
+                    } else {
+                        return leave_description($query->description);
+                    }
+                })->rawColumns(['record_type','status','action','created_at','updated_at'])
                 ->make(true);
         }
-        $data = User::find($id);
+        $data = User::where('clockify_id', $id)->first();
         if ($data) {
             return view('employees.show', compact('data'));
         }

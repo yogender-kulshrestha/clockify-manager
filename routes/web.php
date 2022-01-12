@@ -30,7 +30,7 @@ use App\Http\Controllers\AuthController;
 
 Route::get('/', function () {
     return view('auth.login');
-});
+})->middleware('guest');
 Route::get('/signin', function () {
     return view('auth.login');
 })->name('signin');
@@ -54,25 +54,31 @@ Route::get('/clockify/report', [ClockifyController::class, 'report'])->name('clo
 Route::get('/clockify/project', [ClockifyController::class, 'project'])->name('clockify.project');
 
 //Routes
-//Route::get('/home', [HomeController::class, 'index'])->name('home');
-Route::get('/home', [EmployeeController::class, 'home'])->name('home');
+Route::middleware('admin')->group(function() {
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::resource('hr-managers', HrController::class);//->only(['index', 'store', 'destroy']);
+    Route::resource('employees', EmployeeController::class);//->only(['index', 'store', 'destroy']);
+    Route::resource('approvers', ApproverController::class);
+    Route::resource('time-sheets', TimeSheetController::class);
+    Route::resource('time-cards', TimeCardController::class);
+    Route::resource('records', RecordController::class);
+    Route::resource('leaves', LeaveController::class);
+    Route::resource('profile', ProfileController::class);
+
+    Route::resource('employees-time-sheets', EmployeesTimeSheetController::class);
+    Route::resource('employees-time-cards', EmployeesTimeCardController::class);
+    Route::resource('employees-records', EmployeesRecordController::class);
+    Route::resource('employees-leaves', EmployeesLeaveController::class);
+});
+
+Route::name('hr.')->prefix('hr-manager')->middleware('hr')->group(function() {
+    Route::get('/', [EmployeeController::class, 'home'])->name('home');
+});
+
+
 Route::get('/employees/ajax', [EmployeeController::class, 'employeesAjax'])->name('employees.ajax');
-Route::resource('hr-managers', HrController::class);//->only(['index', 'store', 'destroy']);
-Route::resource('employees', EmployeeController::class);//->only(['index', 'store', 'destroy']);
-Route::resource('approvers', ApproverController::class);
-Route::resource('time-sheets', TimeSheetController::class);
-Route::resource('time-cards', TimeCardController::class);
-Route::resource('records', RecordController::class);
-Route::resource('leaves', LeaveController::class);
-Route::resource('profile', ProfileController::class);
-
-Route::resource('employees-time-sheets', EmployeesTimeSheetController::class);
-Route::resource('employees-time-cards', EmployeesTimeCardController::class);
-Route::resource('employees-records', EmployeesRecordController::class);
-Route::resource('employees-leaves', EmployeesLeaveController::class);
-
-Route::name('employee.')->prefix('employee')->group(function(){
-    Route::get('/home', [EmployeeController::class, 'home'])->name('home');
+Route::name('employee.')->prefix('employee')->middleware('employee')->group(function(){
+    Route::get('/', [EmployeeController::class, 'home'])->name('home');
     Route::get('/records', [EmployeeController::class, 'records'])->name('records');
 
     Route::get('/request-leave', [EmployeeController::class, 'requestLeave'])->name('request-leave');

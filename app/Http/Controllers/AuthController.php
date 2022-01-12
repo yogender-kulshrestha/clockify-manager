@@ -10,14 +10,20 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'role' => 'required',
             'email' => 'required',
             'password' => 'required',
         ]);
 
-        $credentials = $request->only('role', 'email', 'password');
+        $credentials = $request->only('email', 'password');
         if (Auth::attempt($credentials)) {
-            return redirect()->intended('home')->withSuccess('Login in Successfully.');
+            if(auth()->user()->role == 'user') {
+                $route = 'employee.home';
+            } elseif(auth()->user()->role == 'hr') {
+                $route = 'hr.home';
+            } else {
+                $route = 'home';
+            }
+            return redirect()->intended(route($route))->withSuccess('Login in Successfully.');
         }
         return redirect("login")->withInput()->withError('Login details are not valid');
     }

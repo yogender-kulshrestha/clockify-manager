@@ -1,5 +1,4 @@
-
-@extends('layouts.master')
+@extends('employee.master')
 
 @section('title', 'Time Card')
 

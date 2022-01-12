@@ -39,7 +39,43 @@ class EmployeeController extends Controller
         $date->setISODate($now->year,$weekOfYear);
         $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
         $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
-        $weekCount=1;
+
+        /*$fromDate = Carbon::now()->subWeeks(5)->startOfWeek();
+        $time_weeks=Record::select('description as week')
+            ->where('user_id',auth()->user()->clockify_id)->where('record_type', 'timecard')->groupBy('description')->get();
+        $date2 = Carbon::now();
+        $weekOfYear2=($date2->weekOfYear < 10) ? '0'.$date2->weekOfYear : $date2->weekOfYear;
+        $currentWeek2 = $date2->year.'-W'.$weekOfYear2;
+        $all_weeks=TimeSheet::select('week')
+            ->where('user_id',auth()->user()->clockify_id)
+            ->where('week', '!=', $currentWeek2)
+            //->where('start_time', '>=', $fromDate)
+            ->whereNotIn('week', $time_weeks)
+            ->whereNotNull('week')
+            ->where('week', '!=', '')
+            ->where('week', '!=', ' ')
+            ->groupBy('week')->limit(5)->orderByDesc('start_time')->get();*/
+        $week=[];
+        $now = Carbon::now();
+        for($i=0;$i<5;$i++) {
+            $now->subWeek();
+            $weekOfYear=($now->weekOfYear < 10) ? '0'.$now->weekOfYear : $now->weekOfYear;
+            $currentWeek = $now->year.'-W'.$weekOfYear;
+            $week[$i]['week'] = $currentWeek;
+        }
+        $time_weeks=Record::select('description as week')
+            ->where('user_id',auth()->user()->clockify_id)
+            ->whereIn('description', $week)
+            ->where('record_type', 'timecard')->groupBy('description')->get()->toArray();
+        $all_weeks=[];
+        $allweeks=array_diff_key($week,$time_weeks);
+        foreach ($allweeks as $w){
+            $all_weeks[] = $w;
+        }
+        $weekCount=count($all_weeks);
+        if($weekCount == 1) {
+            $currentWeek = $all_weeks[0]->week;
+        }
         return view('employee.home', compact('weekCount','currentWeek', 'startDate', 'endDate'));
     }
 
@@ -196,7 +232,7 @@ class EmployeeController extends Controller
         abort(404);
     }
 
-    public function timecard(Request $request)
+    public function timecard($week, Request $request)
     {
         if($request->ajax()) {
             $data = TimeSheet::query()->where('start_time', '>=', $request->start_time)
@@ -235,17 +271,19 @@ class EmployeeController extends Controller
                 ->rawColumns(['status','action','start_date','start_time','end_date','end_time','time_duration','created_at'])
                 ->make(true);
         }
-        $now = Carbon::now()->subWeek();
+        /*$now = Carbon::now()->subWeek();
         $weekOfYear=($now->weekOfYear < 10) ? '0'.$now->weekOfYear : $now->weekOfYear;
-        $currentWeek = $now->year.'-W'.$weekOfYear;
+        $currentWeek = $now->year.'-W'.$weekOfYear;*/
+        $currentWeek=$week;
+        $seletedWeek = explode('-',Str::replace('W','',$week));
         $date = Carbon::now();
-        $date->setISODate($now->year,$weekOfYear);
+        $date->setISODate($seletedWeek[0],$seletedWeek[1]);
         $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
         $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
         return view('employee.timecard', compact('currentWeek','startDate','endDate'));
     }
 
-    public function addTimeCard(Request $request)
+    public function addTimeCard($week, Request $request)
     {
         try {
             $rules = [
@@ -260,9 +298,18 @@ class EmployeeController extends Controller
             $date_from = Carbon::parse($request->start_time);
             $date_to = Carbon::parse($request->end_time);
             $diff = $date_from->diffInSeconds($date_to);
+            $now = Carbon::parse($request->start_time);
+            $weekOfYear=($now->weekOfYear < 10) ? '0'.$now->weekOfYear : $now->weekOfYear;
+            $currentWeek = $now->year.'-W'.$weekOfYear;
+            if($weekOfYear == 52) {
+                if($now->format('d') < 7) {
+                    $currentWeek = $now->subYear()->year.'-W'.$weekOfYear;
+                }
+            }
             $input = $request->only( 'description', 'start_time', 'end_time', 'employee_remarks');
             $input['duration']=$diff;
             $input['duration_time']=$diff;
+            $input['week']=$currentWeek;
             $input['clockify_id']=time();
             $input['billable']='0';
             $input['workspace_id']=time();
@@ -443,6 +490,7 @@ class EmployeeController extends Controller
         $data = Record::where('record_type', 'timecard')->where('id', $id)->first();
         if($data !== null) {
             $week=$data->description;
+            $currentWeek=$week;
             $rows=TimeCard::where('user_id', $data->user_id)->where('week', $week)->get();
             $seletedWeek = explode('-',Str::replace('W','',$week));
             $date = Carbon::now();
@@ -459,7 +507,7 @@ class EmployeeController extends Controller
             $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($ot_hours));
             $short_hours = $dt->diffInHours($dt->copy()->addSeconds($short_hours));
             $unpaid_hours = $dt->diffInHours($dt->copy()->addSeconds($unpaid_hours));
-            return view('employee.timecard-edit', compact('data','week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours'));
+            return view('employee.timecard-edit', compact('data','week','currentWeek','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours'));
         }
         return redirect()->to(route('employee.records'))->withError('Please create timecard first.');
     }
@@ -490,14 +538,40 @@ class EmployeeController extends Controller
         return redirect()->to(route('employee.records'))->withError('Please create timecard first.');
     }
 
-    public function submitReviewTimesheet(Request $request)
+    public function submitReviewTimecard($week, Request $request)
     {
-        return view('employee.timesheet');
+        $remarks = $request->remarks;
+        $data = Record::where('description', $week)->where('user_id', $request->user_id)->update(['status' => $request->status]);
+        if($data) {
+            foreach ($remarks as $remark) {
+                TimeCard::where('id', $remark['id'])->update(['approver_remarks' => $remark['remarks']]);
+            }
+            return redirect()->to(route('employee.records'))->withSuccess('Timecard '.$request->status.' successfully.');
+        }
+        return redirect()->to(route('employee.records'))->withError('Timecard '.$request->status.' failed.');
     }
 
     public function timesheet(Request $request)
     {
-        return view('employee.timesheet');
+        $week=[];
+        $now = Carbon::now();
+        for($i=0;$i<5;$i++) {
+            $now->subWeek();
+            $weekOfYear=($now->weekOfYear < 10) ? '0'.$now->weekOfYear : $now->weekOfYear;
+            $currentWeek = $now->year.'-W'.$weekOfYear;
+            $week[$i]['week'] = $currentWeek;
+        }
+        $time_weeks=Record::select('description as week')
+            ->where('user_id',auth()->user()->clockify_id)
+            ->whereIn('description', $week)
+            ->where('record_type', 'timecard')->groupBy('description')->get()->toArray();
+        $all_weeks=[];
+        $allweeks=array_diff_key($week,$time_weeks);
+        foreach ($allweeks as $w){
+            $all_weeks[] = $w;
+        }
+        $all_weeks=json_decode(json_encode($all_weeks));
+        return view('employee.timesheet', compact('all_weeks'));
     }
 
     public function employeesAjax(Request $request)

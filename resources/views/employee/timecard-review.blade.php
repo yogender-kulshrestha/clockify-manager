@@ -112,8 +112,9 @@
                                         <td>{{$net_hours}}:{{$net_minutes}}</td>
                                         <td>{{$row->employee_remarks}}</td>
                                         <td>
-                                            <input type="hidden" name="remarks[{{$k}}]['id']" value="{{$row->id}}">
-                                            <textarea name="remarks[{{$k}}]['remarks']">{{$row->approver_remarks}}</textarea>
+                                            <input type="hidden" name="remarks[{{$k}}][id]" value="{{$row->id}}"/>
+                                            <input type="hidden" name="remarks[{{$k}}][date]" value="{{$row->date}}"/>
+                                            <textarea name="remarks[{{$k}}][remarks]">{{$row->approver_remarks}}</textarea>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -146,7 +147,7 @@
                     <p>You can browse your computer for a file.</p>
                     <input type="text" placeholder="Browse file..." class="form-control mb-3">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="" id="importCheck" checked="">
+                        <input class="form-check-input" type="checkbox" value="" id="importCheck" checked=""/>
                         <label class="custom-control-label" for="importCheck">I accept the terms and conditions</label>
                     </div>
                 </div>
@@ -234,7 +235,7 @@
                 "autoWidth": false,
                 "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
                 "ajax": {
-                    url: '{{ route('employee.timecard') }}',
+                    url: '{{ route('employee.timecard', ['week' => $week]) }}',
                     data: function (d) {
                         d.start_time = '',
                         d.end_time = '',

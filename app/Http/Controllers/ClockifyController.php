@@ -227,6 +227,14 @@ class ClockifyController extends Controller
                         $startTime = Carbon::parse(date('Y-m-d h:i:s', strtotime($row->timeInterval->start)));
                         $endTime = Carbon::parse(date('Y-m-d h:i:s', strtotime($row->timeInterval->end ?? Carbon::now())));
                         $diff = $startTime->diffInSeconds($endTime);
+
+                        $weekOfYear=($startTime->weekOfYear < 10) ? '0'.$startTime->weekOfYear : $startTime->weekOfYear;
+                        $currentWeek = $startTime->year.'-W'.$weekOfYear;
+                        if($weekOfYear == 52) {
+                            if($startTime->format('d') < 7) {
+                                $currentWeek = $startTime->subYear()->year.'-W'.$weekOfYear;
+                            }
+                        }
                         $input = [
                             'description' => $row->description,
                             'tag_ids' => $row->tagIds,
@@ -234,6 +242,7 @@ class ClockifyController extends Controller
                             'billable' => $row->billable,
                             'task_id' => $row->taskId,
                             'project_id' => $row->projectId,
+                            'week' => $currentWeek,
                             'start_time' => $endTime,
                             'end_time' => $startTime,
                             'duration_time' => $diff,

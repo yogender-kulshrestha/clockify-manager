@@ -230,7 +230,7 @@
                 "autoWidth": false,
                 "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
                 "ajax": {
-                    url: '{{ route('employee.timecard') }}',
+                    url: '{{ route('employee.timecard', ['week' => $week]) }}',
                     data: function (d) {
                         d.start_time = '',
                         d.end_time = '',

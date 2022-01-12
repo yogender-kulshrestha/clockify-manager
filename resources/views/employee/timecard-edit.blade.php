@@ -1,4 +1,3 @@
-
 @extends('layouts.master')
 
 @section('title', 'Time Card')
@@ -28,7 +27,7 @@
             </li>
             <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Time Card</li>
         </ol>
-        <h6 class="font-weight-bolder mb-0">Time Card</h6>
+        <h6 class="font-weight-bolder mb-0">Time Cards</h6>
     </nav>
 @endsection
 
@@ -52,32 +51,18 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
-                                <table class="border text-sm mt-3 w-100" style="min-width: 150px;">
-                                    <tbody class="">
-                                    <tr>
-                                        <td>Total Hours</td>
-                                        <td>{{$net_hours ?? 0}}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Leave Hours</td>
-                                        <td>{{$ot_hours ?? 0}}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Short Hours</td>
-                                        <td>{{$short_hours ?? 0}}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Unpaid Hours</td>
-                                        <td>{{$unpaid_hours ?? 0}}</td>
-                                    </tr>
-                                    </tbody>
-                                </table>
+                                <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
+                                {{--<button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
+                                Import
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm export mb-0 mt-sm-0 mt-1" data-type="csv" type="button" name="button">Export</button>
+                        --}}
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="card-body px-0 pb-0">
-                    <div class="px-3 mt-n6">
+                    <div class="px-3">
                         <h5>Name :- {{$data->user->name ?? ''}}</h5>
                         <h5>Date &nbsp; :- {{\Carbon\Carbon::parse($startDate)->format('d-M-Y')}} - {{\Carbon\Carbon::parse($endDate)->format('d-M-Y')}}</h5>
                     </div>
@@ -85,45 +70,30 @@
                         <table class="table table-flush" id="datatable">
                             <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                             <tr>
-                                <td>Date</td>
-                                <td>Flags</td>
-                                <td>OT Hours</td>
-                                <td>Net Hours</td>
-                                <td>Employee Remarks</td>
-                                <td>Approver Remarks</td>
-                                {{--<td>Action</td>--}}
+                                <td>#</td>
+                                <td>ID</td>
+                                <td style="max-width: 40% !important;">Description</td>
+                                <td>Start Date</td>
+                                <td>Start Time</td>
+                                <td>End Date</td>
+                                <td>End Time</td>
+                                <td>Duration</td>
+                                <td>Error</td>
+                                <td>Remarks</td>
+                                <td>Action</td>
                             </tr>
                             </thead>
                             <tbody class="text-xs">
-                            @foreach($rows as $row)
-                                @php
-                                    $dt = \Carbon\Carbon::now();
-                                    $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($row->ot_hours));
-                                    $ot_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->ot_hours)->subHours($ot_hours));
-                                    $net_hours = $dt->diffInHours($dt->copy()->addSeconds($row->net_hours));
-                                    $net_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->net_hours)->subHours($net_hours));
-                                @endphp
-                                <tr @if($row->exception == 1 ) style="background-color: rgba(255,0,0,0.3);" @endif>
-                                    <td>{{$row->date}}</td>
-                                    <td>{{$row->flags}}</td>
-                                    <td>{{$ot_hours}}:{{$ot_minutes}}</td>
-                                    <td>{{$net_hours}}:{{$net_minutes}}</td>
-                                    <td>{{$row->employee_remarks}}</td>
-                                    <td>{{$row->approver_remarks}}</td>
-                                </tr>
-                            @endforeach
                             </tbody>
                         </table>
                         <div class="text-center">
-                            <form id="add_form" method="POST" action="{{route('employee.timecard.submit', ['week' => $week])}}">
-                            {{--<form action="#">--}}
+                            <form id="submit_form" method="POST" action="{{route('employee.timecard.create')}}">
                                 @csrf
+                                <input type="hidden" name="user_id" value="{{$data->user_id}}"/>
                                 <input type="hidden" name="start_time" value="{{$startDate}}"/>
                                 <input type="hidden" name="end_time" value="{{$endDate}}"/>
-                                <input type="hidden" name="week" value="{{$week}}"/>
-                                <input type="hidden" name="user_id" value="{{auth()->user()->clockify_id}}"/>
-                                <input type="hidden" name="status" value="Submitted"/>
-                                <input type="submit" value="Submit Timecard" id="submit_button" class="btn btn-success btn-sm"/>
+                                <input type="hidden" name="week" value="{{$currentWeek}}"/>
+                                <input type="submit" value="Create Timecard" id="submit_button" class="btn btn-success btn-sm"/>
                             </form>
                         </div>
                     </div>
@@ -165,6 +135,7 @@
                     </div>
                     <div class="modal-body">
                         <input type="hidden" name="id" id="id"/>
+                        <input type="hidden" name="user_id" id="user_id" value="{{$data->user_id}}"/>
                         <div class="form-group">
                             <label for="description">Description <span class="text-danger">*</span></label>
                             <textarea class="form-control" name="description" id="description" placeholder="Enter Description"></textarea>
@@ -181,7 +152,7 @@
                             <span id="end_time_error" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <label for="remarks">Remarks <span class="text-danger">*</span></label>
+                            <label for="remarks">Remarks <span class="text-danger d-none">*</span></label>
                             <textarea class="form-control" name="employee_remarks" id="remarks" placeholder="Enter Remarks"></textarea>
                             <span id="remarks_error" class="text-danger"></span>
                         </div>
@@ -200,15 +171,10 @@
     <!--  Datatable JS  -->
     <script src="{{asset('assets/js/plugins/datatables.js')}}"></script>
     <script>
-
         $(document).ready(function (){
             var datatable = $('#datatable').DataTable({
-                dom: 'f',
-                'ordering': false,
-            });
-            var datatable = $('#datatable2').DataTable({
                 //dom: 'B<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
-                dom: '',
+                dom: 'f',
                 language: {
                     paginate: {
                         next: '›',
@@ -231,14 +197,16 @@
                 "autoWidth": false,
                 "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
                 "ajax": {
-                    url: '{{ route('employee.timecard') }}',
+                    url: '{{ route('employee.timecard', ['week' => $currentWeek]) }}',
                     data: function (d) {
-                        d.start_time = '',
-                        d.end_time = '',
-                        d.seletedWeek = ''
+                        /*d.start_time = '2010-10-30',*/
+                        d.user_id = '{{$data->user_id}}',
+                        d.start_time = '{{$startDate}}',
+                        d.end_time = '{{$endDate}}',
+                        d.seletedWeek = '{{$currentWeek}}'
                     }
                 },
-                "order": [[ 3, "desc" ],[ 4, "desc" ]],
+                "order": [[ 2, "asc" ],[ 3, "asc" ]],
                 "columns": [
                     {
                         data: 'DT_RowIndex',
@@ -308,21 +276,160 @@
                 },
             });
 
-            const addForm = '{{ route('employee.request-leave') }}';
+            $('#start_time').attr('min', '{{\Carbon\Carbon::parse($startDate)->format('Y-m-d\TH:i')}}');
+            $('#start_time').attr('max', '{{\Carbon\Carbon::parse($endDate)->format('Y-m-d\TH:i')}}');
+            $('#end_time').attr('min', '{{\Carbon\Carbon::parse($startDate)->format('Y-m-d\TH:i')}}');
+            $('#end_time').attr('max', '{{\Carbon\Carbon::parse($endDate)->format('Y-m-d\TH:i')}}');
+
+            /*$("#start_time").on('change', function () {
+                var minDate = new Date($(this).val()).toISOString().slice(0, -5);
+                $('#end_time').attr('min', minDate);
+            });
+
+            $("#end_time").on('change', function () {
+                var maxDate = new Date($(this).val()).toISOString().slice(0, -5);
+                $('#start_time').attr('max', maxDate);
+            });*/
+
+            $(document).on("click", ".rowadd", function () {
+                $("#form_title").text('Create');
+                $("#id").val('');
+                $("#description").val('');
+                $("#start_time").val('');
+                $("#end_time").val('');
+                $("#remarks").val('');
+                $('#description_error').text('');
+                $('#start_time_error').text('');
+                $('#end_time_error').text('');
+                $('#remarks_error').text('');
+                $('.text-danger.hidden').text('*');
+                $("#add_button").text('Add');
+            });
+            $(document).on("click", ".rowedit", function () {
+                $("#form_title").text('Edit');
+                $("#id").val($(this).data('id'));
+                $("#description").val($(this).data('description'));
+                //console.log($(this).data('start_time'));
+                //console.log(new Date($(this).data('start_time')).toISOString().slice(0, -5));
+                $("#start_time").val(new Date($(this).data('start_time')).toISOString().slice(0, -5));
+                $("#end_time").val(new Date($(this).data('end_time')).toISOString().slice(0, -5));
+                $("#remarks").val($(this).data('remarks'));
+                $('#description_error').text('');
+                $('#start_time_error').text('');
+                $('#end_time_error').text('');
+                $('#remarks_error').text('');
+                $('.text-danger.hidden').text('');
+                $("#add_button").text('Update');
+            });
+            const addForm = '{{ route('employee.timecard', ['week' => $week]) }}';
             $('#add_form').submit(function (e) {
                 e.preventDefault();
-                //var form_data = new FormData(this);
+                var form_data = new FormData(this);
+                $.ajax({
+                    method: "POST",
+                    url: addForm,
+                    data: form_data,
+                    contentType: false,
+                    processData: false,
+                    dataType: "json",
+                    headers: {"X-CSRF-Token": $('meta[name="csrf-token"]').attr('content')},
+                    beforeSend: function () {
+                        $('#add_button').attr('disabled', 'disabled');
+                        $('#description_error').text('');
+                        $('#duration_error').text('');
+                        $('#end_time_error').text('');
+                        $('#remarks_error').text('');
+                        $('.text-danger.hidden').text('');
+                    },
+                    success: function (data) {
+                        $("#add_form")[0].reset();
+                        $('#modal-create').modal('hide');
+                        datatable.draw();
+                        if (data.success === true) {
+                            toastr.success(data.message);
+                        } else {
+                            toastr.error(data.message);
+                        }
+                        $('#add_button').attr('disabled', false);
+                    },
+                    error: function (data) {
+                        $('#add_button').attr('disabled', false);
+                        let responseData = data.responseJSON;
+                        $('#description_error').text(responseData.errors['description']);
+                        $('#duration_error').text(responseData.errors['start_time']);
+                        $('#end_time_error').text(responseData.errors['end_time']);
+                        $('#remarks_error').text(responseData.errors['employee_remarks']);
+                    }
+                });
+            });
+
+            $(document).on("click", ".exception", function () {
+                var status = $(this).data('exception') == 0 ? '1' : '0';
+                var id = $(this).data('id');
                 Swal.fire({
                     title: 'Are you sure?',
-                    text: "Once you submit you cannot make changes.",
+                    text: "",
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#3085d6',
                     cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, submit it!'
+                    confirmButtonText: 'Yes!'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        this.submit();
+                        $.ajax({
+                            type: "GET",
+                            url: '{{ route('employee.timecard.exception') }}',
+                            data: {
+                                'status': status,
+                                'id': id
+                            },
+                            dataType: "json",
+                            success: function (data) {
+                                datatable.draw();
+                                //console.log(data);
+                                if (data.success === true) {
+                                    toastr.success(data.message)
+                                } else {
+                                    toastr.error(data.message)
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+
+            $(document).on('click', '.rowdelete', function() {
+                var id = $(this).data('id');
+                var url = '{{ route('time-cards.destroy', ':id') }}';
+                url = url.replace(':id', id);
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: url,
+                            type: "DELETE",
+                            dataType: "JSON",
+                            data:{
+                                'id': id,
+                                '_token': '{{ csrf_token() }}',
+                            },
+                            success: function(data) {
+                                //console.log(data);
+                                datatable.draw();
+                                if (data.success === true) {
+                                    toastr.success(data.message)
+                                } else {
+                                    toastr.error(data.message)
+                                }
+                            }
+                        });
                     }
                 })
             });

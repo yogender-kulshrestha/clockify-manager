@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('title', 'All Time Cards')
+@section('title', 'Request Leave')
 
 @section('style')
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
@@ -26,9 +26,10 @@
                     </svg>
                 </a>
             </li>
-            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Time Cards</li>
+            <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Employee</a></li>
+            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Request Leave</li>
         </ol>
-        <h6 class="font-weight-bolder mb-0">All Time Cards</h6>
+        <h6 class="font-weight-bolder mb-0">Request Leave</h6>
     </nav>
 @endsection
 
@@ -40,134 +41,62 @@
                 <div class="card-header pb-0">
                     <div class="d-lg-flex">
                         <div>
-                            <h5 class="mb-0">All Time Cards</h5>
+                            <h5 class="mb-0"></h5>
                             <p class="text-sm mb-0">
-
                             </p>
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            {{--<div id="reportrange" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
-                                                <i class="fa fa-calendar"></i>&nbsp;
-                                                <span></span> <i class="fa fa-caret-down"></i>
-                                            </div>--}}
-                                            <input name="date_from" id="date_from" type="hidden"/>
-                                            <input name="date_to" id="date_to" type="hidden"/>
-                                            <input name="daterange" class="form-control" type="text" value="" id="datePicker">
-                                            {{--<input name="weekPicker" class="form-control" type="week" value="{{$currentWeek}}" id="weekPicker">--}}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
-                                        {{--<button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
-                                            Import
-                                        </button>
-                                        <button class="btn btn-outline-primary btn-sm export mb-0 mt-sm-0 mt-1" data-type="csv" type="button" name="button">Export</button>
-                                    --}}
-                                    </div>
-                                </div>
+                                <a href="{{route('employee.home')}}" class="btn bg-gradient-primary btn-sm mb-0"> Return to Dashboard </a>
+                            </div>
+                        </div>
+                        <div class="ms-auto my-auto mt-lg-0 mt-4">
+                            <div class="ms-auto my-auto">
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="card-body px-0 pb-0">
-                    <div class="table-responsive p-3">
-                        <table class="table table-flush" id="datatable">
-                            <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                            <tr>
-                                <td>#</td>
-                                <td>ID</td>
-                                <td>Project</td>
-                                <td>Description</td>
-                                <td>Start Date</td>
-                                <td>Start Time</td>
-                                <td>End Date</td>
-                                <td>End Time</td>
-                                <td>Duration</td>
-                                <td>Action</td>
-                            </tr>
-                            </thead>
-                            <tbody class="text-xs">
-                            </tbody>
-                        </table>
-                    </div>
-                    {{--<div class="text-center">
-                        <input type="submit" class="submitReport" id="submitReport" class="btn btn-success btn-sm"/>
-                    </div>--}}
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="import" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog mt-lg-10">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="ModalLabel">Import CSV</h5>
-                    <i class="fas fa-upload ms-3"></i>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>You can browse your computer for a file.</p>
-                    <input type="text" placeholder="Browse file..." class="form-control mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="" id="importCheck" checked="">
-                        <label class="custom-control-label" for="importCheck">I accept the terms and conditions</label>
+                    <div class="px-5">
+                        <h5>Name :- {{auth()->user()->name ?? ''}}</h5>
+                        <h5>Date &nbsp; :- {{\Carbon\Carbon::now()->format('d-M-Y')}}</h5>
+                        <form id="add_form" autocomplete="off" enctype="multipart/form-data">
+                            @csrf
+                            <div class="row">
+                                <input type="hidden" name="id" id="id"/>
+                                <input type="hidden" name="status" id="status" value="Submitted"/>
+                                <input type="hidden" name="user_id" id="user_id" value="{{auth()->user()->clockify_id}}"/>
+                                {{--<div class="form-group">
+                                    <label for="title">Title <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="title" id="title" placeholder="Enter Title">
+                                    <span id="title_error" class="text-danger"></span>
+                                </div>--}}
+                                <div class="col-md-6 offset-md-3">
+                                    <div class="form-group">
+                                        <label for="leave_type_id">Select a week <span class="text-danger">*</span></label>
+                                        <select required class="form-control" name="leave_type_id" id="leave_type_id" placeholder="Select ">
+                                            <option value="" disabled selected>-- Select --</option>
+                                            @foreach($all_weeks as $week)
+                                                @php
+                                                    $seletedWeek = explode('-',Str::replace('W','',$week->week));
+                                                    $date = \Carbon\Carbon::now();
+                                                    $date->setISODate($seletedWeek[0],$seletedWeek[1]);
+                                                    $startDate=$date->startOfWeek()->format('d M Y');
+                                                    $endDate=$date->endOfWeek()->format('d M Y');
+                                                @endphp
+                                                <option value="{{$week->week}}">{{$startDate}} - {{$endDate}} [{{$week->week}}]</option>
+                                            @endforeach
+                                        </select>
+                                        <span id="leave_type_id_error" class="text-danger"></span>
+                                    </div>
+                                    <div class="text-right">
+                                        <button type="submit" style="float: right;" class="btn bg-gradient-primary btn-sm" id="add_button">Go</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn bg-gradient-primary btn-sm">Upload</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="modal-create" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="add_form" autocomplete="off" enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="form_title">Create</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" name="id" id="id"/>
-                        <div class="form-group">
-                            <label for="project_id">Project <span class="text-danger">*</span></label>
-                            <select class="form-control" name="project_id" id="project_id" placeholder="Select Project">
-                            <option value="" selected>-- Select Project --</option>
-                            @foreach($projects as $project)
-                                <option value="{{$project->clockify_id}}">{{$project->name ?? ''}}</option>
-                            @endforeach
-                            </select>
-                            <span id="project_id_error" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="description">Description <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="description" id="description" placeholder="Enter Description">
-                            <span id="description_error" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <input type="hidden" name="start_time" id="start_time"/>
-                            <input type="hidden" name="end_time" id="end_time"/>
-                            <label for="duration">Duration <span class="text-danger">*</span></label>
-                            <input type="duration" class="form-control" name="duration" id="duration" placeholder="Select Duration">
-                            <span id="duration_error" class="text-danger"></span>
-                        </div>
-                        {{--<div class="form-group">
-                            <label for="name">Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="name" id="name" placeholder="Enter Name">
-                            <span id="name_error" class="text-danger"></span>
-                        </div>--}}
-                    </div>
-                    <div class="modal-footer text-right">
-                        <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn bg-gradient-primary btn-sm" id="add_button">Add</button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
@@ -178,271 +107,25 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <!--  Datatable JS  -->
     <script src="{{asset('assets/js/plugins/datatables.js')}}"></script>
-    <script type="text/javascript">
-        $(function() {
-            var start = moment().subtract(29, 'days');
-            var end = moment();
-            function cb(start, end) {
-                $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-            }
-            $('#reportrange').daterangepicker({
-                startDate: start,
-                endDate: end,
-                ranges: {
-                    'Today': [moment(), moment()],
-                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-                    'This Month': [moment().startOf('month'), moment().endOf('month')],
-                    'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-                }
-            }, cb);
-            cb(start, end);
-        });
-    </script>
     <script>
         $(document).ready(function (){
-            var datatable = $('#datatable').DataTable({
-                dom: 'B<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
-                //dom: 'Blfrtip',
-                language: {
-                    paginate: {
-                        next: '›',
-                        previous: '‹'
-                    }
-                },
-                "select": true,
-                "paging": true,
-                "pageLength": "10",
-                "lengthMenu": [
-                    [5, 10, 25, 50, 100, 1000, -1],
-                    [5, 10, 25, 50, 100, 1000, 'ALL']
-                ],
-                "processing": true,
-                "serverSide": true,
-                "searching": true,
-                "responsive": true,
-                //"lengthChange": false,
-                "autoWidth": false,
-                "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
-                "ajax": {
-                    url: '{{ route('time-cards.index') }}',
-                    data: function (d) {
-                        d.date_from = $('#date_from').val(),
-                        d.date_to = $('#date_to').val(),
-                        d.seletedWeek = $('#weekPicker').val()
-                    }
-                },
-                "order": [[ 4, "desc" ],[ 5, "desc" ]],
-                "columns": [
-                    {
-                        data: 'DT_RowIndex',
-                        name: 'DT_RowIndex',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'id',
-                        name: 'id',
-                        defaultContent: '' ,
-                        visible: false
-                    },
-                    {
-                        data: 'project',
-                        name: 'project',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'description',
-                        name: 'description',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'start_date',
-                        name: 'start_date',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'start_time',
-                        name: 'start_time',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'end_date',
-                        name: 'end_date',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'end_time',
-                        name: 'end_time',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'time_duration',
-                        name: 'time_duration',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'action',
-                        name: 'action',
-                        defaultContent: '',
-                        orderable: false,
-                        searchable: false
-                    },
-                ]
+            $('#date_from').attr('min', new Date().toISOString().split('T')[0]);
+            $('#date_to').attr('min', new Date().toISOString().split('T')[0]);
+
+            $("#date_from").on('change', function () {
+                var minDate = new Date($(this).val()).toISOString().split('T')[0];
+                $('#date_to').attr('min', minDate);
             });
 
-            function timeDuration(startOf, endOf)
-            {
-                //$('#start_time').val(startOf.format('YYYY-MM-DD HH:ii:ss'));
-                //$('#end_time').val(endOf.format('YYYY-MM-DD HH:ii:ss'));
-                $('input[name="duration"]').daterangepicker({
-                    timePicker: true,
-                    startDate: startOf,
-                    endDate: endOf,
-                    locale: {
-                        format: 'MM/DD/YYYY HH:mm:ii'
-                    }
-                });
-            }
-
-            $(function() {
-                $('#date_from').val('{{Carbon\Carbon::now()->startOfMonth()->format('Y-m-d')}}');
-                $('#date_to').val('{{Carbon\Carbon::now()->endOfMonth()->format('Y-m-d')}}');
-                datatable.draw();
-                $('input[name="daterange"]').daterangepicker({
-                    "startDate": "{{Carbon\Carbon::now()->startOfMonth()->format('m/d/Y')}}",
-                    "endDate": "{{Carbon\Carbon::now()->endOfMonth()->format('m/d/Y')}}",
-                    "opens": "center",
-                    "drops": "down",
-                    //autoUpdateInput: false,
-                }, function(start, end, label) {
-                    $('#date_from').val(start.format('YYYY-MM-DD'));
-                    $('#date_to').val(end.format('YYYY-MM-DD'));
-                    //console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
-                    datatable.draw();
-                });
-                /*$('input[name="duration"]').daterangepicker({
-                    timePicker: true,
-                    startDate: moment().startOf('hour'),
-                    endDate: moment().startOf('hour').add(10, 'hour'),
-                    locale: {
-                        format: 'MM/DD/YYYY hh:mm A'
-                    }
-                });*/
-                timeDuration(moment().startOf('hour'), moment().startOf('hour').add(10, 'hour'));
+            $("#date_to").on('change', function () {
+                var maxDate = new Date($(this).val()).toISOString().split('T')[0];
+                $('#date_from').attr('max', maxDate);
             });
 
-            $(document).on('change', '#duration', function (){
-                const myArray = $(this).val().split(" - ");
-                $('#start_time').val(myArray[0]);
-                $('#end_time').val(myArray[1]);
-            });
-
-            $(document).on("click", ".rowadd", function () {
-                $("#form_title").text('Create');
-                $("#id").val('');
-                $("#project_id").val('');
-                $("#description").val('');
-                timeDuration(moment().startOf('hour'), moment().startOf('hour').add(10, 'hour'));
-                $('#project_id_error').text('');
-                $('#description_error').text('');
-                $('#duration_error').text('');
-                $('#end_time_error').text('');
-                $('.text-danger.hidden').text('*');
-                $("#add_button").text('Add');
-            });
-            $(document).on("click", ".rowedit", function () {
-                $("#form_title").text('Edit');
-                $("#id").val($(this).data('id'));
-                $("#project_id").val($(this).data('project_id'));
-                $("#description").val($(this).data('description'));
-                //$("#start_time").val($(this).data('start_time'));
-                //$("#end_time").val($(this).data('end_time'));
-                //$("#duration").val($(this).data('start_time')+' - '+$(this).data('end_time'));
-                console($(this).data('start_time'));
-                timeDuration(moment($(this).data('start_time')).format('MM/DD/YYYY HH:mm:ii'), moment($(this).data('end_time')).format('MM/DD/YYYY HH:mm:ii'));
-                $('#project_id_error').text('');
-                $('#description_error').text('');
-                $('#duration_error').text('');
-                $('#end_time_error').text('');
-                $('.text-danger.hidden').text('');
-                $("#add_button").text('Update');
-            });
-            const addForm = '{{ route('time-cards.store') }}';
             $('#add_form').submit(function (e) {
                 e.preventDefault();
-                var form_data = new FormData(this);
-                $.ajax({
-                    method: "POST",
-                    url: addForm,
-                    data: form_data,
-                    contentType: false,
-                    processData: false,
-                    dataType: "json",
-                    headers: {"X-CSRF-Token": $('meta[name="csrf-token"]').attr('content')},
-                    beforeSend: function () {
-                        $('#add_button').attr('disabled', 'disabled');
-                        $('#project_id_error').text('');
-                        $('#description_error').text('');
-                        $('#duration_error').text('');
-                        $('#end_time_error').text('');
-                        $('.text-danger.hidden').text('');
-                    },
-                    success: function (data) {
-                        $("#add_form")[0].reset();
-                        $('#modal-create').modal('hide');
-                        datatable.draw();
-                        if (data.success === true) {
-                            toastr.success(data.message);
-                        } else {
-                            toastr.error(data.message);
-                        }
-                        $('#add_button').attr('disabled', false);
-                    },
-                    error: function (data) {
-                        $('#add_button').attr('disabled', false);
-                        let responseData = data.responseJSON;
-                        $('#project_id_error').text(responseData.errors['project_id']);
-                        $('#description_error').text(responseData.errors['description']);
-                        $('#duration_error').text(responseData.errors['start_time']);
-                        $('#end_time_error').text(responseData.errors['end_time']);
-                    }
-                });
-            });
-            $(document).on('click', '.rowdelete', function() {
-                var id = $(this).data('id');
-                var url = '{{ route('time-cards.destroy', ':id') }}';
-                url = url.replace(':id', id);
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You won't be able to revert this!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, delete it!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: url,
-                            type: "DELETE",
-                            dataType: "JSON",
-                            data:{
-                                'id': id,
-                                '_token': '{{ csrf_token() }}',
-                            },
-                            success: function(data) {
-                                //console.log(data);
-                                datatable.draw();
-                                if (data.success === true) {
-                                    toastr.success(data.message)
-                                } else {
-                                    toastr.error(data.message)
-                                }
-                            }
-                        });
-                    }
-                })
+                var week = $('#leave_type_id').val();
+                window.location.href = "timecard/"+week;
             });
         });
     </script>

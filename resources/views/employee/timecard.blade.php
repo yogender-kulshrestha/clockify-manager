@@ -89,6 +89,7 @@
                         <div class="text-center">
                             <form id="submit_form" method="POST" action="{{route('employee.timecard.create')}}">
                                 @csrf
+                                <input type="hidden" name="user_id" value="{{auth()->user()->clockify_id}}"/>
                                 <input type="hidden" name="start_time" value="{{$startDate}}"/>
                                 <input type="hidden" name="end_time" value="{{$endDate}}"/>
                                 <input type="hidden" name="week" value="{{$currentWeek}}"/>
@@ -134,6 +135,7 @@
                     </div>
                     <div class="modal-body">
                         <input type="hidden" name="id" id="id"/>
+                        <input type="hidden" name="user_id" id="user_id" value="{{auth()->user()->clockify_id}}"/>
                         <div class="form-group">
                             <label for="description">Description <span class="text-danger">*</span></label>
                             <textarea class="form-control" name="description" id="description" placeholder="Enter Description"></textarea>
@@ -195,9 +197,10 @@
                 "autoWidth": false,
                 "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
                 "ajax": {
-                    url: '{{ route('employee.timecard') }}',
+                    url: '{{ route('employee.timecard',['week' => $currentWeek]) }}',
                     data: function (d) {
                         /*d.start_time = '2010-10-30',*/
+                        d.user_id = '{{auth()->user()->clockify_id}}',
                         d.start_time = '{{$startDate}}',
                         d.end_time = '{{$endDate}}',
                         d.seletedWeek = '{{$currentWeek}}'
@@ -318,7 +321,7 @@
                 $('.text-danger.hidden').text('');
                 $("#add_button").text('Update');
             });
-            const addForm = '{{ route('employee.timecard') }}';
+            const addForm = '{{ route('employee.timecard', ['week' => $currentWeek]) }}';
             $('#add_form').submit(function (e) {
                 e.preventDefault();
                 var form_data = new FormData(this);

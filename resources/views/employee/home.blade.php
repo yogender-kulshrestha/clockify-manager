@@ -51,7 +51,7 @@
                     <a href="{{route('employee.records')}}">
                         <div class="card">
                             <div class="card-body text-center">
-                                <h1 class="text-gradient text-primary"><span id="status1">View/Edit Records</span> <span class="text-lg ms-n2"></span></h1>
+                                <h1 class="text-gradient text-primary"><span id="status1">View/Edit <br/>Records</span> <span class="text-lg ms-n2"></span></h1>
                                 {{--<h6 class="mb-0 font-weight-bolder">Living Room</h6>
                                 <p class="opacity-8 mb-0 text-sm">Temperature</p>--}}
                             </div>
@@ -70,10 +70,10 @@
                     </a>
                 </div>
                 <div class="col-md-4 mt-md-0 mt-4">
-                    <a href="{{route('employee.timecard')}}">
+                    <a href="{{ ($weekCount == 1) ? route('employee.timecard',['week' => $week]) : route('employee.timesheet') }}">
                         <div class="card">
                             <div class="card-body text-center">
-                                <h1 class="text-gradient text-primary"> <span id="status3">Submit New Timecard</span> <span class="text-lg ms-n1"></span></h1>
+                                <h1 class="text-gradient text-primary"> <span id="status3">Submit New <br/>Timecard</span> <span class="text-lg ms-n1"></span></h1>
                                 {{--<h6 class="mb-0 font-weight-bolder">Outside</h6>
                                 <p class="opacity-8 mb-0 text-sm">Humidity</p>--}}
                             </div>

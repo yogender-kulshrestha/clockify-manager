@@ -1,4 +1,8 @@
-@extends('employee.master')
+@php
+    $layout = (auth()->user()->role == 'user') ? 'employee.master' : 'layouts.master';
+@endphp
+@extends($layout)
+
 
 @section('title', 'Request Leave')
 

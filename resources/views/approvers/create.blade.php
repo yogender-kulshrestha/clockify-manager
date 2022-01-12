@@ -90,9 +90,10 @@
         });
         let options = '';
         function employeesAjax(employees){
-            $.getJSON("{{route('employees.ajax')}}/?employees="+employees, function(json){
+            $.getJSON("{{route('employees.ajax')}}?employees="+employees, function(json){
                 //options = '<select class="form-control" name="approver" id="approver">' +
                 //options = '<option value="" disabled>-- Select --</option>';
+                console.log(json.data);
                 $.each(json.data, function(i,data) {
                     options +='<option value="'+data.clockify_id+'">'+data.name+'</option>';
                 });

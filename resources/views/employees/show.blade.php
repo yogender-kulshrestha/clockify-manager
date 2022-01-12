@@ -59,15 +59,15 @@
                                     </tr>
                                     <tr>
                                         <td>Leave Hours</td>
-                                        <td>{{00}}</td>
+                                        <td>00</td>
                                     </tr>
                                     <tr>
                                         <td>Short Hours</td>
-                                        <td>{{00}}</td>
+                                        <td>00</td>
                                     </tr>
                                     <tr>
                                         <td>Unpaid Hours</td>
-                                        <td>{{00}}</td>
+                                        <td>00</td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -76,6 +76,9 @@
                     </div>
                 </div>
                 <div class="card-body px-0 pb-0">
+                    <div class="px-3 mt-n6">
+                        <h5>Name :- {{$data->name ?? ''}}</h5>
+                    </div>
                     <div class="table-responsive p-3">
                         <table class="table table-flush" id="datatable">
                             <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
@@ -289,7 +292,6 @@
                         defaultContent: '',
                         orderable: false,
                         searchable: false,
-                        visible: false
                     },
                 ]
             });

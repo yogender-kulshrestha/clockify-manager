@@ -159,7 +159,7 @@
     <script>
         $(document).ready(function (){
             var datatable = $('#datatable').DataTable({
-                dom: 'B<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
+                dom: '<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
                 //dom: 'Blfrtip',
                 language: {
                     paginate: {

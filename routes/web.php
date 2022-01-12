@@ -54,7 +54,8 @@ Route::get('/clockify/report', [ClockifyController::class, 'report'])->name('clo
 Route::get('/clockify/project', [ClockifyController::class, 'project'])->name('clockify.project');
 
 //Routes
-Route::get('/home', [HomeController::class, 'index'])->name('home');
+//Route::get('/home', [HomeController::class, 'index'])->name('home');
+Route::get('/home', [EmployeeController::class, 'home'])->name('home');
 Route::get('/employees/ajax', [EmployeeController::class, 'employeesAjax'])->name('employees.ajax');
 Route::resource('hr-managers', HrController::class);//->only(['index', 'store', 'destroy']);
 Route::resource('employees', EmployeeController::class);//->only(['index', 'store', 'destroy']);

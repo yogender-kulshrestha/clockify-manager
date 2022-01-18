@@ -64,7 +64,7 @@ function leave_hours($user_id,$startDate,$endDate,$type=null){
     foreach($rows as $row){
         $leave+=$row->leave_days;
     }
-    return $leave;
+    return $leave*10;
 }
 
 function total_earnings($user_id, $date_from, $date_to)
@@ -143,6 +143,28 @@ function verify_working_hours($week, $start, $end, $user_id) {
         ->where('start_time', '<=', $endDate)
         ->where('user_id', $user_id)->orderBy('start_time')->get();
     foreach ($rows as $row) {
+        //error_eo
+        $overlap = TimeSheet::select('id')->where(function ($q) use($row){
+            $q->where(function ($q) use($row){
+                $q->where('start_time', '<=', $row->start_time)
+                    ->where('end_time', '>=', $row->start_time);
+            })->orWhere(function ($q) use($row){
+                $q->where('start_time', '<=', $row->end_time)
+                    ->where('end_time', '>=', $row->end_time);
+            })->orWhere(function ($q) use($row){
+                $q->where('start_time', '>=', $row->start_time)->where('end_time', '<=', $row->end_time);
+            });
+        })->where('user_id', $user_id)->get();
+
+        if($overlap->count() > 1){
+            TimeSheet::whereIn('id', $overlap)
+                ->where('user_id', $user_id)->update(['error_eo'=>'Entry Overlap.']);
+        } else {
+            TimeSheet::whereIn('id', $overlap)
+                ->where('user_id', $user_id)->update(['error_eo'=>NULL]);
+        }
+
+        //error_ot
         $start=Carbon::parse($row->start_time);
         $time=$start->startOfDay();
         $startTime = $time->addHour(config('clockify.start_time'))->format('Y-m-d H:i:s');
@@ -162,34 +184,35 @@ function verify_working_hours($week, $start, $end, $user_id) {
             $dt = Carbon::now();
             $d_hours = $dt->diffInHours($dt->copy()->addSeconds($h_hours));
             $d_minutes = $dt->diffInMinutes($dt->copy()->subHours($d_hours)->addSeconds($h_hours));
-            $message = 'Worked on unknown time:';
+            $message = 'OT:';
             if($d_hours > 0){
                 $message .=' '.$d_hours.' hours';
             }
             if($d_minutes > 0){
                 $message .=' '.$d_minutes.' minutes';
             }
-            TimeSheet::find($row->id)->update(['time_error'=>'1','error_remarks'=>$message]);
+            TimeSheet::find($row->id)->update(['error_ot'=>$message]);
         } else {
             TimeSheet::where('id', $row->id)
-                ->where('time_error', '1')->update(['time_error'=>'0','error_remarks'=>NULL]);
+                ->where('time_error', '1')->update(['error_ot'=>NULL]);
         }
 
+        //error_bm
         $hours = Carbon::parse($row->start_time)->diffInHours($row->end_time);
         $minutes = Carbon::parse($row->start_time)->addHour($hours)->diffInMinutes($row->end_time);
         if($hours > 6 || ($hours == 6 && $minutes > 0)) {
-            TimeSheet::find($row->id)->update(['time_error'=>'4','error_remarks'=>'Break is missing.']);
+            TimeSheet::find($row->id)->update(['error_bm'=>'Break is missing.']);
         } else {
             TimeSheet::where('id', $row->id)
-                ->where('time_error', '4')->update(['time_error'=>'0','error_remarks'=>NULL]);
+                ->where('time_error', '4')->update(['error_bm'=>NULL]);
         }
 
+        //error_wh
         $start=Carbon::parse($row->start_time);
         $end=Carbon::parse($start->copy()->endOfDay()->format('Y-m-d H:i:s'));
         $sheets = TimeSheet::where('start_time', '>=', $start)
             ->where('start_time', '<=', $end)
             ->where('user_id', $user_id)->get();
-
         $net_hours = 0;
         foreach ($sheets as $sheet) {
             $net_hours += $sheet->duration_time ?? 0;
@@ -200,34 +223,34 @@ function verify_working_hours($week, $start, $end, $user_id) {
             $ot_hours = $net_hours-$working_hours;
             TimeSheet::where('start_time', '>=', $start)
                 ->where('start_time', '<=', $end)
-                ->where('user_id', $user_id)->update(['time_error'=>'3','error_remarks'=>'16+ working hours.']);
+                ->where('user_id', $user_id)->update(['error_wh'=>'16+ working hours.']);
         } else {
             TimeSheet::where('start_time', '>=', $start)
                 ->where('start_time', '<=', $end)
                 ->where('time_error', '3')
-                ->where('user_id', $user_id)->update(['time_error'=>'0','error_remarks'=>NULL]);
+                ->where('user_id', $user_id)->update(['error_wh'=>NULL]);
         }
 
-        $overlay = TimeSheet::select('id')->where(function ($q) use($row){
-            $q->where(function ($q) use($row){
-                $q->where('start_time', '<=', $row->start_time)
-                    ->where('end_time', '>=', $row->start_time);
-                })->orWhere(function ($q) use($row){
-                    $q->where('start_time', '<=', $row->end_time)
-                        ->where('end_time', '>=', $row->end_time);
-                })->orWhere(function ($q) use($row){
-                    $q->where('start_time', '>=', $row->start_time)->where('end_time', '<=', $row->end_time);
-                });
-            })->where('user_id', $user_id)->get();
-
-        if($overlay->count() > 1){
-            TimeSheet::whereIn('id', $overlay)
-                ->where('user_id', $user_id)->update(['time_error'=>'2','error_remarks'=>'Entry Overlay.']);
+        //error_le
+        $days = Carbon::parse($row->start_time)->diffInDays($row->end_time);
+        if($days >= 1) {
+            TimeSheet::find($row->id)->update(['error_le'=>'Long entry.']);
         } else {
-            TimeSheet::whereIn('id', $overlay)->where('time_error', '2')
-                ->where('user_id', $user_id)->update(['time_error'=>'0','error_remarks'=>NULL]);
+            TimeSheet::where('id', $row->id)
+                ->where('time_error', '5')->update(['error_le'=>NULL]);
         }
     }
+    TimeSheet::query()->where('start_time', '>=', $startDate)
+        ->where('start_time', '<=', $endDate)->where('user_id', $user_id)
+        ->where(function ($q){
+            $q->whereNull('error_eo')->whereNull('error_ot')->whereNull('error_bm')->whereNull('error_wh')->whereNull('error_le');
+        })->update(['time_error' => '0']);
+    TimeSheet::query()->where('start_time', '>=', $startDate)
+        ->where('start_time', '<=', $endDate)->where('user_id', $user_id)
+        ->where(function ($q){
+            $q->whereNotNull('error_eo')->orWhereNotNull('error_ot')->orWhereNotNull('error_bm')
+                ->orWhereNotNull('error_wh')->orWhereNotNull('error_le');
+        })->update(['time_error' => '1']);
     $rows = TimeSheet::query()->where('start_time', '>=', $startDate)
         ->where('start_time', '<=', $endDate)
         ->where('user_id', $user_id)->latest()->get();

@@ -250,8 +250,8 @@
                         defaultContent: ''
                     },
                     {
-                        data: 'error_remarks',
-                        name: 'error_remarks',
+                        data: 'error',
+                        name: 'error',
                         defaultContent: ''
                     },
                     {

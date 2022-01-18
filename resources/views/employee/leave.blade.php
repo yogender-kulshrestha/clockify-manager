@@ -130,8 +130,8 @@
     <script src="{{asset('assets/js/plugins/datatables.js')}}"></script>
     <script>
         $(document).ready(function (){
-            $('#date_from').attr('min', new Date().toISOString().split('T')[0]);
-            $('#date_to').attr('min', new Date().toISOString().split('T')[0]);
+            $('#date_from').attr('min', new Date('{{Carbon\Carbon::now()->subWeek(5)}}').toISOString().split('T')[0]);
+            $('#date_to').attr('min', new Date('{{Carbon\Carbon::now()->subWeek(5)}}').toISOString().split('T')[0]);
 
             $("#date_from").on('change', function () {
                 var minDate = new Date($(this).val()).toISOString().split('T')[0];

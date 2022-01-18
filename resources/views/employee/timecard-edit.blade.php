@@ -253,8 +253,8 @@
                         defaultContent: ''
                     },
                     {
-                        data: 'time_error',
-                        name: 'time_error',
+                        data: 'error',
+                        name: 'error',
                         defaultContent: ''
                     },
                     {

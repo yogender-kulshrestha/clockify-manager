@@ -114,30 +114,36 @@
                                 @endphp
                                 <tr @if($row->exception == 1 ) style="background-color: rgba(255,0,0,0.3);" @endif>
                                     <td>{{$row->date}}</td>
-                                    <td>{{$row->flags}}</td>
+                                    <td>{!! $row->flags !!}</td>
                                     <td>{{$ot_hours}}:{{$ot_minutes}}</td>
                                     <td>{{$net_hours}}:{{$net_minutes}}</td>
-                                    <td>{{$row->employee_remarks}}</td>
+                                    <td>{!! $row->employee_remarks !!}</td>
                                     <td>{{$row->approver_remarks}}</td>
                                 </tr>
                             @endforeach
                             </tbody>
                         </table>
-                        <div class="text-center">
-                            @if($net_hours < 45)
-                            <input type="button" value="Submit Timecard" class="btn btn-success btn-sm exception"/>
-                            @else
-                            <form id="add_form" method="POST" action="{{route('employee.timecard.submit', ['week' => $week])}}">
-                            {{--<form action="#">--}}
-                                @csrf
-                                <input type="hidden" name="start_time" value="{{$startDate}}"/>
-                                <input type="hidden" name="end_time" value="{{$endDate}}"/>
-                                <input type="hidden" name="week" value="{{$week}}"/>
-                                <input type="hidden" name="user_id" value="{{auth()->user()->clockify_id}}"/>
-                                <input type="hidden" name="status" value="Submitted"/>
-                                <input type="submit" value="Submit Timecard" id="submit_button" class="btn btn-success btn-sm"/>
-                            </form>
-                            @endif
+                        <div class="row">
+                            <div class="col-md-4">
+                                <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; Request Leave </button>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <form id="add_form" method="POST" action="{{route('employee.timecard.submit', ['week' => $week])}}">
+                                        @csrf
+                                        <input type="hidden" name="start_time" value="{{$startDate}}"/>
+                                        <input type="hidden" name="end_time" value="{{$endDate}}"/>
+                                        <input type="hidden" name="week" value="{{$week}}"/>
+                                        <input type="hidden" name="user_id" value="{{auth()->user()->clockify_id}}"/>
+                                        @if($net_hours < 45)
+                                            <input type="hidden" name="status" value="Edit Later"/>
+                                        @else
+                                            <input type="hidden" name="status" value="Submitted"/>
+                                        @endif
+                                        <input type="submit" value="Submit Timecard" id="submit_button" class="btn btn-success btn-sm"/>
+                                    </form>
+                                </div></div>
+                            <div class="col-md-4"></div>
                         </div>
                     </div>
                 </div>
@@ -170,38 +176,50 @@
     <div class="modal fade" id="modal-create" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form id="add_form" autocomplete="off" enctype="multipart/form-data">
+                <form id="add_form2" autocomplete="off" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-header">
-                        <h5 class="modal-title" id="form_title">Create</h5>
+                        <h5 class="modal-title" id="form_title">Create Leave Request</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <input type="hidden" name="id" id="id"/>
+                        <input type="hidden" name="status" id="status" value="Submitted"/>
+                        <input type="hidden" name="user_id" id="user_id" value="{{auth()->user()->clockify_id}}"/>
                         <div class="form-group">
-                            <label for="description">Description <span class="text-danger">*</span></label>
-                            <textarea class="form-control" name="description" id="description" placeholder="Enter Description"></textarea>
-                            <span id="description_error" class="text-danger"></span>
+                            <label for="leave_type_id">Leave Type <span class="text-danger">*</span></label>
+                            <select required class="form-control" name="leave_type_id" id="leave_type_id" placeholder="Select Leave Type">
+                                <option value="" disabled selected>-- Select --</option>
+                                @foreach($leave_categories as $category)
+                                    <option value="{{$category->id}}">{{$category->name}}</option>
+                                @endforeach
+                            </select>
+                            <span id="leave_type_id_error" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <label for="duration">From <span class="text-danger">*</span></label>
-                            <input type="datetime-local" class="form-control" name="start_time" id="start_time"/>
-                            <span id="start_time_error" class="text-danger"></span>
+                            <label for="date_from">Date From <span class="text-danger">*</span></label>
+                            <input required type="date" class="form-control" name="date_from" id="date_from" placeholder="Select Date From">
+                            <span id="date_from_error" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <label for="duration">To <span class="text-danger">*</span></label>
-                            <input type="datetime-local" class="form-control" name="end_time" id="end_time"/>
-                            <span id="end_time_error" class="text-danger"></span>
+                            <label for="date_to">Date To <span class="text-danger">*</span></label>
+                            <input required type="date" class="form-control" name="date_to" id="date_to" placeholder="Select Date To">
+                            <span id="date_to_error" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <label for="remarks">Remarks <span class="text-danger">*</span></label>
-                            <textarea class="form-control" name="employee_remarks" id="remarks" placeholder="Enter Remarks"></textarea>
-                            <span id="remarks_error" class="text-danger"></span>
+                            <label for="title">Explanation / Handover of Responsibilities</label>
+                            <textarea class="form-control" name="title" id="title" placeholder="Enter Explanation / Handover of Responsibilities"></textarea>
+                            <span id="title_error" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="" for="attachment">Attachment</label>
+                            <input type="file" class="form-control" name="attachment" id="attachment"/>
+                            <span id="attachment_error" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="modal-footer text-right">
                         <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn bg-gradient-primary btn-sm" id="add_button">Add</button>
+                        <button type="submit" class="btn bg-gradient-primary btn-sm" id="add_button2">Submit</button>
                     </div>
                 </form>
             </div>
@@ -213,118 +231,63 @@
     <!--  Datatable JS  -->
     <script src="{{asset('assets/js/plugins/datatables.js')}}"></script>
     <script>
-
         $(document).ready(function (){
             var datatable = $('#datatable').DataTable({
                 dom: 'f',
                 'ordering': false,
-            });
-            var datatable = $('#datatable2').DataTable({
-                //dom: 'B<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
-                dom: '',
-                language: {
-                    paginate: {
-                        next: '›',
-                        previous: '‹'
-                    }
-                },
-                "select": true,
-                "paging": true,
-                "pageLength": "-1",
-                "lengthMenu": [
-                    [5, 10, 25, 50, 100, 1000, -1],
-                    [5, 10, 25, 50, 100, 1000, 'ALL']
-                ],
-                "processing": true,
-                "serverSide": true,
-                "searching": true,
-                "responsive": true,
-                "lengthChange": false,
-                'ordering': false,
-                "autoWidth": false,
-                "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
-                "ajax": {
-                    url: '{{ route('employee.timecard', ['week' => $week]) }}',
-                    data: function (d) {
-                        d.start_time = '',
-                        d.end_time = '',
-                        d.seletedWeek = ''
-                    }
-                },
-                "order": [[ 3, "desc" ],[ 4, "desc" ]],
-                "columns": [
-                    {
-                        data: 'DT_RowIndex',
-                        name: 'DT_RowIndex',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'id',
-                        name: 'id',
-                        defaultContent: '' ,
-                        visible: false
-                    },
-                    {
-                        data: 'description',
-                        name: 'description',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'start_date',
-                        name: 'start_date',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'start_time',
-                        name: 'start_time',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'end_date',
-                        name: 'end_date',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'end_time',
-                        name: 'end_time',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'time_duration',
-                        name: 'time_duration',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'time_error',
-                        name: 'time_error',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'employee_remarks',
-                        name: 'employee_remarks',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'action',
-                        name: 'action',
-                        defaultContent: '',
-                        orderable: false,
-                        searchable: false
-                    },
-                ],
-                "createdRow": function( row, data, dataIndex){
-                    if(data.exception == 1 ){
-                        $(row).css('background-color', 'rgba(255,0,0,0.3)');
-                    }else{
-                    }
-
-                },
             });
 
             const addForm = '{{ route('employee.request-leave') }}';
             $('#add_form').submit(function (e) {
                 e.preventDefault();
                 //var form_data = new FormData(this);
+                var status = $('#status').val();
+                let buttonText = '';
+                let msgText = '';
+                if(status == 'Submitted'){
+                    buttonText = "Once you submit you cannot make changes.";
+                    msgText = 'Yes, submit it!';
+                } else {
+                    msgText = 'Your claimed time is less from 45 hours';
+                    buttonText = 'Save, (edit later)';
+                }
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: msgText,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: buttonText
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.submit();
+                    }
+                })
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function (){
+            $('#date_from').attr('min', new Date('{{Carbon\Carbon::parse($startDate)->addDay()}}').toISOString().split('T')[0]);
+            $('#date_from').attr('max', new Date('{{Carbon\Carbon::parse($endDate)}}').toISOString().split('T')[0]);
+            $('#date_to').attr('min', new Date('{{Carbon\Carbon::parse($startDate)->addDay()}}').toISOString().split('T')[0]);
+            $('#date_to').attr('max', new Date('{{Carbon\Carbon::parse($endDate)}}').toISOString().split('T')[0]);
+
+            $("#date_from").on('change', function () {
+                var minDate = new Date($(this).val()).toISOString().split('T')[0];
+                $('#date_to').attr('min', minDate);
+            });
+
+            $("#date_to").on('change', function () {
+                var maxDate = new Date($(this).val()).toISOString().split('T')[0];
+                $('#date_from').attr('max', maxDate);
+            });
+
+            const addForm = '{{ route('employee.request-leave') }}';
+            $('#add_form2').submit(function (e) {
+                e.preventDefault();
+                var form_data = new FormData(this);
                 Swal.fire({
                     title: 'Are you sure?',
                     text: "Once you submit you cannot make changes.",
@@ -335,25 +298,45 @@
                     confirmButtonText: 'Yes, submit it!'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        this.submit();
+                        $.ajax({
+                            method: "POST",
+                            url: addForm,
+                            data: form_data,
+                            contentType: false,
+                            processData: false,
+                            dataType: "json",
+                            headers: {"X-CSRF-Token": $('meta[name="csrf-token"]').attr('content')},
+                            beforeSend: function () {
+                                $('#add_button').attr('disabled', 'disabled');
+                                $('#title_error').text('');
+                                $('#leave_type_id_error').text('');
+                                $('#date_from_error').text('');
+                                $('#date_to_error').text('');
+                                $('#remarks_error').text('');
+                            },
+                            success: function (data) {
+                                $("#add_form2")[0].reset();
+                                $('#modal-create').modal('hide');
+                                if (data.success === true) {
+                                    toastr.success(data.message);
+                                    window.location.reload();
+                                } else {
+                                    toastr.error(data.message);
+                                }
+                                $('#add_button').attr('disabled', false);
+                            },
+                            error: function (data) {
+                                $('#add_button').attr('disabled', false);
+                                let responseData = data.responseJSON;
+                                $('#title_error').text(responseData.errors['title']);
+                                $('#leave_type_id_error').text(responseData.errors['leave_type_id']);
+                                $('#date_from_error').text(responseData.errors['date_from']);
+                                $('#date_to_error').text(responseData.errors['date_to']);
+                                $('#remarks_error').text(responseData.errors['remarks']);
+                            }
+                        });
                     }
                 })
-            });
-
-
-
-            $(document).on("click", ".exception", function () {
-                Swal.fire({
-                    title: 'Oops?',
-                    text: "Required at least 45 hours",
-                    icon: 'danger',
-                    showCancelButton: false,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'OK'
-                }).then((result) => {
-                    return false;
-                });
             });
         });
     </script>

@@ -235,14 +235,15 @@ class EmployeeController extends Controller
     public function timecard($week, Request $request)
     {
         if($request->ajax()) {
+            verify_working_hours($week, $request->start_time, $request->end_time, auth()->user()->clockify_id);
             $data = TimeSheet::query()->where('start_time', '>=', $request->start_time)
                 ->where('start_time', '<=', $request->end_time)
-                ->where('user_id', auth()->user()->clockify_id)->latest()->get();
+                ->where('user_id', auth()->user()->clockify_id)->orderBy('start_time')->get();
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function($query){
                     $exception = ($query->exception == 0) ? 'Request' : 'Remove';
-                    return '<a data-id="'.$query->id.'" data-remarks="'.$query->employee_remarks.'" data-description="'.$query->description.'" data-start_time="'.$query->start_time.'" data-end_time="'.$query->end_time.'" class="rowedit btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
+                    return '<a data-id="'.$query->id.'" data-remarks="'.$query->employee_remarks.'" data-description="'.$query->description.'" data-start_time="'.Carbon::parse($query->start_time)->format('Y-m-d\TH:i:s').'" data-end_time="'.Carbon::parse($query->end_time)->format('Y-m-d\TH:i:s').'" class="rowedit btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
                         Edit
                     </a>
                     <a data-id="'.$query->id.'" data-exception="'.$query->exception.'" data-description="'.$query->description.'" data-start_time="'.$query->start_time.'" data-end_time="'.$query->end_time.'" class="exception btn btn-dark btn-sm">
@@ -333,11 +334,9 @@ class EmployeeController extends Controller
 
     public function statusTimeCard(Request $request){
         try {
-            $update = TimeSheet::find($request->id);
-            $update->exception = $request->status;
-            $update->save();
-            $exception = ($request->status == '1') ? 'Requested' : 'Removed';
-            return response()->json(['success' => true, 'message' => 'Exception '.$exception.' successfully.'], 200);
+            TimeSheet::where('id',$request->id)->update(['exception' => strval($request->status)]);
+            $exception_text = ($request->status == '1') ? 'Requested' : 'Removed';
+            return response()->json(['success' => true, 'message' => 'Exception '.$exception_text.' successfully.'], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
         }
@@ -347,8 +346,14 @@ class EmployeeController extends Controller
     {
         $rules = [
             'start_time' => 'required',
+            'end_time' => 'required'
         ];
         $request->validate($rules);
+        $count = TimeSheet::where('start_time', '>=', $request->start_time)->where('start_time', '<=', $request->end_time)
+            ->whereIn('time_error', ['1','2','3','4'])->where('exception', '!=', '1')->count();
+        if($count > 0){
+            return redirect()->back()->withError('Please fixed the all errors or Request Exception.');
+        }
         $start=Carbon::parse($request->start_time);
         $end=Carbon::parse($start->copy()->endOfDay()->format('Y-m-d H:i:s'));
         $start->subDay();
@@ -414,7 +419,8 @@ class EmployeeController extends Controller
 
     public function forSubmitTimeCard($week)
     {
-        $rows=TimeCard::where('user_id', auth()->user()->clockify_id)->where('week', $week)->get();
+        $user_id=auth()->user()->clockify_id;
+        $rows=TimeCard::where('user_id', $user_id)->where('week', $week)->get();
         if($rows !== null) {
             $seletedWeek = explode('-',Str::replace('W','',$week));
             $date = Carbon::now();
@@ -423,15 +429,17 @@ class EmployeeController extends Controller
             $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
 
             $dt = Carbon::now();
-            $net_hours = TimeCard::where('week', $week)->groupBy('week')->sum('net_hours');
-            $ot_hours = TimeCard::where('week', $week)->groupBy('week')->sum('ot_hours');
-            $short_hours = TimeCard::where('week', $week)->groupBy('week')->sum('short_hours');
-            $unpaid_hours = TimeCard::where('week', $week)->groupBy('week')->sum('unpaid_hours');
-            $net_hours = $dt->diffInHours($dt->copy()->addSeconds($net_hours));
+            $net_hour = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('net_hours');
+            $ot_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('ot_hours');
+            $short_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('short_hours');
+            $unpaid_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('unpaid_hours');
+            $net_hour = $dt->diffInHours($dt->copy()->addSeconds($net_hour));
             $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($ot_hours));
             $short_hours = $dt->diffInHours($dt->copy()->addSeconds($short_hours));
             $unpaid_hours = $dt->diffInHours($dt->copy()->addSeconds($unpaid_hours));
-            return view('employee.timecard-submit', compact('week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours'));
+            $leave_hours = leave_hours($user_id, $startDate, $endDate);
+            $net_hours = $net_hour+$leave_hours;
+            return view('employee.timecard-submit', compact('week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours','leave_hours'));
         }
         return redirect()->back()->withError('Please create timecard first.');
     }
@@ -464,7 +472,8 @@ class EmployeeController extends Controller
         $data = Record::where('record_type', 'timecard')->where('id', $id)->first();
         if($data !== null) {
             $week=$data->description;
-            $rows=TimeCard::where('user_id', $data->user_id)->where('week', $week)->get();
+            $user_id=$data->user_id;
+            $rows=TimeCard::where('user_id', $user_id)->where('week', $week)->get();
             $seletedWeek = explode('-',Str::replace('W','',$week));
             $date = Carbon::now();
             $date->setISODate($seletedWeek[0],$seletedWeek[1]);
@@ -472,10 +481,10 @@ class EmployeeController extends Controller
             $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
 
             $dt = Carbon::now();
-            $net_hours = TimeCard::where('week', $week)->groupBy('week')->sum('net_hours');
-            $ot_hours = TimeCard::where('week', $week)->groupBy('week')->sum('ot_hours');
-            $short_hours = TimeCard::where('week', $week)->groupBy('week')->sum('short_hours');
-            $unpaid_hours = TimeCard::where('week', $week)->groupBy('week')->sum('unpaid_hours');
+            $net_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('net_hours');
+            $ot_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('ot_hours');
+            $short_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('short_hours');
+            $unpaid_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('unpaid_hours');
             $net_hours = $dt->diffInHours($dt->copy()->addSeconds($net_hours));
             $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($ot_hours));
             $short_hours = $dt->diffInHours($dt->copy()->addSeconds($short_hours));
@@ -499,10 +508,10 @@ class EmployeeController extends Controller
             $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
 
             $dt = Carbon::now();
-            $net_hours = TimeCard::where('week', $week)->groupBy('week')->sum('net_hours');
-            $ot_hours = TimeCard::where('week', $week)->groupBy('week')->sum('ot_hours');
-            $short_hours = TimeCard::where('week', $week)->groupBy('week')->sum('short_hours');
-            $unpaid_hours = TimeCard::where('week', $week)->groupBy('week')->sum('unpaid_hours');
+            $net_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('net_hours');
+            $ot_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('ot_hours');
+            $short_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('short_hours');
+            $unpaid_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('unpaid_hours');
             $net_hours = $dt->diffInHours($dt->copy()->addSeconds($net_hours));
             $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($ot_hours));
             $short_hours = $dt->diffInHours($dt->copy()->addSeconds($short_hours));

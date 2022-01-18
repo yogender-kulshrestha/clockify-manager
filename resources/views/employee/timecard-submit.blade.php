@@ -54,23 +54,24 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
+                                <a href="{{route('employee.timecard', ['week' => $week])}}" class="btn bg-gradient-primary btn-sm mb-0"> Back to Edit </a>
                                 <table class="border text-sm mt-3 w-100" style="min-width: 150px;">
                                     <tbody class="">
                                     <tr>
                                         <td>Total Hours</td>
-                                        <td>{{$net_hours ?? 0}}</td>
+                                        <td>{{$net_hours ?? '00'}}</td>
                                     </tr>
                                     <tr>
                                         <td>Leave Hours</td>
-                                        <td>{{$ot_hours ?? 0}}</td>
+                                        <td>{{$leave_hours ?? '00'}}</td>
                                     </tr>
                                     <tr>
                                         <td>Short Hours</td>
-                                        <td>{{$short_hours ?? 0}}</td>
+                                        <td>{{$short_hours ?? '00'}}</td>
                                     </tr>
                                     <tr>
                                         <td>Unpaid Hours</td>
-                                        <td>{{$unpaid_hours ?? 0}}</td>
+                                        <td>{{$unpaid_hours ?? '00'}}</td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -117,6 +118,9 @@
                             </tbody>
                         </table>
                         <div class="text-center">
+                            @if($net_hours < 45)
+                            <input type="button" value="Submit Timecard" class="btn btn-success btn-sm exception"/>
+                            @else
                             <form id="add_form" method="POST" action="{{route('employee.timecard.submit', ['week' => $week])}}">
                             {{--<form action="#">--}}
                                 @csrf
@@ -127,6 +131,7 @@
                                 <input type="hidden" name="status" value="Submitted"/>
                                 <input type="submit" value="Submit Timecard" id="submit_button" class="btn btn-success btn-sm"/>
                             </form>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -329,37 +334,19 @@
                 })
             });
 
+
+
             $(document).on("click", ".exception", function () {
-                var status = $(this).prop('checked') == true ? '1' : '0';
-                var id = $(this).data('id');
                 Swal.fire({
-                    title: 'Are you sure?',
-                    text: "",
-                    icon: 'warning',
-                    showCancelButton: true,
+                    title: 'Oops?',
+                    text: "Required at least 45 hours",
+                    icon: 'danger',
+                    showCancelButton: false,
                     confirmButtonColor: '#3085d6',
                     cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes!'
+                    confirmButtonText: 'OK'
                 }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            type: "GET",
-                            url: '{{ route('employee.timecard.exception') }}',
-                            data: {
-                                'status': status,
-                                'id': id
-                            },
-                            dataType: "json",
-                            success: function (data) {
-                                //console.log(data);
-                                if (data.success === true) {
-                                    toastr.success(data.message)
-                                } else {
-                                    toastr.error(data.message)
-                                }
-                            }
-                        });
-                    }
+                    return false;
                 });
             });
         });

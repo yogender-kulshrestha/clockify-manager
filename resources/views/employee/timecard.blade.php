@@ -250,8 +250,8 @@
                         defaultContent: ''
                     },
                     {
-                        data: 'time_error',
-                        name: 'time_error',
+                        data: 'error_remarks',
+                        name: 'error_remarks',
                         defaultContent: ''
                     },
                     {
@@ -311,8 +311,8 @@
                 $("#description").val($(this).data('description'));
                 //console.log($(this).data('start_time'));
                 //console.log(new Date($(this).data('start_time')).toISOString().slice(0, -5));
-                $("#start_time").val(new Date($(this).data('start_time')).toISOString().slice(0, -5));
-                $("#end_time").val(new Date($(this).data('end_time')).toISOString().slice(0, -5));
+                $("#start_time").val($(this).data('start_time'));
+                $("#end_time").val($(this).data('end_time'));
                 $("#remarks").val($(this).data('remarks'));
                 $('#description_error').text('');
                 $('#start_time_error').text('');

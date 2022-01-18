@@ -212,15 +212,13 @@ class ClockifyController extends Controller
         if($dayOfTheWeek == 0) {
             $weekday = $dayOfTheWeek-1;
         }
-        $data = [
-            'start' => Carbon::now()->startOfDay()->subDay($weekday)->toISOString()
-        ];
+        $start = Carbon::now()->startOfDay()->subDay($weekday)->format('Y-m-d\TH:i:s\Z');//->toISOString();
         $workspaces = Workspace::get();
         foreach ($workspaces as $workspace) {
             $users = User::whereNotNull('clockify_id')->get();
                 //->whereIn('clockify_id', ['609935adba9fdd7cafab3447','60aaf97e79793e3042ff8975'])->get();
             foreach ($users as $user) {
-                $rows = $this->clockify->apiRequest('workspaces/'.$workspace->clockify_id.'/user/' . $user->clockify_id . '/time-entries');
+                $rows = $this->clockify->apiRequest('workspaces/'.$workspace->clockify_id.'/user/' . $user->clockify_id . '/time-entries?start='.$start);
                 $rows = json_decode($rows);
                 if(!empty($rows) && count($rows) > 0) {
                     foreach ($rows as $row) {

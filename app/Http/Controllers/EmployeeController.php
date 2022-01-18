@@ -437,9 +437,10 @@ class EmployeeController extends Controller
             $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($ot_hours));
             $short_hours = $dt->diffInHours($dt->copy()->addSeconds($short_hours));
             $unpaid_hours = $dt->diffInHours($dt->copy()->addSeconds($unpaid_hours));
-            $leave_hours = leave_hours($user_id, $startDate, $endDate);
+            $leave_hours = leave_hours($user_id, $startDate, $endDate, 'Approved');
+            $nleave_hours = leave_hours($user_id, $startDate, $endDate, 'NotApproved');
             $net_hours = $net_hour+$leave_hours;
-            return view('employee.timecard-submit', compact('week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours','leave_hours'));
+            return view('employee.timecard-submit', compact('week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours','leave_hours','nleave_hours'));
         }
         return redirect()->back()->withError('Please create timecard first.');
     }

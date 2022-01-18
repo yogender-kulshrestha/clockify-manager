@@ -57,21 +57,27 @@
                                 <a href="{{route('employee.timecard', ['week' => $week])}}" class="btn bg-gradient-primary btn-sm mb-0"> Back to Edit </a>
                                 <table class="border text-sm mt-3 w-100" style="min-width: 150px;">
                                     <tbody class="">
-                                    <tr>
+                                    <tr class="border-bottom">
                                         <td>Total Hours</td>
-                                        <td>{{$net_hours ?? '00'}}</td>
+                                        <td>{{$net_hours ?? '0'}}</td>
                                     </tr>
-                                    <tr>
+                                    <tr class="border-bottom">
                                         <td>Leave Hours</td>
-                                        <td>{{$leave_hours ?? '00'}}</td>
+                                        <td>{{$leave_hours ?? '0'}}</td>
                                     </tr>
-                                    <tr>
+                                    @if($nleave_hours > 0)
+                                    <tr class="border-bottom">
+                                        <td>Unapproved <br/>Leave Hours</td>
+                                        <td>{{$nleave_hours ?? '0'}}</td>
+                                    </tr>
+                                    @endif
+                                    <tr class="border-bottom">
                                         <td>Short Hours</td>
-                                        <td>{{$short_hours ?? '00'}}</td>
+                                        <td>{{$short_hours ?? '0'}}</td>
                                     </tr>
                                     <tr>
                                         <td>Unpaid Hours</td>
-                                        <td>{{$unpaid_hours ?? '00'}}</td>
+                                        <td>{{$unpaid_hours ?? '0'}}</td>
                                     </tr>
                                     </tbody>
                                 </table>

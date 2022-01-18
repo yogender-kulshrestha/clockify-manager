@@ -98,7 +98,7 @@ Route::name('employee.')->prefix('employee')->group(function(){
     Route::get('/leave/{id}/edit', [EmployeeController::class, 'editRequestLeave'])->name('leave.edit');
     Route::get('/leave/{id}/review', [EmployeeController::class, 'reviewRequestLeave'])->name('leave.review');
 
-    Route::get('/timecard/exception', [EmployeeController::class, 'statusTimeCard'])->name('timecard.exception');
+    Route::get('/timecard-exception', [EmployeeController::class, 'statusTimeCard'])->name('timecard.exception');
     Route::get('/timecard/{week}/submit', [EmployeeController::class, 'forSubmitTimeCard'])->name('timecard.submit');
     Route::post('/timecard/{week}/submit', [EmployeeController::class, 'submitTimecard']);
 

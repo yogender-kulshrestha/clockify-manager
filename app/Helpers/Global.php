@@ -36,12 +36,35 @@ function total_working_hours($user_id, $date_from, $date_to)
     echo CarbonInterval::days($days)->hours($hours)->minutes($minutes)->forHumans();*/
 }
 
-function leave_hours($user_id,$startDate,$endDate){
-    $leaves = Leave::where('user_id', $user_id)->where('status', 'Approved')
-        ->where(function ($q) use($startDate, $endDate){
+function leave_hours($user_id,$startDate,$endDate,$type=null){
+    $query = DB::raw("*, (CASE WHEN (date_from >= '$startDate' AND date_to <= '$endDate') THEN datediff(date_to, date_from)+1
+    WHEN (date_from <= '$startDate' AND date_to >= '$endDate') THEN datediff('$endDate', '$startDate')+1
+    WHEN (date_from >= '$startDate' AND date_from <= '$endDate') THEN datediff('$endDate', date_from)+1
+    WHEN (date_to >= '$startDate' AND date_to <= '$endDate') THEN datediff(date_to, '$startDate')+1
+    ELSE '1' END) as leave_days");
+    $leaves = Leave::where('user_id', $user_id)->select($query);
+    $leaves->where(function ($q) use($startDate, $endDate) {
+        $q->where(function ($q) use ($startDate, $endDate) {
+            $q->whereDate('date_from', '>=', $startDate)->whereDate('date_to', '<=', $endDate);
+        })->orWhere(function ($q) use ($startDate, $endDate) {
+            $q->whereDate('date_from', '<=', $startDate)->whereDate('date_to', '>=', $endDate);
+        })->orWhere(function ($q) use ($startDate, $endDate) {
             $q->whereDate('date_from', '>=', $startDate)->whereDate('date_from', '<=', $endDate);
-        })->get();
-    return 0;
+        })->orWhere(function ($q) use ($startDate, $endDate) {
+            $q->whereDate('date_to', '>=', $startDate)->whereDate('date_to', '<=', $endDate);
+        });
+    });
+    if($type == 'Approved') {
+        $leaves->where('status', 'Approved');
+    } elseif($type == 'NotApproved') {
+        $leaves->where('status', '!=', 'Approved');
+    }
+    $rows=$leaves->get();
+    $leave=0;
+    foreach($rows as $row){
+        $leave+=$row->leave_days;
+    }
+    return $leave;
 }
 
 function total_earnings($user_id, $date_from, $date_to)
@@ -114,26 +137,27 @@ function verify_working_hours($week, $start, $end, $user_id) {
     $seletedWeek = explode('-',Str::replace('W','',$week));
     $date = Carbon::now();
     //$date->setISODate($seletedWeek[0],$seletedWeek[1]);
-    $startDate=Carbon::parse($start);//$date->startOfWeek()->format('Y-m-d H:i:s');
-    $endDate=Carbon::parse($end);//$date->endOfWeek()->format('Y-m-d H:i:s');
+    $startDate=Carbon::parse($start)->format('Y-m-d H:i:s');//$date->startOfWeek()->format('Y-m-d H:i:s');
+    $endDate=Carbon::parse($end)->format('Y-m-d H:i:s');//$date->endOfWeek()->format('Y-m-d H:i:s');
     $rows = TimeSheet::query()->where('start_time', '>=', $startDate)
         ->where('start_time', '<=', $endDate)
         ->where('user_id', $user_id)->orderBy('start_time')->get();
     foreach ($rows as $row) {
         $start=Carbon::parse($row->start_time);
         $time=$start->startOfDay();
-        $startTime = $time->addHour(config('clockify.start_time'));
-        $endTime = $time->addHour(config('clockify.end_time')-config('clockify.start_time'));
+        $startTime = $time->addHour(config('clockify.start_time'))->format('Y-m-d H:i:s');
+        $endTime = $time->addHour(config('clockify.end_time')-config('clockify.start_time'))->format('Y-m-d H:i:s');
         $h_hours = 0;
-        if($startTime->lt($row->start_time) || $endTime->lt($row->end_time)) {
-            if($startTime->lt($row->start_time)) {
-                if($startTime->lt($row->end_time)) {
-                    $startTime=$row->end_time;
+        if($startTime > $row->start_time || $endTime < $row->end_time) {
+            if($startTime > $row->start_time) {
+                if($startTime > $row->end_time) {
+                    $h_hours += Carbon::parse($row->end_time)->diffInSeconds($row->start_time);
+                } else {
+                    $h_hours += Carbon::parse($startTime)->diffInSeconds($row->start_time);
                 }
-                $h_hours += Carbon::parse($row->start_time)->diffInSeconds($startTime);
             }
-            if($endTime->lt($row->end_time)) {
-                $h_hours += $endTime->diffInSeconds($row->end_time);
+            if($endTime < $row->end_time) {
+                $h_hours += Carbon::parse($endTime)->diffInSeconds($row->end_time);
             }
             $dt = Carbon::now();
             $d_hours = $dt->diffInHours($dt->copy()->addSeconds($h_hours));

@@ -176,9 +176,9 @@ class EmployeeController extends Controller
     {
         try {
             $rules = [
-                //'leave_type_id' => 'required_if_null:id|required|exists:leave_types,id',
-                //'date_from' => 'required_if_null:id|required',
-                //'date_to' => 'required_if_null:id|required',
+                'leave_type_id' => 'required_if:id,null|exists:leave_types,id',
+                'date_from' => 'required_if:id,null',
+                'date_to' => 'required_if:id,null|after_or_equal:date_from',
                 'status' => 'required|in:Submitted,Revise and Resubmit,Approved',
                 'user_id' => 'required'
             ];
@@ -323,7 +323,7 @@ class EmployeeController extends Controller
             $rules = [
                 'description' => 'required|max:255',
                 'start_time' => 'required',
-                'end_time' => 'required',
+                'end_time' => 'required|after:start_time',
             ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {

@@ -15,6 +15,7 @@ class AuthController extends Controller
         ]);
 
         $credentials = $request->only('email', 'password');
+        $credentials['status']='active';
         if (Auth::attempt($credentials)) {
             if(auth()->user()->role == 'user' || auth()->user()->role == 'hr') {
                 $route = 'employee.home';

@@ -60,16 +60,16 @@ Route::middleware('admin')->prefix('admin')->group(function() {
     Route::resource('approvers', ApproverController::class);
     Route::get('records', [EmployeeController::class, 'records'])->name('records');
 
-    //Route::resource('time-sheets', TimeSheetController::class);
-    //Route::resource('time-cards', TimeCardController::class);
+    Route::resource('time-sheets', TimeSheetController::class);
+    Route::resource('time-cards', TimeCardController::class);
     //Route::resource('records', RecordController::class);
-    //Route::resource('leaves', LeaveController::class);
+    Route::resource('leaves', LeaveController::class);
     Route::resource('profile', ProfileController::class);
 
-    //Route::resource('employees-time-sheets', EmployeesTimeSheetController::class);
-    //Route::resource('employees-time-cards', EmployeesTimeCardController::class);
-    //Route::resource('employees-records', EmployeesRecordController::class);
-    //Route::resource('employees-leaves', EmployeesLeaveController::class);
+    Route::resource('employees-time-sheets', EmployeesTimeSheetController::class);
+    Route::resource('employees-time-cards', EmployeesTimeCardController::class);
+    Route::resource('employees-records', EmployeesRecordController::class);
+    Route::resource('employees-leaves', EmployeesLeaveController::class);
 });
 
 /*Route::name('hr.')->prefix('hr-manager')->middleware('hr')->group(function() {

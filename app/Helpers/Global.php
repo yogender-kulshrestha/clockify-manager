@@ -250,7 +250,9 @@ function verify_working_hours($week, $start, $end, $user_id) {
         }
 
         //error_le
-        $days = Carbon::parse($row->start_time)->diffInDays($row->end_time);
+        $start_time = Carbon::parse($row->start_time)->format('Y-m-d');
+        $end_time = Carbon::parse($row->end_time)->format('Y-m-d');
+        $days = Carbon::parse($start_time)->diffInDays($end_time);
         if($days >= 1) {
             TimeSheet::find($row->id)->update(['error_le'=>'Long entry.']);
         } else {

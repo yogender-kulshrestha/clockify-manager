@@ -82,10 +82,21 @@ class EmployeeController extends Controller
     public function records(Request $request)
     {
         if($request->ajax()) {
-            $approving = Approver::select('user_id')->where('approver_id', auth()->user()->clockify_id)->get();
-            $data = Record::where('user_id', auth()->user()->clockify_id)->orWhereIn('user_id', $approving)->orderByDesc('updated_at')->get();
+            if($request->user_id) {
+                $data = Record::where('user_id', $request->user_id)->orderByDesc('updated_at')->get();
+            } else {
+                if (auth()->user()->role = 'admin') {
+                    $approving = User::select('clockify_id')->whereIn('role', ['user', 'hr'])->get();
+                } elseif (auth()->user()->role = 'hr') {
+                    $approving = User::select('clockify_id')->whereIn('role', ['user'])->get();
+                } else {
+                    $approving = Approver::select('user_id')->where('approver_id', auth()->user()->clockify_id)->get();
+                }
+                $data = Record::where('user_id', auth()->user()->clockify_id)->orWhereIn('user_id', $approving)->orderByDesc('updated_at')->get();
+            }
             return Datatables::of($data)
-                ->addIndexColumn()->addColumn('action', function($query) {
+                ->addIndexColumn()
+                ->addColumn('action', function($query) {
                     if($query->user_id == auth()->user()->clockify_id) {
                         if($query->record_type == 'leave'){
                             if($query->status == 'Revise and Resubmit'){
@@ -144,7 +155,14 @@ class EmployeeController extends Controller
                 })->rawColumns(['record_type','status','action','created_at','updated_at'])
                 ->make(true);
         }
-        return view('employee.records');
+        if(auth()->user()->role='admin'){
+            $users = User::whereIn('role', ['user', 'hr'])->get();
+        } elseif(auth()->user()->role='hr'){
+            $users = User::whereIn('role', ['user'])->get();
+        } else {
+            $users = Approver::where('approver_id', auth()->user()->clockify_id)->get();
+        }
+        return view('employee.records', compact('users'));
     }
 
     public function requestLeave(Request $request)

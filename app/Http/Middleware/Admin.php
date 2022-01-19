@@ -16,9 +16,10 @@ class Admin
      */
     public function handle(Request $request, Closure $next)
     {
-        if(auth()->user()->role == 'hr') {
+        /*if(auth()->user()->role == 'hr') {
             return redirect(route('hr.home'));
-        } elseif(auth()->user()->role == 'user') {
+        } else*/
+        if(auth()->user()->role == 'user' || auth()->user()->role == 'hr') {
             return redirect(route('employee.home'));
         } else {
             return $next($request);

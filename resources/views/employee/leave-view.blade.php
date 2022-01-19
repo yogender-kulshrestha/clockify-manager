@@ -1,5 +1,5 @@
 @php
-    $layout = (auth()->user()->role == 'user') ? 'employee.master' : 'layouts.master';
+    $layout = (auth()->user()->role == 'admin') ? 'layouts.master' : 'employee.master';
 @endphp
 @extends($layout)
 

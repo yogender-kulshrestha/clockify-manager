@@ -16,10 +16,8 @@ class AuthController extends Controller
 
         $credentials = $request->only('email', 'password');
         if (Auth::attempt($credentials)) {
-            if(auth()->user()->role == 'user') {
+            if(auth()->user()->role == 'user' || auth()->user()->role == 'hr') {
                 $route = 'employee.home';
-            } elseif(auth()->user()->role == 'hr') {
-                $route = 'hr.home';
             } else {
                 $route = 'home';
             }

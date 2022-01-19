@@ -1,4 +1,7 @@
-@extends('employee.master')
+@php
+    $layout = (auth()->user()->role == 'admin') ? 'layouts.master' : 'employee.master';
+@endphp
+@extends($layout)
 
 @section('title', 'All Records')
 
@@ -47,11 +50,26 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
+                                @if(auth()->user()->role != 'admin')
                                 <a href="{{route('employee.home')}}" class="btn bg-gradient-primary btn-sm mb-0"> Return to Dashboard </a>
+                                @endif
                             </div>
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
+                                @if($users->count() > 0)
+                                <div class="form-group">
+                                    <select class="form-control" name="user_id" id="user_id" placeholder="Select an Employee">
+                                        <option value="" selected>-- Select an Employee --</option>
+                                        @if(auth()->user()->role != 'admin')
+                                        <option value="{{auth()->user()->clockify_id}}">{{auth()->user()->name}}</option>
+                                        @endif
+                                        @foreach($users as $user)
+                                        <option value="{{$user->clockify_id}}">{{$user->name}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -85,6 +103,7 @@
     <script src="{{asset('assets/js/plugins/datatables.js')}}"></script>
     <script>
         $(document).ready(function (){
+            var url = '{{ (auth()->user()->role == 'admin') ? route('records') : route('employee.records') }}'
             var datatable = $('#datatable').DataTable({
                 dom: '<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
                 //dom: 'Blfrtip',
@@ -110,7 +129,10 @@
                 "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
                 "order": [['2', 'desc']],
                 "ajax": {
-                    url: '{{ route('employee.records') }}',
+                    url: url,
+                    data: function (d) {
+                        d.user_id = $('#user_id').val();
+                    },
                 },
                 "columns": [
                     {
@@ -152,10 +174,12 @@
                     },
                 ]
             });
-
+            $(document).on('change', '#user_id', function() {
+                datatable.draw();
+            });
             $('#datatable').on('click', 'tbody .delete', function() {
                 var id = $(this).data('id');
-                var url = '{{ route('records.destroy', ':id') }}';
+                var url = '';
                 url = url.replace(':id', id);
                 Swal.fire({
                     title: 'Are you sure?',

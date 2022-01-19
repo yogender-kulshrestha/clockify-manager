@@ -36,6 +36,24 @@ function total_working_hours($user_id, $date_from, $date_to)
     echo CarbonInterval::days($days)->hours($hours)->minutes($minutes)->forHumans();*/
 }
 
+function leave_count($user_id,$startDate,$endDate,$type=null){
+    $leaves = Leave::where('user_id', $user_id)->where(function ($q) use($startDate, $endDate) {
+        $q->where(function ($q) use ($startDate, $endDate) {
+            $q->whereDate('date_from', '>=', $startDate)->whereDate('date_to', '<=', $endDate);
+        })->orWhere(function ($q) use ($startDate, $endDate) {
+            $q->whereDate('date_from', '<=', $startDate)->whereDate('date_to', '>=', $endDate);
+        })->orWhere(function ($q) use ($startDate, $endDate) {
+            $q->whereDate('date_from', '>=', $startDate)->whereDate('date_from', '<=', $endDate);
+        })->orWhere(function ($q) use ($startDate, $endDate) {
+            $q->whereDate('date_to', '>=', $startDate)->whereDate('date_to', '<=', $endDate);
+        });
+    });
+    if($type) {
+        $leaves->where('id', '!=', $type);
+    }
+    return $leaves->count();
+}
+
 function leave_hours($user_id,$startDate,$endDate,$type=null){
     $query = DB::raw("*, (CASE WHEN (date_from >= '$startDate' AND date_to <= '$endDate') THEN datediff(date_to, date_from)+1
     WHEN (date_from <= '$startDate' AND date_to >= '$endDate') THEN datediff('$endDate', '$startDate')+1

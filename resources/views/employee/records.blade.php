@@ -62,7 +62,7 @@
                                     <select class="form-control" name="user_id" id="user_id" placeholder="Select an Employee">
                                         <option value="" selected>-- Select an Employee --</option>
                                         @if(auth()->user()->role != 'admin')
-                                        <option value="{{auth()->user()->clockify_id}}">{{auth()->user()->name}}</option>
+                                        <option value="{{auth()->user()->clockify_id}}">{{auth()->user()->name}} (Self)</option>
                                         @endif
                                         @foreach($users as $user)
                                         <option value="{{$user->clockify_id}}">{{$user->name}}</option>

@@ -171,7 +171,7 @@ class ClockifyController extends Controller
                     'image' => $user->profilePicture,
                     'memberships' => $user->memberships,
                     'settings' => $user->settings,
-                    'status' => Str::lower($user->status),
+                    'status' => (Str::lower($user->status) == 'active') ? 'active' : 'inactive',
                 ];
                 $find = User::where('email', $user->email)->first();
                 if (!$find) {
@@ -180,7 +180,9 @@ class ClockifyController extends Controller
                     $input['password'] = $password;
                 }
                 $insert = User::updateOrCreate($id, $input);
-                dispatch(new SendRegistrationMail($insert))->onQueue('mail');
+                if($insert->wasRecentlyCreated){
+                    dispatch(new SendRegistrationMail($insert))->onQueue('mail');
+                }
             }
         }
         return response()->json(['status' => true, 'message' => 'User list updated successfully.']);

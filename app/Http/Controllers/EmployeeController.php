@@ -85,9 +85,9 @@ class EmployeeController extends Controller
             if($request->user_id) {
                 $data = Record::where('user_id', $request->user_id)->orderByDesc('updated_at')->get();
             } else {
-                if (auth()->user()->role = 'admin') {
+                if (auth()->user()->role == 'admin') {
                     $approving = User::select('clockify_id')->whereIn('role', ['user', 'hr'])->get();
-                } elseif (auth()->user()->role = 'hr') {
+                } elseif (auth()->user()->role == 'hr') {
                     $approving = User::select('clockify_id')->whereIn('role', ['user'])->get();
                 } else {
                     $approving = Approver::select('user_id')->where('approver_id', auth()->user()->clockify_id)->get();
@@ -155,12 +155,13 @@ class EmployeeController extends Controller
                 })->rawColumns(['record_type','status','action','created_at','updated_at'])
                 ->make(true);
         }
-        if(auth()->user()->role='admin'){
+        if(auth()->user()->role == 'admin'){
             $users = User::whereIn('role', ['user', 'hr'])->get();
-        } elseif(auth()->user()->role='hr'){
+        } elseif(auth()->user()->role == 'hr'){
             $users = User::whereIn('role', ['user'])->get();
         } else {
-            $users = Approver::where('approver_id', auth()->user()->clockify_id)->get();
+            $us = Approver::select('user_id')->where('approver_id', auth()->user()->clockify_id)->get();
+            $users = User::whereIn('clockify_id', $us)->get();
         }
         return view('employee.records', compact('users'));
     }
@@ -188,6 +189,18 @@ class EmployeeController extends Controller
             if ($validator->fails()) {
                 return response()->json(['success' => false, 'errors' => $validator->getMessageBag(), 'message' => 'Something went wrong.'], 422);
             }
+
+            if($request->user_id && $request->date_from && $request->date_to) {
+                if($request->id){
+                    $leave_hours = leave_count($request->user_id, $request->date_from, $request->date_to, $request->id);
+                } else {
+                    $leave_hours = leave_count($request->user_id, $request->date_from, $request->date_to);
+                }
+                if($leave_hours > 0) {
+                    return response()->json(['success' => false, 'message' => 'Leave request already exists between date from and date to.'], 200);
+                }
+            }
+
             $input = $request->only('title', 'user_id', 'leave_type_id', 'date_from', 'date_to', 'remarks', 'status');
             if($request->hasFile('attachment')) {
                 $attachment = $request->attachment->store('attachments');

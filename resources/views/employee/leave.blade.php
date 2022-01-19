@@ -177,9 +177,9 @@
                                 $('#remarks_error').text('');
                             },
                             success: function (data) {
-                                $("#add_form")[0].reset();
-                                $('#modal-create').modal('hide');
                                 if (data.success === true) {
+                                    $("#add_form")[0].reset();
+                                    $('#modal-create').modal('hide');
                                     toastr.success(data.message);
                                     window.location.href = "{{route('employee.records')}}";
                                 } else {

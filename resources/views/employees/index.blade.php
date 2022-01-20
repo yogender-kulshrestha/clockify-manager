@@ -63,9 +63,9 @@
                             <tr>
                                 <td>#</td>
                                 <th>ID</th>
-                                {{--<td>Clockify ID</td>--}}
                                 <td>Name</td>
                                 <td>Email</td>
+                                <td>Employee Type</td>
                                 <td>Registration Date</td>
                                 <td>Status</td>
                                 <td>Action</td>
@@ -122,6 +122,16 @@
                             <label for="email">Email <span class="text-danger hidden">*</span></label>
                             <input type="email" class="form-control" name="email" id="email" placeholder="Enter Email" disabled readonly>
                             <span id="email_error" class="text-danger text-sm"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Employee Type <span class="text-danger">*</span></label>
+                            <select class="form-control" name="type" id="type">
+                                <option value="">-- Select --</option>
+                                <option value="fulltime">Full Time</option>
+                                <option value="fellows">Fellows</option>
+                                <option value="contractors">Contractors</option>
+                            </select>
+                            <span id="type_error" class="text-danger text-sm"></span>
                         </div>
                         <div class="form-group">
                             <label for="status">Status <span class="text-danger">*</span></label>
@@ -196,11 +206,6 @@
                         defaultContent: '' ,
                         visible: false
                     },
-                    /*{
-                        data: 'clockify_id',
-                        name: 'clockify_id',
-                        defaultContent: ''
-                    },*/
                     {
                         data: 'name',
                         name: 'name',
@@ -209,6 +214,11 @@
                     {
                         data: 'email',
                         name: 'email',
+                        defaultContent: ''
+                    },
+                    {
+                        data: 'type',
+                        name: 'type',
                         defaultContent: ''
                     },
                     {
@@ -249,9 +259,11 @@
                 $("#id").val($(this).data('id'));
                 $("#name").val($(this).data('name'));
                 $("#email").val($(this).data('email'));
+                $("#type").val($(this).data('type'));
                 $("#status").val($(this).data('status'));
                 $('#name_error').text('');
                 $('#email_error').text('');
+                $('#type_error').text('');
                 $('#status_error').text('');
                 $('#password_error').text('');
                 $('#password_confirmation_error').text('');
@@ -274,6 +286,7 @@
                         $('#add_button').attr('disabled', 'disabled');
                         $('#name_error').text('');
                         $('#email_error').text('');
+                        $('#type_error').text('');
                         $('#status_error').text('');
                         $('#password_error').text('');
                         $('#password_confirmation_error').text('');
@@ -294,6 +307,7 @@
                         let responseData = data.responseJSON;
                         $('#name_error').text(responseData.errors['name']);
                         $('#email_error').text(responseData.errors['email']);
+                        $('#type_error').text(responseData.errors['type']);
                         $('#status_error').text(responseData.errors['status']);
                         $('#password_error').text(responseData.errors['password']);
                         $('#password_confirmation_error').text(responseData.errors['password_confirmation']);

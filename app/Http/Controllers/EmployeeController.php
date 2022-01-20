@@ -675,7 +675,7 @@ class EmployeeController extends Controller
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function($query){
-                    return '<a data-id="'.$query->id.'" data-name="'.$query->name.'" data-email="'.$query->email.'" data-status="'.$query->status.'" class="mx-1 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
+                    return '<a data-id="'.$query->id.'" data-name="'.$query->name.'" data-email="'.$query->email.'" data-type="'.$query->type.'" data-status="'.$query->status.'" class="mx-1 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
                         <i class="fas fa-edit text-primary"></i>
                     </a>
                     <a href="'.route('employees.show',['employee'=>$query->clockify_id]).'" data-bs-toggle="tooltip" data-bs-original-title="View">
@@ -684,6 +684,8 @@ class EmployeeController extends Controller
                     <!--<a data-id="'.$query->id.'" class="mx-1 rowdelete" data-bs-toggle="tooltip" data-bs-original-title="Delete">
                         <i class="fas fa-trash text-danger"></i>
                     </a>-->';
+                })->editColumn('type', function ($query) {
+                    return ($query->type == 'fulltime') ? 'Full Time' : ucfirst($query->type);
                 })->editColumn('status', function ($query) {
                     if($query->status == 'active'){
                         $status = 'badge-success';
@@ -711,6 +713,8 @@ class EmployeeController extends Controller
         try {
             $rules = [
                 'name' => 'required|min:3|max:255',
+                'email' => 'required_if:id,null|email|exists:users,email',
+                'type' => 'required',
                 'status' => 'required|in:active,inactive',
                 'password' => 'required_without:id|confirmed'
             ];
@@ -718,7 +722,7 @@ class EmployeeController extends Controller
             if ($validator->fails()) {
                 return response()->json(['success' => false, 'errors' => $validator->getMessageBag(), 'message' => 'Something went wrong.'], 422);
             }
-            $input = $request->only('name', 'status');
+            $input = $request->only('name', 'status', 'type');
             if($request->password) {
                 $input['password']=Hash::make($request->password);
             }
@@ -758,7 +762,7 @@ class EmployeeController extends Controller
                                 $action='<a href="'.route('employee.leave.view',["id"=>$query->description]).'" class="btn btn-dark btn-sm">View</a>';
                             }
                         } else {
-                            if($query->status == 'Revise and Resubmit'){
+                            if($query->status == 'Revise and Resubmit' || $query->status == 'Edit Later'){
                                 $action='<a href="'.route('employee.timecard.edit',["week"=>$query->id]).'" class="btn btn-dark btn-sm">Edit</a>';
                             } else {
                                 $action='<a href="'.route('employee.timecard.view',["week"=>$query->id]).'" class="btn btn-dark btn-sm">View</a>';
@@ -810,7 +814,21 @@ class EmployeeController extends Controller
         }
         $data = User::where('clockify_id', $id)->first();
         if ($data) {
-            return view('employees.show', compact('data'));
+            $user_id=$data->clockify_id;
+            $startDate = Carbon::parse('2000-01-01 00:00:00')->format('Y-m-d H:i:s');
+            $dt = Carbon::now();
+            $net_hour = TimeCard::where('user_id', $user_id)->sum('net_hours');
+            $ot_hours = TimeCard::where('user_id', $user_id)->sum('ot_hours');
+            $short_hours = TimeCard::where('user_id', $user_id)->sum('short_hours');
+            $unpaid_hours = TimeCard::where('user_id', $user_id)->sum('unpaid_hours');
+            $net_hour = $dt->diffInHours($dt->copy()->addSeconds($net_hour));
+            $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($ot_hours));
+            $short_hours = $dt->diffInHours($dt->copy()->addSeconds($short_hours));
+            $unpaid_hours = $dt->diffInHours($dt->copy()->addSeconds($unpaid_hours));
+            $leave_hours = leave_hours($user_id, $startDate, $dt, 'Approved');
+            $nleave_hours = leave_hours($user_id, $startDate, $dt, 'NotApproved');
+            $net_hours = $net_hour+$leave_hours;
+            return view('employees.show', compact('data','net_hours','ot_hours','short_hours','unpaid_hours','leave_hours','nleave_hours'));
         }
         abort(404);
     }

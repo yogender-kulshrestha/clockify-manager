@@ -53,21 +53,27 @@
                             <div class="ms-auto my-auto">
                                 <table class="border text-sm mt-3 w-100" style="min-width: 150px;">
                                     <tbody class="">
-                                    <tr>
+                                    <tr class="border-bottom">
                                         <td>Total Hours</td>
-                                        <td>{{total_working_hours($data->clockify_id, '2010-01-01 00:00:00', '2022-01-01 00:00:00')}}</td>
+                                        <td>{{$net_hours ?? '0'}}</td>
                                     </tr>
-                                    <tr>
+                                    <tr class="border-bottom">
                                         <td>Leave Hours</td>
-                                        <td>00</td>
+                                        <td>{{$leave_hours ?? '0'}}</td>
                                     </tr>
-                                    <tr>
+                                    @if($nleave_hours > 0)
+                                        <tr class="border-bottom">
+                                            <td>Unapproved <br/>Leave Hours</td>
+                                            <td>{{$nleave_hours ?? '0'}}</td>
+                                        </tr>
+                                    @endif
+                                    <tr class="border-bottom">
                                         <td>Short Hours</td>
-                                        <td>00</td>
+                                        <td>{{$short_hours ?? '0'}}</td>
                                     </tr>
                                     <tr>
                                         <td>Unpaid Hours</td>
-                                        <td>00</td>
+                                        <td>{{$unpaid_hours ?? '0'}}</td>
                                     </tr>
                                     </tbody>
                                 </table>

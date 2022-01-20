@@ -43,6 +43,13 @@
                                 <h2 class="font-weight-bolder mb-0">Welcome {{auth()->user()->name ?? ''}}</h2>
                             </div>
                         </div>
+                        <div class="col-lg-6">
+                            <div class="text-end text-primary">
+                                <a href="{{route('employee.profile')}}" class="nav-link text-body p-0">
+                                    <span class="d-sm-inline d-none me-1 ">Change Password</span>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

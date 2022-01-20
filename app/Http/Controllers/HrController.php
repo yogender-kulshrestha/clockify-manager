@@ -34,6 +34,9 @@ class HrController extends Controller
                 ->addColumn('action', function($query){
                     $action = '<a data-id="'.$query->id.'" data-name="'.$query->name.'" data-email="'.$query->email.'" data-status="'.$query->status.'" class="mx-1 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
                         <i class="fas fa-edit text-primary"></i>
+                    </a>
+                    <a href="'.route('employees.show',['employee'=>$query->clockify_id]).'" data-bs-toggle="tooltip" data-bs-original-title="View">
+                        <i class="fas fa-eye text-success"></i>
                     </a>';
                     if($query->clockify_id != '609935adba9fdd7cafab3447') {
                         $action .= '<a data-id="' . $query->id . '" class="mx-1 rowdelete" data-bs-toggle="tooltip" data-bs-original-title="Delete">

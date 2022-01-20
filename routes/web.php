@@ -58,20 +58,20 @@ Route::middleware('admin')->prefix('admin')->group(function() {
     Route::resource('hr-managers', HrController::class);//->only(['index', 'store', 'destroy']);
     Route::resource('employees', EmployeeController::class);//->only(['index', 'store', 'destroy']);
     Route::resource('approvers', ApproverController::class);
-    Route::get('records', [EmployeeController::class, 'records'])->name('records');
+    Route::get('record', [EmployeeController::class, 'records'])->name('records');
 
     Route::resource('time-sheets', TimeSheetController::class);
     Route::resource('time-cards', TimeCardController::class);
-    //Route::resource('records', RecordController::class);
+    Route::resource('records', RecordController::class);
     Route::resource('leaves', LeaveController::class);
-    Route::resource('profile', ProfileController::class);
+    Route::get('profile', [ProfileController::class, 'index'])->name('profile');
 
     Route::resource('employees-time-sheets', EmployeesTimeSheetController::class);
     Route::resource('employees-time-cards', EmployeesTimeCardController::class);
     Route::resource('employees-records', EmployeesRecordController::class);
     Route::resource('employees-leaves', EmployeesLeaveController::class);
 });
-
+Route::post('profile', [ProfileController::class, 'store']);
 /*Route::name('hr.')->prefix('hr-manager')->middleware('hr')->group(function() {
     Route::get('/', [EmployeeController::class, 'home'])->name('home');
 });*/
@@ -81,16 +81,17 @@ Route::name('employee.')->group(function(){
     Route::middleware(['employee'])->group(function() {
         Route::get('/', [EmployeeController::class, 'home'])->name('home');
         Route::get('/records', [EmployeeController::class, 'records'])->name('records');
+        Route::get('profile', [ProfileController::class, 'index'])->name('profile');
 
         Route::get('/request-leave', [EmployeeController::class, 'requestLeave'])->name('request-leave');
 
         Route::get('/timesheet', [EmployeeController::class, 'timesheet'])->name('timesheet');
-//    Route::get('/timecard', [EmployeeController::class, 'timecard'])->name('timecard');
-//    Route::post('/timecard', [EmployeeController::class, 'addTimeCard']);
+//        Route::get('/timecard', [EmployeeController::class, 'timecard'])->name('timecard');
+//        Route::post('/timecard', [EmployeeController::class, 'addTimeCard']);
         Route::post('/timecard/create', [EmployeeController::class, 'createTimeCard'])->name('timecard.create');
         Route::get('/timecard/{week}', [EmployeeController::class, 'timecard'])->name('timecard');
         Route::post('/timecard/{week}', [EmployeeController::class, 'addTimeCard']);
-//    Route::post('/timecard/{week}/create', [EmployeeController::class, 'createTimeCard'])->name('timecard.create');
+//        Route::post('/timecard/{week}/create', [EmployeeController::class, 'createTimeCard'])->name('timecard.create');
     });
     Route::post('/request-leave', [EmployeeController::class, 'storeRequestLeave']);
 
@@ -107,4 +108,3 @@ Route::name('employee.')->group(function(){
     Route::get('/timecard/{week}/review', [EmployeeController::class, 'reviewTimecard'])->name('timecard.review');
     Route::post('/timecard/{week}/review', [EmployeeController::class, 'submitReviewTimecard']);
 });
-

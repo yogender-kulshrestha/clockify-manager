@@ -107,7 +107,7 @@
     <script src="{{asset('assets/js/plugins/datatables.js')}}"></script>
     <script>
         $(document).ready(function (){
-            const addForm = '{{ route('profile') }}';
+            const addForm = '{{ route('employee.profile') }}';
             $('#add_form').submit(function (e) {
                 e.preventDefault();
                 var form_data = new FormData(this);

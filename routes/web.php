@@ -71,7 +71,6 @@ Route::middleware('admin')->prefix('admin')->group(function() {
     Route::resource('employees-records', EmployeesRecordController::class);
     Route::resource('employees-leaves', EmployeesLeaveController::class);
 });
-Route::post('profile', [ProfileController::class, 'store']);
 /*Route::name('hr.')->prefix('hr-manager')->middleware('hr')->group(function() {
     Route::get('/', [EmployeeController::class, 'home'])->name('home');
 });*/
@@ -93,6 +92,8 @@ Route::name('employee.')->group(function(){
         Route::post('/timecard/{week}', [EmployeeController::class, 'addTimeCard']);
 //        Route::post('/timecard/{week}/create', [EmployeeController::class, 'createTimeCard'])->name('timecard.create');
     });
+    Route::post('profile', [ProfileController::class, 'store']);
+
     Route::post('/request-leave', [EmployeeController::class, 'storeRequestLeave']);
 
     Route::get('/leave/{id}/view', [EmployeeController::class, 'viewRequestLeave'])->name('leave.view');

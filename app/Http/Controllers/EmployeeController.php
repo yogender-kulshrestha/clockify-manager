@@ -382,8 +382,10 @@ class EmployeeController extends Controller
             'end_time' => 'required'
         ];
         $request->validate($rules);
-        $count = TimeSheet::where('start_time', '>=', $request->start_time)->where('start_time', '<=', $request->end_time)
-            ->where('time_error', '1')->where('exception', '!=', '1')->count();
+        $count = TimeSheet::where('start_time', '>=', $request->start_time)
+            ->where('start_time', '<=', $request->end_time)
+            ->where('time_error', '1')->where('exception', '!=', '1')
+            ->where('user_id', auth()->user()->clockify_id)->count();
         if($count > 0){
             return redirect()->back()->withError('Please fixed the all errors or Request Exception.');
         }

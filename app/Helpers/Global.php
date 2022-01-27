@@ -209,20 +209,18 @@ function verify_working_hours($week, $start, $end, $user_id) {
             if($d_minutes > 0){
                 $message .=' '.$d_minutes.' minutes';
             }
-            TimeSheet::find($row->id)->update(['error_ot'=>$message]);
+            TimeSheet::where('id', $row->id)->update(['error_ot'=>$message]);
         } else {
-            TimeSheet::where('id', $row->id)
-                ->where('time_error', '1')->update(['error_ot'=>NULL]);
+            TimeSheet::where('id', $row->id)->update(['error_ot'=>NULL]);
         }
 
         //error_bm
         $hours = Carbon::parse($row->start_time)->diffInHours($row->end_time);
         $minutes = Carbon::parse($row->start_time)->addHour($hours)->diffInMinutes($row->end_time);
         if($hours > 6 || ($hours == 6 && $minutes > 0)) {
-            TimeSheet::find($row->id)->update(['error_bm'=>'Break is missing.']);
+            TimeSheet::where('id', $row->id)->update(['error_bm'=>'Break is missing.']);
         } else {
-            TimeSheet::where('id', $row->id)
-                ->where('time_error', '4')->update(['error_bm'=>NULL]);
+            TimeSheet::where('id', $row->id)->update(['error_bm'=>NULL]);
         }
 
         //error_wh
@@ -245,7 +243,6 @@ function verify_working_hours($week, $start, $end, $user_id) {
         } else {
             TimeSheet::where('start_time', '>=', $start)
                 ->where('start_time', '<=', $end)
-                ->where('time_error', '3')
                 ->where('user_id', $user_id)->update(['error_wh'=>NULL]);
         }
 
@@ -254,10 +251,9 @@ function verify_working_hours($week, $start, $end, $user_id) {
         $end_time = Carbon::parse($row->end_time)->format('Y-m-d');
         $days = Carbon::parse($start_time)->diffInDays($end_time);
         if($days >= 1) {
-            TimeSheet::find($row->id)->update(['error_le'=>'Long entry.']);
+            TimeSheet::where('id', $row->id)->update(['error_le'=>'Long entry.']);
         } else {
-            TimeSheet::where('id', $row->id)
-                ->where('time_error', '5')->update(['error_le'=>NULL]);
+            TimeSheet::where('id', $row->id)->update(['error_le'=>NULL]);
         }
     }
     TimeSheet::query()->where('start_time', '>=', $startDate)

@@ -107,8 +107,8 @@ class ClockifyController extends Controller
             $rows = $this->clockify->apiRequest('workspaces/' . $this->clockify->workspaceId . '/user/' . $user->clockify_id . '/time-entries');
             $rows=json_decode($rows);
             foreach ($rows as $row){
-                $startTime=Carbon::parse(date('Y-m-d h:i:s', strtotime($row->timeInterval->start)));
-                $endTime=Carbon::parse(date('Y-m-d h:i:s', strtotime($row->timeInterval->end)));
+                $startTime=Carbon::parse(date('Y-m-d H:i:s', strtotime($row->timeInterval->start)));
+                $endTime=Carbon::parse(date('Y-m-d H:i:s', strtotime($row->timeInterval->end)));
                 $diff = $startTime->diff($endTime)->format('%H:%I:%S');
                 $input = [
                     'description' => $row->description,
@@ -217,15 +217,16 @@ class ClockifyController extends Controller
         $start = Carbon::now()->startOfDay()->subDay($weekday)->format('Y-m-d\TH:i:s\Z');//->toISOString();
         $workspaces = Workspace::get();
         foreach ($workspaces as $workspace) {
-            $users = User::whereNotNull('clockify_id')->get();
-                //->whereIn('clockify_id', ['609935adba9fdd7cafab3447','60aaf97e79793e3042ff8975'])->get();
+            $users = User::select('*')
+                ->whereNotNull('clockify_id')->get();
+            //->whereIn('clockify_id', ['609935adba9fdd7cafab3447','60aaf97e79793e3042ff8975'])->get();
             foreach ($users as $user) {
                 $rows = $this->clockify->apiRequest('workspaces/'.$workspace->clockify_id.'/user/' . $user->clockify_id . '/time-entries?start='.$start);
                 $rows = json_decode($rows);
                 if(!empty($rows) && count($rows) > 0) {
                     foreach ($rows as $row) {
-                        $startTime = Carbon::parse(date('Y-m-d h:i:s', strtotime($row->timeInterval->start)));
-                        $endTime = Carbon::parse(date('Y-m-d h:i:s', strtotime($row->timeInterval->end ?? Carbon::now())));
+                        $startTime = Carbon::parse(date('Y-m-d H:i:s', strtotime($row->timeInterval->start)));
+                        $endTime = Carbon::parse(date('Y-m-d H:i:s', strtotime($row->timeInterval->end ?? Carbon::now())));
                         $diff = $startTime->diffInSeconds($endTime);
 
                         $weekOfYear=($startTime->weekOfYear < 10) ? '0'.$startTime->weekOfYear : $startTime->weekOfYear;
@@ -235,22 +236,41 @@ class ClockifyController extends Controller
                                 $currentWeek = $startTime->subYear()->year.'-W'.$weekOfYear;
                             }
                         }
-                        $input = [
-                            'description' => $row->description,
-                            'tag_ids' => $row->tagIds,
-                            'user_id' => $row->userId,
-                            'billable' => $row->billable,
-                            'task_id' => $row->taskId,
-                            'project_id' => $row->projectId,
-                            'week' => $currentWeek,
-                            'start_time' => $endTime,
-                            'end_time' => $startTime,
-                            'duration_time' => $diff,
-                            'duration' => $row->timeInterval->duration,
-                            'workspace_id' => $row->workspaceId,
-                            'is_locked' => $row->isLocked,
-                            'custom_field_values' => $row->customFieldValues,
-                        ];
+                        if($startTime > $endTime) {
+                            $input = [
+                                'description' => $row->description,
+                                'tag_ids' => $row->tagIds,
+                                'user_id' => $row->userId,
+                                'billable' => $row->billable,
+                                'task_id' => $row->taskId,
+                                'project_id' => $row->projectId,
+                                'week' => $currentWeek,
+                                'start_time' => $endTime,
+                                'end_time' => $startTime,
+                                'duration_time' => $diff,
+                                'duration' => $row->timeInterval->duration,
+                                'workspace_id' => $row->workspaceId,
+                                'is_locked' => $row->isLocked,
+                                'custom_field_values' => $row->customFieldValues,
+                            ];
+                        } else {
+                            $input = [
+                                'description' => $row->description,
+                                'tag_ids' => $row->tagIds,
+                                'user_id' => $row->userId,
+                                'billable' => $row->billable,
+                                'task_id' => $row->taskId,
+                                'project_id' => $row->projectId,
+                                'week' => $currentWeek,
+                                'start_time' => $startTime,
+                                'end_time' => $endTime,
+                                'duration_time' => $diff,
+                                'duration' => $row->timeInterval->duration,
+                                'workspace_id' => $row->workspaceId,
+                                'is_locked' => $row->isLocked,
+                                'custom_field_values' => $row->customFieldValues,
+                            ];
+                        }
                         $id = [
                             'clockify_id' => $row->id,
                         ];

@@ -274,12 +274,19 @@ class EmployeeController extends Controller
                 ->addIndexColumn()
                 ->addColumn('action', function($query){
                     $exception = ($query->exception == 0) ? 'Request' : 'Remove';
-                    return '<a data-id="'.$query->id.'" data-remarks="'.$query->employee_remarks.'" data-description="'.$query->description.'" data-start_time="'.Carbon::parse($query->start_time)->format('Y-m-d\TH:i:s').'" data-end_time="'.Carbon::parse($query->end_time)->format('Y-m-d\TH:i:s').'" class="rowedit btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
+                    $action = '<a data-id="'.$query->id.'" data-remarks="'.$query->employee_remarks.'" data-description="'.$query->description.'" data-start_time="'.Carbon::parse($query->start_time)->format('Y-m-d\TH:i').'" data-end_time="'.Carbon::parse($query->end_time)->format('Y-m-d\TH:i').'" class="rowedit btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
                         Edit
-                    </a>
-                    <a data-id="'.$query->id.'" data-exception="'.$query->exception.'" data-description="'.$query->description.'" data-start_time="'.$query->start_time.'" data-end_time="'.$query->end_time.'" class="exception btn btn-dark btn-sm">
-                        '.$exception.' Exception
                     </a>';
+                    if(!empty($query->error_eo)) {
+                        $action .= '<a data-id="' . $query->id . '" class="rowdelete btn btn-dark btn-sm">
+                            Delete
+                        </a>';
+                    } else {
+                        $action .= '<a data-id="' . $query->id . '" data-exception="' . $query->exception . '" data-description="' . $query->description . '" data-start_time="' . $query->start_time . '" data-end_time="' . $query->end_time . '" class="exception btn btn-dark btn-sm">
+                            ' . $exception . ' Exception
+                        </a>';
+                    }
+                    return $action;
                 })->editColumn('project', function ($query) {
                     return $query->project->name ?? '';
                 })->editColumn('status', function ($query) {
@@ -321,7 +328,7 @@ class EmployeeController extends Controller
     {
         try {
             $rules = [
-                'description' => 'required|max:255',
+                'description' => 'nullable|max:255',
                 'start_time' => 'required',
                 'end_time' => 'required|after:start_time',
             ];
@@ -360,6 +367,15 @@ class EmployeeController extends Controller
             }
             $message = $request->id ? 'Updating Failed.' : 'Adding Failed.';
             return response()->json(['success' => false, 'message' => $message], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+        }
+    }
+
+    public function deleteTimeCard(Request $request){
+        try {
+            TimeSheet::where('id',$request->id)->delete();
+            return response()->json(['success' => true, 'message' => 'Delete successfully.'], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
         }

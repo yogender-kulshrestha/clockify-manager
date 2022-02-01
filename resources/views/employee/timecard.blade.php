@@ -140,7 +140,7 @@
                         <input type="hidden" name="id" id="id"/>
                         <input type="hidden" name="user_id" id="user_id" value="{{auth()->user()->clockify_id}}"/>
                         <div class="form-group">
-                            <label for="description">Description <span class="text-danger">*</span></label>
+                            <label for="description">Description {{--<span class="text-danger">*</span>--}}</label>
                             <textarea class="form-control" name="description" id="description" placeholder="Enter Description"></textarea>
                             <span id="description_error" class="text-danger"></span>
                         </div>
@@ -403,8 +403,7 @@
 
             $(document).on('click', '.rowdelete', function() {
                 var id = $(this).data('id');
-                var url = '{{ route('time-cards.destroy', ':id') }}';
-                url = url.replace(':id', id);
+                var url = '{{ route('employee.timecard.delete') }}';
                 Swal.fire({
                     title: 'Are you sure?',
                     text: "You won't be able to revert this!",
@@ -417,7 +416,7 @@
                     if (result.isConfirmed) {
                         $.ajax({
                             url: url,
-                            type: "DELETE",
+                            type: "GET",
                             dataType: "JSON",
                             data:{
                                 'id': id,

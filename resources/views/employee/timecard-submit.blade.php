@@ -109,14 +109,14 @@
                                     $dt = \Carbon\Carbon::now();
                                     $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($row->ot_hours));
                                     $ot_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->ot_hours)->subHours($ot_hours));
-                                    $net_hours = $dt->diffInHours($dt->copy()->addSeconds($row->net_hours));
-                                    $net_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->net_hours)->subHours($net_hours));
+                                    $net_hours2 = $dt->diffInHours($dt->copy()->addSeconds($row->net_hours));
+                                    $net_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->net_hours)->subHours($net_hours2));
                                 @endphp
                                 <tr @if($row->exception == 1 ) style="background-color: rgba(255,0,0,0.3);" @endif>
                                     <td>{{$row->date}}</td>
                                     <td>{!! $row->flags !!}</td>
                                     <td>{{$ot_hours}}:{{$ot_minutes}}</td>
-                                    <td>{{$net_hours}}:{{$net_minutes}}</td>
+                                    <td>{{$net_hours2}}:{{$net_minutes}}</td>
                                     <td>{!! $row->employee_remarks !!}</td>
                                     <td>{{$row->approver_remarks}}</td>
                                 </tr>
@@ -136,9 +136,9 @@
                                         <input type="hidden" name="week" value="{{$week}}"/>
                                         <input type="hidden" name="user_id" value="{{auth()->user()->clockify_id}}"/>
                                         @if($net_hours < 45)
-                                            <input type="hidden" name="status" value="Edit Later"/>
+                                            <input type="hidden" name="status" id="status" value="Edit Later"/>
                                         @else
-                                            <input type="hidden" name="status" value="Submitted"/>
+                                            <input type="hidden" name="status" id="status" value="Submitted"/>
                                         @endif
                                         <input type="submit" value="Submit Timecard" id="submit_button" class="btn btn-success btn-sm"/>
                                     </form>
@@ -184,7 +184,7 @@
                     </div>
                     <div class="modal-body">
                         <input type="hidden" name="id" id="id"/>
-                        <input type="hidden" name="status" id="status" value="Submitted"/>
+                        {{--<input type="hidden" name="status" id="status" value="Submitted"/>--}}
                         <input type="hidden" name="user_id" id="user_id" value="{{auth()->user()->clockify_id}}"/>
                         <div class="form-group">
                             <label for="leave_type_id">Leave Type <span class="text-danger">*</span></label>
@@ -241,18 +241,21 @@
             $('#add_form').submit(function (e) {
                 e.preventDefault();
                 //var form_data = new FormData(this);
-                var status = $('#status').val();
-                let buttonText = '';
-                let msgText = '';
-                if(status == 'Submitted'){
-                    buttonText = "Once you submit you cannot make changes.";
-                    msgText = 'Yes, submit it!';
-                } else {
+                var net_hours = '{{$net_hours ?? 0}}';
+                titleText = 'Are you sure?';
+                buttonText = "Once you submit you cannot make changes.";
+                msgText = 'Yes, submit it!';
+                if(net_hours < 45){
+                    titleText = 'Oops you are not able to submit.';
                     msgText = 'Your claimed time is less from 45 hours';
                     buttonText = 'Save, (edit later)';
+                } else {
+                    titleText = 'Are you sure?';
+                    buttonText = "Once you submit you cannot make changes.";
+                    msgText = 'Yes, submit it!';
                 }
                 Swal.fire({
-                    title: 'Are you sure?',
+                    title: titleText,
                     text: msgText,
                     icon: 'warning',
                     showCancelButton: true,

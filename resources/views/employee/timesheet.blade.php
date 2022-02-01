@@ -3,7 +3,7 @@
 @endphp
 @extends($layout)
 
-@section('title', 'Request Leave')
+@section('title', 'Time Sheet')
 
 @section('style')
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />

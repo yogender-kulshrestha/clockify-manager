@@ -101,6 +101,7 @@ Route::name('employee.')->group(function(){
     Route::get('/leave/{id}/review', [EmployeeController::class, 'reviewRequestLeave'])->name('leave.review');
 
     Route::get('/timecard-exception', [EmployeeController::class, 'statusTimeCard'])->name('timecard.exception');
+    Route::get('/timecard-delete', [EmployeeController::class, 'deleteTimeCard'])->name('timecard.delete');
     Route::get('/timecard/{week}/submit', [EmployeeController::class, 'forSubmitTimeCard'])->name('timecard.submit');
     Route::post('/timecard/{week}/submit', [EmployeeController::class, 'submitTimecard']);
 

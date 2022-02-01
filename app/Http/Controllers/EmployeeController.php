@@ -530,9 +530,11 @@ class EmployeeController extends Controller
         ];
         $insert = Record::updateOrCreate($id, $input);
         if ($insert->wasRecentlyCreated) {
-            return redirect()->to(route('employee.records'))->withSuccess('Timecard submit successfully.');
+            $message = ($request->status == 'Edit Later') ? 'Timecard save successfully.' : 'Timecard submitted successfully.';
+            return redirect()->to(route('employee.records'))->withSuccess($message);
         } else {
-            return redirect()->to(route('employee.records'))->withSuccess('Timecard resubmit successfully.');
+            $message = ($request->status == 'Edit Later') ? 'Timecard save successfully.' : 'Timecard re-submitted successfully.';
+            return redirect()->to(route('employee.records'))->withSuccess($message);
         }
         return redirect()->back()->withError('Timecard not submit.');
     }

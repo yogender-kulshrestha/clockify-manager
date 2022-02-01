@@ -129,19 +129,30 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="text-center">
-                                    <form id="add_form" method="POST" action="{{route('employee.timecard.submit', ['week' => $week])}}">
-                                        @csrf
-                                        <input type="hidden" name="start_time" value="{{$startDate}}"/>
-                                        <input type="hidden" name="end_time" value="{{$endDate}}"/>
-                                        <input type="hidden" name="week" value="{{$week}}"/>
-                                        <input type="hidden" name="user_id" value="{{auth()->user()->clockify_id}}"/>
-                                        @if($net_hours < 45)
-                                            <input type="hidden" name="status" id="status" value="Edit Later"/>
-                                        @else
-                                            <input type="hidden" name="status" id="status" value="Submitted"/>
-                                        @endif
-                                        <input type="submit" value="Submit Timecard" id="submit_button" class="btn btn-success btn-sm"/>
-                                    </form>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <form id="add_form" method="POST" action="{{route('employee.timecard.submit', ['week' => $week])}}">
+                                                    @csrf
+                                                    <input type="hidden" name="start_time" value="{{$startDate}}"/>
+                                                    <input type="hidden" name="end_time" value="{{$endDate}}"/>
+                                                    <input type="hidden" name="week" value="{{$week}}"/>
+                                                    <input type="hidden" name="user_id" value="{{auth()->user()->clockify_id}}"/>
+                                                    <input type="hidden" name="status" id="status" value="Submitted"/>
+                                                    <input type="submit" value="Submit Timecard" id="submit_button" class="btn btn-success btn-sm"/>
+                                                </form>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <form id="add_form3" method="POST" action="{{route('employee.timecard.submit', ['week' => $week])}}">
+                                                    @csrf
+                                                    <input type="hidden" name="start_time" value="{{$startDate}}"/>
+                                                    <input type="hidden" name="end_time" value="{{$endDate}}"/>
+                                                    <input type="hidden" name="week" value="{{$week}}"/>
+                                                    <input type="hidden" name="user_id" value="{{auth()->user()->clockify_id}}"/>
+                                                    <input type="hidden" name="status" id="status" value="Edit Later"/>
+                                                    <input type="submit" value="Save & Edit Later" id="submit_button2" class="btn btn-info btn-sm"/>
+                                                </form>
+                                            </div>
+                                        </div>
                                 </div></div>
                             <div class="col-md-4"></div>
                         </div>
@@ -237,15 +248,14 @@
                 'ordering': false,
             });
 
-            const addForm = '{{ route('employee.request-leave') }}';
             $('#add_form').submit(function (e) {
                 e.preventDefault();
                 //var form_data = new FormData(this);
-                var net_hours = '{{$net_hours ?? 0}}';
-                titleText = 'Are you sure?';
-                buttonText = "Once you submit you cannot make changes.";
-                msgText = 'Yes, submit it!';
-                if(net_hours < 45){
+                //var net_hours = '{{$net_hours ?? 0}}';
+                var titleText = 'Are you sure?';
+                var msgText = "Once you submit you cannot make changes.";
+                var buttonText = 'Yes, submit it!';
+                /*if(net_hours < 45){
                     titleText = 'Oops you are not able to submit.';
                     msgText = 'Your claimed time is less from 45 hours';
                     buttonText = 'Save, (edit later)';
@@ -253,7 +263,28 @@
                     titleText = 'Are you sure?';
                     buttonText = "Once you submit you cannot make changes.";
                     msgText = 'Yes, submit it!';
-                }
+                }*/
+                Swal.fire({
+                    title: titleText,
+                    text: msgText,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: buttonText
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.submit();
+                    }
+                })
+            });
+
+            $('#add_form3').submit(function (e) {
+                e.preventDefault();
+                //var form_data = new FormData(this);
+                var titleText = 'Are you sure?';
+                var msgText = 'You went save & edit later.';
+                var buttonText = "Yes, save it!";
                 Swal.fire({
                     title: titleText,
                     text: msgText,

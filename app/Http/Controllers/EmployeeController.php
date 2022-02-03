@@ -217,14 +217,24 @@ class EmployeeController extends Controller
                     'status' => $request->status,
                     'description' => $insert->id,
                 ];
-                Record::create($record);
+                $data = Record::create($record);
+                sendMail('leaveSubmit', $data);
                 return response()->json(['success' => true, 'message' => 'Request leave create successfully.'], 200);
             } else {
                 $record = [
                     'record_type' => 'leave',
                     'description' => $insert->id,
                 ];
-                Record::where($record)->update(['status' => $request->status]);
+                $data = Record::where($record)->update(['status' => $request->status]);
+                if($request->status == 'Approved') {
+                    $status = 'leaveApproved';
+                } elseif($request->status == 'Revise and Resubmit') {
+                    $status = 'leaveRevise';
+                } else {
+                    $status = 'leaveResubmit';
+                }
+                $data = Record::where($record)->first();
+                sendMail($status, $data);
                 return response()->json(['success' => true, 'message' => 'Request leave update successfully.'], 200);
             }
             return response()->json(['success' => false, 'message' => 'Request leave failed.'], 200);
@@ -530,9 +540,25 @@ class EmployeeController extends Controller
         ];
         $insert = Record::updateOrCreate($id, $input);
         if ($insert->wasRecentlyCreated) {
+            if($request->status == 'Submitted') {
+                $status = 'timesheetSubmit';
+                $insert = Record::find($insert->id);
+                sendMail($status, $insert);
+            }
             $message = ($request->status == 'Edit Later') ? 'Timecard save successfully.' : 'Timecard submitted successfully.';
             return redirect()->to(route('employee.records'))->withSuccess($message);
         } else {
+            $insert = Record::where($id)->first();
+            if($request->status == 'Approved') {
+                $status = 'timesheetApproved';
+                sendMail($status, $insert);
+            } elseif($request->status == 'Revise and Resubmit') {
+                $status = 'timesheetRevise';
+                sendMail($status, $insert);
+            } elseif($request->status == 'Submitted') {
+                $status = 'timesheetResubmit';
+                sendMail($status, $insert);
+            }
             $message = ($request->status == 'Edit Later') ? 'Timecard save successfully.' : 'Timecard re-submitted successfully.';
             return redirect()->to(route('employee.records'))->withSuccess($message);
         }
@@ -637,6 +663,14 @@ class EmployeeController extends Controller
         if($data) {
             foreach ($remarks as $remark) {
                 TimeCard::where('id', $remark['id'])->update(['approver_remarks' => $remark['remarks']]);
+            }
+            $data = Record::where('description', $week)->where('user_id', $request->user_id)->first();
+            if($request->status == 'Approved') {
+                $status = 'timesheetApproved';
+                sendMail($status, $data);
+            } elseif($request->status == 'Revise and Resubmit') {
+                $status = 'timesheetRevise';
+                sendMail($status, $data);
             }
             return redirect()->to(route('employee.records'))->withSuccess('Timecard '.$request->status.' successfully.');
         }
@@ -860,5 +894,48 @@ class EmployeeController extends Controller
             return response()->json(['success' => true, 'message' => 'Deleted Successfully.'], 200);
         }
         return response()->json(['success' => false, 'message' => 'Deletion Failed.'], 200);
+    }
+
+    public function mailNotifications()
+    {
+        $date = Carbon::now();
+        $records = Record::where('status', 'Submitted')->whereDate('updated_at', '<', $date)->get();
+        foreach ($records as $record) {
+            reminderMail('approver', $record);
+        }
+
+        $users = User::where('role', 'user')->get();
+        foreach ($users as $user) {
+            $now = Carbon::now()->subWeek();
+            $weekOfYear = ($now->weekOfYear < 10) ? '0' . $now->weekOfYear : $now->weekOfYear;
+            $currentWeek = $now->year . '-W' . $weekOfYear;
+            $date = Carbon::now();
+            $date->setISODate($now->year, $weekOfYear);
+            $startDate = $date->startOfWeek()->format('Y-m-d H:i:s');
+            $endDate = $date->endOfWeek()->format('Y-m-d H:i:s');
+            $week = [];
+            $now = Carbon::now();
+            for ($i = 0; $i < 5; $i++) {
+                $now->subWeek();
+                $weekOfYear = ($now->weekOfYear < 10) ? '0' . $now->weekOfYear : $now->weekOfYear;
+                $currentWeek = $now->year . '-W' . $weekOfYear;
+                $week[$i]['week'] = $currentWeek;
+            }
+            $time_weeks = Record::select('description as week')
+                ->where('user_id', $user->clockify_id)
+                ->whereIn('description', $week)
+                ->where('record_type', 'timecard')->groupBy('description')->get()->toArray();
+            $all_weeks = [];
+            $allweeks = array_diff_key($week, $time_weeks);
+            foreach ($allweeks as $w) {
+                $all_weeks[] = $w;
+            }
+            $weekCount = count($all_weeks);
+            if ($weekCount >= 1) {
+                $user['weekCount'] = $weekCount;
+                reminderMail('employee', $user);
+            }
+        }
+        return response()->json(['message' => 'Reminder mail sent successfully.']);
     }
 }

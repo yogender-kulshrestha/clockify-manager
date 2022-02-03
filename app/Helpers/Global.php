@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Approver;
 use App\Models\Leave;
+use App\Mail\CommonMail;
 
 function total_hours($user_id, $project_id, $date_from, $date_to)
 {
@@ -271,4 +272,174 @@ function verify_working_hours($week, $start, $end, $user_id) {
         ->where('start_time', '<=', $endDate)
         ->where('user_id', $user_id)->latest()->get();
     return $rows;
+}
+
+function sendMail($type, $data)
+{
+    $types = [
+        'leaveSubmit',
+        'leaveResubmit',
+        'timesheetSubmit',
+        'timesheetResubmit',
+    ];
+    $types_approver = [
+        'leaveRevise',
+        'leaveApproved',
+        'timesheetRevise',
+        'timesheetApproved',
+    ];
+    if(in_array($type, $types)) {
+        $owner = User::where('clockify_id', $data->user_id)->first();
+        $approver = Approver::select('approver_id')->where('user_id', $owner->clockify_id)->get();
+        $users = User::whereIn('role', ['hr'])->orWhereIn('clockify_id', $approver)->get();
+        //\Illuminate\Support\Facades\Log::info(json_encode($users));
+        foreach($users as $user) {
+            $email = $user->email;
+            $name = $user->name;
+            if ($type == 'leaveSubmit') {
+                $subject = 'Leave Request Submitted';
+                $title = '';
+                $body = 'Leave request submitted by '.$owner->name.'.';
+            } elseif ($type == 'leaveResubmit') {
+                $subject = 'Leave Request Re-Submitted';
+                $title = '';
+                $body = 'Leave request re-submitted by '.$owner->name.'.';
+            } elseif ($type == 'timesheetSubmit') {
+                $subject = 'Timecard Request Submitted';
+                $title = '';
+                $body = 'Timecard submitted by '.$owner->name.'.';
+            } elseif ($type == 'timesheetResubmit') {
+                $subject = 'Timecard Re-Submitted';
+                $title = '';
+                $body = 'Timecard re-submitted by '.$owner->name.'.';
+            }
+            $data['to'] = $user;
+            $data['owner'] = $owner;
+            $data['subject'] = $subject;
+            $data['title'] = $title;
+            $data['body'] = $body;
+            $sent = \Mail::to($email, $name)->send(new CommonMail($data));
+        }
+        $user = $owner;
+        $email = $user->email;
+        $name = $user->name;
+        if ($type == 'leaveSubmit') {
+            $subject = 'Leave Request Submitted';
+            $title = '';
+            $body = 'Your leave request submitted successfully.';
+        } elseif ($type == 'leaveResubmit') {
+            $subject = 'Leave Request Re-Submitted';
+            $title = '';
+            $body = 'Your leave request re-submitted successfully.';
+        } elseif ($type == 'timesheetSubmit') {
+            $subject = 'Timecard Request Submitted';
+            $title = '';
+            $body = 'Your timecard submitted successfully.';
+        } elseif ($type == 'timesheetResubmit') {
+            $subject = 'Timecard Re-Submitted';
+            $title = '';
+            $body = 'Your timecard re-submitted successfully.';
+        }
+        $data['to'] = $user;
+        $data['owner'] = $owner;
+        $data['subject'] = $subject;
+        $data['title'] = $title;
+        $data['body'] = $body;
+        $sent = \Mail::to($email, $name)->send(new CommonMail($data));
+    } elseif(in_array($type, $types_approver)) {
+        $user = User::where('clockify_id', $data->user_id)->first();
+        $owner = User::where('clockify_id', auth()->user()->clockify_id)->first();
+        $email = $user->email;
+        $name = $user->name;
+        if($type == 'leaveRevise') {
+            $subject = 'Leave Revise and Re-Submit';
+            $title = '';
+            $body = 'Your leave request disapproved by '.$owner->name.', Please revise and re-submit.';
+        } elseif($type == 'leaveApproved') {
+            $subject = 'Leave Approved';
+            $title = '';
+            $body = 'Your leave request Approved by '.$owner->name.'.';
+        } elseif ($type == 'timesheetRevise') {
+            $subject = 'Timecard Revise and Re-Submit';
+            $title = '';
+            $body = 'Your timecard disapproved by '.$owner->name.', Please revise and re-submit.';
+        } elseif ($type == 'timesheetApproved') {
+            $subject = 'Timecard Approved';
+            $title = '';
+            $body = 'Your timecard Approved by '.$owner->name.'.';
+        }
+        $data['to'] = $user;
+        $data['owner'] = $owner;
+        $data['subject'] = $subject;
+        $data['title'] = $title;
+        $data['body'] = $body;
+        $sent = \Mail::to($email, $name)->send(new CommonMail($data));
+
+        $owner = User::where('clockify_id', $data->user_id)->first();
+        $user = User::where('clockify_id', auth()->user()->clockify_id)->first();
+        $email = $user->email;
+        $name = $user->name;
+        if($type == 'leaveRevise') {
+            $subject = 'Leave Revise and Re-Submit';
+            $title = '';
+            $body = 'Leave request disapproved of '.$owner->name.'.';
+        } elseif($type == 'leaveApproved') {
+            $subject = 'Leave Approved';
+            $title = '';
+            $body = 'Leave request Approved of '.$owner->name.'.';
+        } elseif ($type == 'timesheetRevise') {
+            $subject = 'Timecard Revise and Re-Submit';
+            $title = '';
+            $body = 'Timecard disapproved of '.$owner->name.'.';
+        } elseif ($type == 'timesheetApproved') {
+            $subject = 'Timecard Approved';
+            $title = '';
+            $body = 'Timecard Approved of '.$owner->name.'.';
+        }
+        $data['to'] = $user;
+        $data['owner'] = $owner;
+        $data['subject'] = $subject;
+        $data['title'] = $title;
+        $data['body'] = $body;
+        $sent = \Mail::to($email, $name)->send(new CommonMail($data));
+    }
+    return $sent ? true : false;
+}
+
+function reminderMail($type, $data)
+{
+    if($type == 'approver') {
+        $owner = User::where('clockify_id', $data->user_id)->first();
+        $approver = Approver::select('approver_id')->where('user_id', $owner->clockify_id)->get();
+        $users = User::whereIn('role', ['hr'])->orWhereIn('clockify_id', $approver)->get();
+        //\Illuminate\Support\Facades\Log::info(json_encode($users));
+        foreach($users as $user) {
+            $email = $user->email;
+            $name = $user->name;
+            $subject = 'Reminder for approve submitted '.$data->record_type;
+            $title = '';
+            $body = 'Please check and approve submitted '.$data->record_type.' of '.$owner->name;
+            $data['to'] = $user;
+            $data['owner'] = $owner;
+            $data['subject'] = $subject;
+            $data['title'] = $title;
+            $data['body'] = $body;
+            $sent = \Mail::to($email, $name)->send(new CommonMail($data));
+        }
+    } elseif($type == 'employee') {
+        $user = User::where('clockify_id', $data->clockify_id)->first();
+        $owner = $user;
+        $email = $user->email;
+        $name = $user->name;
+        $subject = 'Reminder for Timecard submittion';
+        $title = '';
+        $body = 'Please submit you last '.$data->weekCount.' week timecard.';
+        $data['to'] = $user;
+        $data['owner'] = $owner;
+        $data['subject'] = $subject;
+        $data['title'] = $title;
+        $data['body'] = $body;
+        $sent = \Mail::to($email, $name)->send(new CommonMail($data));
+    }
+    return $sent ? true : false;
 }

@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class SendRegistrationMail extends Mailable
+class CommonMail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -30,8 +30,6 @@ class SendRegistrationMail extends Mailable
      */
     public function build()
     {
-        //return $this->view('view.name');
-        return $this->subject('Register Successfully.')
-            ->view('mails.registration');
+        return $this->subject($this->details->subject)->view('mails.common');
     }
 }

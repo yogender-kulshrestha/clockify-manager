@@ -113,13 +113,13 @@ class EmployeeController extends Controller
                         }
                     } else {
                         if($query->record_type == 'leave'){
-                            if($query->status == 'Submitted'){
+                            if($query->status == 'Submitted' || $query->status == 'Resubmitted'){
                                 $action='<a href="'.route('employee.leave.review',["id"=>$query->description]).'" class="btn btn-dark btn-sm">Review</a>';
                             } else {
                                 $action='<a href="'.route('employee.leave.view',["id"=>$query->description]).'" class="btn btn-dark btn-sm">View</a>';
                             }
                         } else {
-                            if($query->status == 'Submitted'){
+                            if($query->status == 'Submitted' || $query->status == 'Resubmitted'){
                                 $action='<a href="'.route('employee.timecard.review',["week"=>$query->id]).'" class="btn btn-dark btn-sm">Review</a>';
                             } else {
                                 $action='<a href="'.route('employee.timecard.view',["week"=>$query->id]).'" class="btn btn-dark btn-sm">View</a>';
@@ -232,6 +232,7 @@ class EmployeeController extends Controller
                     $status = 'leaveRevise';
                 } else {
                     $status = 'leaveResubmit';
+                    Record::where($record)->update(['status' => 'Resubmitted']);
                 }
                 $data = Record::where($record)->first();
                 sendMail($status, $data);
@@ -556,6 +557,7 @@ class EmployeeController extends Controller
                 $status = 'timesheetRevise';
                 sendMail($status, $insert);
             } elseif($request->status == 'Submitted') {
+                Record::where($id)->update(['status' => 'Resubmitted']);
                 $status = 'timesheetResubmit';
                 sendMail($status, $insert);
             }
@@ -824,13 +826,13 @@ class EmployeeController extends Controller
                         }
                     } else {
                         if($query->record_type == 'leave'){
-                            if($query->status == 'Submitted'){
+                            if($query->status == 'Submitted' || $query->status == 'Resubmitted'){
                                 $action='<a href="'.route('employee.leave.review',["id"=>$query->description]).'" class="btn btn-dark btn-sm">Review</a>';
                             } else {
                                 $action='<a href="'.route('employee.leave.view',["id"=>$query->description]).'" class="btn btn-dark btn-sm">View</a>';
                             }
                         } else {
-                            if($query->status == 'Submitted'){
+                            if($query->status == 'Submitted' || $query->status == 'Resubmitted'){
                                 $action='<a href="'.route('employee.timecard.review',["week"=>$query->id]).'" class="btn btn-dark btn-sm">Review</a>';
                             } else {
                                 $action='<a href="'.route('employee.timecard.view',["week"=>$query->id]).'" class="btn btn-dark btn-sm">View</a>';

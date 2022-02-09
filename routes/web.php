@@ -41,7 +41,7 @@ Auth::routes([
     'verify' => false,
 ]);
 
-Route::get('mail-notifications', [EmployeeController::class, 'mailNotifications']);
+Route::get('mail-notifications', [ClockifyController::class, 'mailNotifications']);
 
 //Clockify Routes
 Route::get('/clockify/workspaces', [ClockifyController::class, 'workspaces'])->name('clockify.workspaces');

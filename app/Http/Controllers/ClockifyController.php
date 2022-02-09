@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\SendRegistrationMail;
 use App\Models\Project;
+use App\Models\Record;
 use App\Models\TimeSheet;
 use App\Models\User;
 use App\Models\Workspace;
@@ -280,5 +281,48 @@ class ClockifyController extends Controller
             }
         }
         return response()->json(['status' => true, 'message' => 'Time sheet updated successfully.']);
+    }
+
+    public function mailNotifications()
+    {
+        $date = Carbon::now();
+        $records = Record::where('status', 'Submitted')->whereDate('updated_at', '<', $date)->get();
+        foreach ($records as $record) {
+            reminderMail('approver', $record);
+        }
+
+        $users = User::where('role', 'user')->get();
+        foreach ($users as $user) {
+            $now = Carbon::now()->subWeek();
+            $weekOfYear = ($now->weekOfYear < 10) ? '0' . $now->weekOfYear : $now->weekOfYear;
+            $currentWeek = $now->year . '-W' . $weekOfYear;
+            $date = Carbon::now();
+            $date->setISODate($now->year, $weekOfYear);
+            $startDate = $date->startOfWeek()->format('Y-m-d H:i:s');
+            $endDate = $date->endOfWeek()->format('Y-m-d H:i:s');
+            $week = [];
+            $now = Carbon::now();
+            for ($i = 0; $i < 5; $i++) {
+                $now->subWeek();
+                $weekOfYear = ($now->weekOfYear < 10) ? '0' . $now->weekOfYear : $now->weekOfYear;
+                $currentWeek = $now->year . '-W' . $weekOfYear;
+                $week[$i]['week'] = $currentWeek;
+            }
+            $time_weeks = Record::select('description as week')
+                ->where('user_id', $user->clockify_id)
+                ->whereIn('description', $week)
+                ->where('record_type', 'timecard')->groupBy('description')->get()->toArray();
+            $all_weeks = [];
+            $allweeks = array_diff_key($week, $time_weeks);
+            foreach ($allweeks as $w) {
+                $all_weeks[] = $w;
+            }
+            $weekCount = count($all_weeks);
+            if ($weekCount >= 1) {
+                $user['weekCount'] = $weekCount;
+                reminderMail('employee', $user);
+            }
+        }
+        return response()->json(['message' => 'Reminder mail sent successfully.']);
     }
 }

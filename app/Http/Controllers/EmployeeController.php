@@ -687,16 +687,20 @@ class EmployeeController extends Controller
             $now->subWeek();
             $weekOfYear=($now->weekOfYear < 10) ? '0'.$now->weekOfYear : $now->weekOfYear;
             $currentWeek = $now->year.'-W'.$weekOfYear;
-            $week[$i]['week'] = $currentWeek;
+            $week[$i] = $currentWeek;
         }
-        $time_weeks=Record::select('description as week')
+        $times=Record::select('description as week')
             ->where('user_id',auth()->user()->clockify_id)
             ->whereIn('description', $week)
-            ->where('record_type', 'timecard')->groupBy('description')->get()->toArray();
+            ->where('record_type', 'timecard')->groupBy('description')->get();
+        $time_weeks=[];
+        foreach($times as $k=>$time){
+            $time_weeks[$k] = $time->week;
+        }
         $all_weeks=[];
-        $allweeks=array_diff_key($week,$time_weeks);
-        foreach ($allweeks as $w){
-            $all_weeks[] = $w;
+        $allweeks=array_diff($week,$time_weeks);
+        foreach ($allweeks as $k=>$w) {
+            $all_weeks[]['week'] = $w;
         }
         $all_weeks=json_decode(json_encode($all_weeks));
         return view('employee.timesheet', compact('all_weeks'));

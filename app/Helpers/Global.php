@@ -37,7 +37,7 @@ function total_working_hours($user_id, $date_from, $date_to)
     echo CarbonInterval::days($days)->hours($hours)->minutes($minutes)->forHumans();*/
 }
 
-function leave_count($user_id,$startDate,$endDate,$type=null,$leave_type_id=null){
+function leave_count($user_id,$startDate,$endDate,$type=null,$leave_type_id=null,$status=null){
     $query = DB::raw("*, (CASE WHEN (date_from >= '$startDate' AND date_to <= '$endDate') THEN datediff(date_to, date_from)+1
     WHEN (date_from <= '$startDate' AND date_to >= '$endDate') THEN datediff('$endDate', '$startDate')+1
     WHEN (date_from >= '$startDate' AND date_from <= '$endDate') THEN datediff('$endDate', date_from)+1
@@ -59,6 +59,9 @@ function leave_count($user_id,$startDate,$endDate,$type=null,$leave_type_id=null
     }
     if($leave_type_id) {
         $leaves->where('leave_type_id', $leave_type_id);
+    }
+    if($status != 'status') {
+        $leaves->where('status', 'Final Approved');
     }
     //return $leaves->count();
     $rows=$leaves->get();
@@ -88,9 +91,9 @@ function leave_hours($user_id,$startDate,$endDate,$type=null){
         });
     });
     if($type == 'Approved') {
-        $leaves->where('status', 'Approved');
+        $leaves->where('status', 'Final Approved');
     } elseif($type == 'NotApproved') {
-        $leaves->where('status', '!=', 'Approved');
+        $leaves->where('status', '!=', 'Final Approved');
     }
     $rows=$leaves->get();
     $leave=0;
@@ -299,6 +302,7 @@ function sendMail($type, $data)
     $types_approver = [
         'leaveRevise',
         'leaveApproved',
+        'leaveFinalApproved',
         'timesheetRevise',
         'timesheetApproved',
     ];
@@ -373,6 +377,10 @@ function sendMail($type, $data)
             $subject = 'Leave Approved';
             $title = '';
             $body = 'Your leave request Approved by '.$owner->name.'.';
+        } elseif($type == 'leaveFinalApproved') {
+            $subject = 'Leave Final Approved';
+            $title = '';
+            $body = 'Your leave request Final Approved by '.$owner->name.'.';
         } elseif ($type == 'timesheetRevise') {
             $subject = 'Timecard Revise and Re-Submit';
             $title = '';

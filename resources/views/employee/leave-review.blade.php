@@ -39,7 +39,7 @@
 @section('content')
     <div class="row">
         <div class="col-12">
-            <div class="card">
+            <div class="card" @if($data->exception == '1') style="background-color:rgba(255,0,0,0.3);" @endif>
                 <!-- Card header -->
                 <div class="card-header pb-0">
                     <div class="d-lg-flex">
@@ -122,7 +122,11 @@
                                     </div>
                                 </div>
                                 <div class="text-right">
+                                    @if(auth()->user()->role == 'hr')
+                                    <button type="submit" value="Final Approved" style="float: right;" class="btn btn-success btn-sm" id="add_button">Final Approve</button>
+                                    @else
                                     <button type="submit" value="Approved" style="float: right;" class="btn btn-success btn-sm" id="add_button">Approve</button>
+                                    @endif
                                     <button type="submit" value="Revise and Resubmit" style="float: right;" class="btn btn-danger btn-sm mx-2" id="add2_button">Revise/Resubmit</button>
                                 </div>
                             </div>

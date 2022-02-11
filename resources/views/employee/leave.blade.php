@@ -68,6 +68,7 @@
                             <div class="row">
                                 <input type="hidden" name="id" id="id"/>
                                 <input type="hidden" name="status" id="status" value="Submitted"/>
+                                <input type="hidden" name="exception" id="exception" value="0"/>
                                 <input type="hidden" name="user_id" id="user_id" value="{{auth()->user()->clockify_id}}"/>
                                 {{--<div class="form-group">
                                     <label for="title">Title <span class="text-danger">*</span></label>
@@ -82,8 +83,10 @@
                                             @foreach($leave_categories as $category)
                                                 @php
                                                 $leave = leave_count(auth()->user()->clockify_id, startOfYear(), endOfYear(), null, $category->id);
+                                                $balance = $category->balance - $leave;
+                                                $balance = ($balance > 0) ? $balance : 0;
                                                 @endphp
-                                                <option value="{{$category->id}}" @if($leave >= $category->balance) disabled @endif>{{$category->name}} [used {{ $leave ?? 0 }} from {{ $category->balance ?? 0 }}]</option>
+                                                <option value="{{$category->id}}">{{$category->name}} [balance {{ $balance ?? 0 }}]</option>
                                             @endforeach
                                         </select>
                                         <span id="leave_type_id_error" class="text-danger"></span>
@@ -156,7 +159,11 @@
             const addForm = '{{ route('employee.request-leave') }}';
             $('#add_form').submit(function (e) {
                 e.preventDefault();
-                var form_data = new FormData(this);
+                //var form_data = new FormData(this);
+                formSubmit();
+            });
+            function formSubmit() {
+                var form_data = new FormData($('#add_form')[0]);
                 Swal.fire({
                     title: 'Are you sure?',
                     text: "Once you submit you cannot make changes.",
@@ -177,7 +184,7 @@
                             headers: {"X-CSRF-Token": $('meta[name="csrf-token"]').attr('content')},
                             beforeSend: function () {
                                 $('#add_button').attr('disabled', 'disabled');
-                                $('#title_error').text('');
+                                //$('#title_error').text('');
                                 $('#leave_type_id_error').text('');
                                 $('#date_from_error').text('');
                                 $('#date_to_error').text('');
@@ -190,14 +197,34 @@
                                     toastr.success(data.message);
                                     window.location.href = "{{route('employee.records')}}";
                                 } else {
-                                    toastr.error(data.message);
+                                    if(data.type == '2'){
+                                        Swal.fire({
+                                            title: 'Oops?',
+                                            text: data.message,
+                                            icon: 'warning',
+                                            showCancelButton: true,
+                                            confirmButtonColor: '#d33',
+                                            cancelButtonColor: '#3085d6',
+                                            confirmButtonText: 'Yes, submit with exception',
+                                            cancelButtonText: 'Edit'
+                                        }).then((result) => {
+                                            if (result.isConfirmed) {
+                                                $('#exception').val('1');
+                                                formSubmit();
+                                            } else {
+                                                $('#exception').val('0');
+                                            }
+                                        })
+                                    } else {
+                                        toastr.error(data.message);
+                                    }
                                 }
                                 $('#add_button').attr('disabled', false);
                             },
                             error: function (data) {
                                 $('#add_button').attr('disabled', false);
                                 let responseData = data.responseJSON;
-                                $('#title_error').text(responseData.errors['title']);
+                                //$('#title_error').text(responseData.errors['title']);
                                 $('#leave_type_id_error').text(responseData.errors['leave_type_id']);
                                 $('#date_from_error').text(responseData.errors['date_from']);
                                 $('#date_to_error').text(responseData.errors['date_to']);
@@ -206,7 +233,7 @@
                         });
                     }
                 })
-            });
+            };
         });
     </script>
 @endsection

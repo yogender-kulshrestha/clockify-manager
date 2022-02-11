@@ -187,7 +187,7 @@ class EmployeeController extends Controller
                 'leave_type_id' => 'required_if:id,null|exists:leave_types,id',
                 'date_from' => 'required_if:id,null',
                 'date_to' => 'required_if:id,null|after_or_equal:date_from',
-                'status' => 'required|in:Submitted,Revise and Resubmit,Approved',
+                'status' => 'required|in:Submitted,Revise and Resubmit,Approved,Final Approved',
                 'user_id' => 'required'
             ];
             $messages = [
@@ -195,37 +195,39 @@ class EmployeeController extends Controller
             ];
             $validator = Validator::make($request->all(), $rules, $messages);
             if ($validator->fails()) {
-                return response()->json(['success' => false, 'errors' => $validator->getMessageBag(), 'message' => 'Something went wrong.'], 422);
-            }
-
-            $total_leave = LeaveType::where('id',$request->leave_type_id)->sum('balance');
-            if($request->id){
-                $year_leave = leave_count($request->user_id, startOfYear(), endOfYear(), $request->id, $request->leave_type_id);
-            } else {
-                $year_leave = leave_count($request->user_id, startOfYear(), endOfYear(), null, $request->leave_type_id);
-            }
-            $year_leave_t=$year_leave+Carbon::parse($request->date_from)->diffInDays($request->date_to)+1;
-            if($year_leave_t > $total_leave) {
-                if($year_leave >= $total_leave) {
-                    return response()->json(['success' => false, 'message' => 'This leave type limit already used,Please select another one.'], 200);
-                } else {
-                    $le=$total_leave-$year_leave;
-                    return response()->json(['success' => false, 'message' => 'This leave type balance remaining '.$le.' only.'], 200);
-                }
+                return response()->json(['success' => false, 'type' => '1', 'errors' => $validator->getMessageBag(), 'message' => 'Something went wrong.'], 422);
             }
 
             if($request->user_id && $request->date_from && $request->date_to) {
                 if($request->id){
-                    $leave_hours = leave_count($request->user_id, $request->date_from, $request->date_to, $request->id);
+                    $leave_hours = leave_count($request->user_id, $request->date_from, $request->date_to, $request->id, null, 'status');
                 } else {
-                    $leave_hours = leave_count($request->user_id, $request->date_from, $request->date_to);
+                    $leave_hours = leave_count($request->user_id, $request->date_from, $request->date_to, null, null, 'status');
                 }
                 if($leave_hours > 0) {
-                    return response()->json(['success' => false, 'message' => 'Leave request already exists between date from and date to.'], 200);
+                    return response()->json(['success' => false, 'type' => '1', 'message' => 'Leave request already exists between date from and date to.'], 200);
+                }
+
+                if($request->exception != '1') {
+                    $total_leave = LeaveType::where('id',$request->leave_type_id)->sum('balance');
+                    if($request->id){
+                        $year_leave = leave_count($request->user_id, startOfYear(), endOfYear(), $request->id, $request->leave_type_id);
+                    } else {
+                        $year_leave = leave_count($request->user_id, startOfYear(), endOfYear(), null, $request->leave_type_id);
+                    }
+                    $year_leave_t=$year_leave+Carbon::parse($request->date_from)->diffInDays($request->date_to)+1;
+                    if($year_leave_t > $total_leave) {
+                        if($year_leave >= $total_leave) {
+                            return response()->json(['success' => false, 'type' => '2', 'message' => 'This leave type balance already used, Please select another one or submit with Exception.'], 200);
+                        } else {
+                            $le=$total_leave-$year_leave;
+                            return response()->json(['success' => false, 'type' => '2', 'message' => 'This leave type balance remaining '.$le.' only, Please edit or submit with Exception'], 200);
+                        }
+                    }
                 }
             }
 
-            $input = $request->only('title', 'user_id', 'leave_type_id', 'date_from', 'date_to', 'remarks', 'status');
+            $input = $request->only('title', 'user_id', 'leave_type_id', 'date_from', 'date_to', 'remarks', 'status', 'exception');
             if($request->hasFile('attachment')) {
                 $attachment = $request->attachment->store('attachments');
                 $input['attachment'] = 'storage/'. $attachment;
@@ -252,6 +254,8 @@ class EmployeeController extends Controller
                 $data = Record::where($record)->update(['status' => $request->status]);
                 if($request->status == 'Approved') {
                     $status = 'leaveApproved';
+                } elseif($request->status == 'Final Approved') {
+                    $status = 'leaveFinalApproved';
                 } elseif($request->status == 'Revise and Resubmit') {
                     $status = 'leaveRevise';
                 } else {
@@ -260,11 +264,11 @@ class EmployeeController extends Controller
                 }
                 $data = Record::where($record)->first();
                 sendMail($status, $data);
-                return response()->json(['success' => true, 'message' => 'Request leave update successfully.'], 200);
+                return response()->json(['success' => true, 'type' => '1', 'message' => 'Request leave update successfully.'], 200);
             }
-            return response()->json(['success' => false, 'message' => 'Request leave failed.'], 200);
+            return response()->json(['success' => false, 'type' => '1', 'message' => 'Request leave failed.'], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+            return response()->json(['success' => false, 'type' => '1', 'message' => $e->getMessage()], 200);
         }
     }
 

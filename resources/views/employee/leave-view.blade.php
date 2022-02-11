@@ -39,7 +39,7 @@
 @section('content')
     <div class="row">
         <div class="col-12">
-            <div class="card">
+            <div class="card" @if($data->exception == '1') style="background-color:rgba(255,0,0,0.3);" @endif>
                 <!-- Card header -->
                 <div class="card-header pb-0">
                     <div class="d-lg-flex">
@@ -66,7 +66,9 @@
                         <form id="add_form" autocomplete="off" enctype="multipart/form-data">
                             @csrf
                             <div class="row">
-                                <input type="hidden" name="id" id="id"/>
+                                <input type="hidden" name="id" id="id" value="{{$data->id}}"/>
+                                <input type="hidden" name="status" id="status" value="Final Approved"/>
+                                <input type="hidden" name="user_id" id="user_id" value="{{$data->user_id}}"/>
                                 {{--<div class="form-group">
                                     <label for="title">Title <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" name="title" id="title" placeholder="Enter Title">
@@ -115,9 +117,15 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="remarks">Approver Comment</label>
-                                        <textarea disabled class="form-control" name="remarks" id="remarks">{{$data->remarks}}</textarea>
+                                        <textarea @if(auth()->user()->role == 'user' || auth()->user()->role == 'admin') disabled @endif class="form-control" name="remarks" id="remarks">{{$data->remarks}}</textarea>
                                         <span id="remarks_error" class="text-danger"></span>
                                     </div>
+                                </div>
+                                <div class="text-right">
+                                    @if(auth()->user()->role == 'hr')
+                                        <button type="submit" value="Final Approved" style="float: right;" class="btn btn-success btn-sm" id="add_button">Final Approve</button>
+                                        <button type="submit" value="Revise and Resubmit" style="float: right;" class="btn btn-danger btn-sm mx-2" id="add2_button">Revise/Resubmit</button>
+                                    @endif
                                 </div>
                             </div>
                         </form>
@@ -147,6 +155,9 @@
                 });
             });*/
 
+            $(":submit").click(function() {
+                $('#status').val($(this).val());
+            });
             const addForm = '{{ route('employee.request-leave') }}';
             $('#add_form').submit(function (e) {
                 e.preventDefault();
@@ -171,7 +182,9 @@
                         $("#add_form")[0].reset();
                         $('#modal-create').modal('hide');
                         if (data.success === true) {
-                            toastr.success(data.message);
+                            toastr.success($('#status').val()+' Successfully.');
+                            //toastr.success(data.message);
+                            window.location.href = "{{route('employee.records')}}";
                         } else {
                             toastr.error(data.message);
                         }

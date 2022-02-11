@@ -65,6 +65,26 @@
                         </div>
                     </a>
                 </div>
+                @if(auth()->user()->role == 'hr')
+                <div class="col-md-4 mt-md-0 mt-4">
+                    <a href="{{route('leave-types.index')}}">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h1 class="text-gradient text-primary"> <span id="status2">Leave <br/>Types</span> <span class="text-lg ms-n1"></span></h1>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4 mt-md-0 mt-4">
+                    <a href="{{route('employees.index')}}">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h1 class="text-gradient text-primary"> <span id="status3">All <br/>Employees</span> <span class="text-lg ms-n1"></span></h1>
+                             </div>
+                        </div>
+                    </a>
+                </div>
+                @else
                 <div class="col-md-4 mt-md-0 mt-4">
                     <a href="{{route('employee.request-leave')}}">
                         <div class="card">
@@ -77,7 +97,7 @@
                     </a>
                 </div>
                 <div class="col-md-4 mt-md-0 mt-4">
-                    <a href="{{ ($weekCount == 1) ? route('employee.timecard',['week' => $week]) : route('employee.timesheet') }}">
+                    <a href="{{ ($weekCount == 1) ? route('employee.timecard',['week' => $currentWeek]) : route('employee.timesheet') }}">
                         <div class="card">
                             <div class="card-body text-center">
                                 <h1 class="text-gradient text-primary"> <span id="status3">Submit New <br/>Timecard</span> <span class="text-lg ms-n1"></span></h1>
@@ -87,6 +107,7 @@
                         </div>
                     </a>
                 </div>
+                @endif
             </div>
         </div>
     </div>

@@ -2,7 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LeaveType;
+use App\Models\Record;
+use App\Models\TimeCard;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use DataTables;
+use Validator;
 
 class LeaveTypeController extends Controller
 {
@@ -16,24 +24,32 @@ class LeaveTypeController extends Controller
         $this->middleware('auth');
     }
 
+
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+        if($request->ajax()) {
+            $data = LeaveType::get();
+            return Datatables::of($data)
+                ->addIndexColumn()
+                ->addColumn('action', function($query){
+                    return '<a data-id="'.$query->id.'" data-name="'.$query->name.'" data-balance="'.$query->balance.'" class="mx-1 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
+                        <i class="fas fa-edit text-primary"></i>
+                    </a>
+                    <!--<a data-id="'.$query->id.'" class="mx-1 rowdelete" data-bs-toggle="tooltip" data-bs-original-title="Delete">
+                        <i class="fas fa-trash text-danger"></i>
+                    </a>-->';
+                })->editColumn('created_at', function ($query) {
+                    return Carbon::createFromFormat('Y-m-d H:i:s', $query->created_at)->format('d M, Y');
+                })
+                ->rawColumns(['action','created_at'])
+                ->make(true);
+        }
+        return view('leave-types.index');
     }
 
     /**
@@ -44,51 +60,37 @@ class LeaveTypeController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        try {
+            $rules = [
+                'name' => 'required|min:3|max:255',
+                'balance' => 'required|numeric|min:0'
+            ];
+            $validator = Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'errors' => $validator->getMessageBag(), 'message' => 'Something went wrong.'], 422);
+            }
+            $input = $request->only('name', 'balance');
+            $id = [
+                'id' => $request->id,
+            ];
+            $insert = LeaveType::updateOrCreate($id, $input);
+            if ($insert) {
+                $message = $request->id ? 'Updated Successfully.' : 'Added Successfully.';
+                return response()->json(['success' => true, 'message' => $message], 200);
+            }
+            $message = $request->id ? 'Updating Failed.' : 'Adding Failed.';
+            return response()->json(['success' => false, 'message' => $message], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+        }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
-        //
+        $data = LeaveType::find($id)->delete();
+        if($data){
+            return response()->json(['success' => true, 'message' => 'Deleted Successfully.'], 200);
+        }
+        return response()->json(['success' => false, 'message' => 'Deletion Failed.'], 200);
     }
 }

@@ -3,7 +3,7 @@
 @endphp
 @extends($layout)
 
-@section('title', 'All Records')
+@section('title', 'All Leave Types')
 
 @section('style')
 @endsection
@@ -28,9 +28,9 @@
                     </svg>
                 </a>
             </li>
-            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Records</li>
+            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Leave</li>
         </ol>
-        <h6 class="font-weight-bolder mb-0">Employee Records</h6>
+        <h6 class="font-weight-bolder mb-0">All Leave Types</h6>
     </nav>
 @endsection
 
@@ -42,94 +42,43 @@
                 <div class="card-header pb-0">
                     <div class="d-lg-flex">
                         <div>
-                            <h5 class="mb-0">All Records of {{$data->name ?? ''}}</h5>
+                            <h5 class="mb-0">All Leave Types</h5>
                             <p class="text-sm mb-0">
 
                             </p>
                         </div>
+                        @if(auth()->user()->role == 'hr')
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
                                 <a href="{{route('employee.home')}}" class="btn bg-gradient-primary btn-sm mb-0"> Return to Dashboard </a>
                             </div>
                         </div>
+                        @endif
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
-                                <table class="border text-sm mt-3 w-100" style="min-width: 150px;">
-                                    <tbody class="">
-                                    <tr class="border-bottom">
-                                        <td>Total Hours</td>
-                                        <td>{{$net_hours ?? '0'}}</td>
-                                    </tr>
-                                    <tr class="border-bottom">
-                                        <td>Leave Hours</td>
-                                        <td>{{$leave_hours ?? '0'}}</td>
-                                    </tr>
-                                    @if($nleave_hours > 0)
-                                        <tr class="border-bottom">
-                                            <td>Unapproved <br/>Leave Hours</td>
-                                            <td>{{$nleave_hours ?? '0'}}</td>
-                                        </tr>
-                                    @endif
-                                    <tr class="border-bottom">
-                                        <td>Short Hours</td>
-                                        <td>{{$short_hours ?? '0'}}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Unpaid Hours</td>
-                                        <td>{{$unpaid_hours ?? '0'}}</td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                                {{--<button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
+                                <button type="button" class="btn bg-gradient-primary btn-sm mb-0"><i class="fa fa-rotate-270"></i> @</button>
+                               --}} {{--<button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
+                                    Import
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm export mb-0 mt-sm-0 mt-1" data-type="csv" type="button" name="button">Export</button>
+                            --}}</div>
                         </div>
                     </div>
                 </div>
                 <div class="card-body px-0 pb-0">
-                    <div class="px-3 mt-n6">
-                        <h5>Name :- {{$data->name ?? ''}}</h5>
-                    </div>
                     <div class="table-responsive p-3">
                         <table class="table table-flush" id="datatable">
                             <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                             <tr>
                                 <td>#</td>
-                                <td>Record Type</td>
-                                <td>Modified Date</td>
-                                <td>Description</td>
-                                {{--<td>Remarks</td>--}}
-                                <td>Status</td>
+                                <th>ID</th>
+                                <td>Name</td>
+                                <td>Balance</td>
                                 <td>Action</td>
                             </tr>
                             </thead>
-                            <tbody class="text-xs">
-                            {{--<tr>
-                                <td>1</td>
-                                <td>Approval Request</td>
-                                <td>31-Dec-2021</td>
-                                <td>Leave Request for 1 Jan, 2022</td>
-                                <td>Submitted</td>
-                                <td>
-                                    <select>
-                                        <option>Review</option>
-                                        <option>Edit</option>
-                                        <option>View</option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>2</td>
-                                <td>Approval Request</td>
-                                <td>30-Dec-2021</td>
-                                <td>Leave Request for 30 Dec, 2021</td>
-                                <td>Submitted</td>
-                                <td>
-                                    <select>
-                                        <option>Review</option>
-                                        <option>Edit</option>
-                                        <option>View</option>
-                                    </select>
-                                </td>
-                            </tr>--}}
+                            <tbody class="text-sm">
                             </tbody>
                         </table>
                     </div>
@@ -167,35 +116,19 @@
                     @csrf
                     <div class="modal-header">
                         <h5 class="modal-title" id="form_title">Create</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <input type="hidden" name="id" id="id"/>
-                        <input type="hidden" name="user_id" value="{{$data->clockify_id}}">
                         <div class="form-group">
-                            <label for="record_type">Record Type <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="record_type" id="record_type" placeholder="Enter Record Type">
-                            <span id="record_type_error" class="text-danger"></span>
+                            <label for="name">Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="name" id="name" placeholder="Enter Name">
+                            <span id="name_error" class="text-danger text-sm"></span>
                         </div>
                         <div class="form-group">
-                            <label for="description">Description <span class="text-danger">*</span></label>
-                            <textarea class="form-control" name="description" id="description" placeholder="Enter Description"></textarea>
-                            <span id="description_error" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="status">Status <span class="text-danger">*</span></label>
-                            <select class="form-control" name="status" id="status" placeholder="Select Status" required>
-                                <option value="" disabled selected>-- Select --</option>
-                                <option value="submitted">Submitted</option>
-                                <option value="in review">In Review</option>
-                                <option value="approved">Approved</option>
-                                <option value="rejected">Rejected</option>
-                            </select>
-                            <span id="status_error" class="text-danger"></span>
-                        </div>
-                        <div class="form-group" disabled="">
-                            <label for="remarks">Remarks <span class="text-danger">*</span></label>
-                            <textarea class="form-control" name="remarks" id="remarks" placeholder="Enter Remarks"></textarea>
-                            <span id="remarks_error" class="text-danger"></span>
+                            <label for="balance">Balance <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="balance" id="balance" placeholder="Enter Leave Balance" >
+                            <span id="balance_error" class="text-danger text-sm"></span>
                         </div>
                     </div>
                     <div class="modal-footer text-right">
@@ -213,29 +146,6 @@
     <script src="{{asset('assets/js/plugins/datatables.js')}}"></script>
     <script>
         $(document).ready(function (){
-            /*$('#datatable').DataTable({
-                dom: '<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
-                //dom: 'Blfrtip',
-                language: {
-                    paginate: {
-                        next: '›',
-                        previous: '‹'
-                    }
-                },
-                "select": true,
-                "paging": true,
-                "pageLength": "10",
-                "lengthMenu": [
-                    [5, 10, 25, 50, 100, 1000, -1],
-                    [5, 10, 25, 50, 100, 1000, 'ALL']
-                ],
-                "processing": true,
-                "searching": true,
-                "responsive": true,
-                //"lengthChange": false,
-                "autoWidth": false,
-                "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
-            });*/
             var datatable = $('#datatable').DataTable({
                 dom: '<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
                 //dom: 'Blfrtip',
@@ -260,39 +170,28 @@
                 "autoWidth": false,
                 "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
                 "ajax": {
-                    url: '{{ route('employees.show',['employee'=>$data->id]) }}',
-                    data: function (d) {
-                        d.user_id = '{{$data->clockify_id}}';
-                    },
+                    url: '{{ route('leave-types.index') }}',
                 },
+                "order": [[ 1, "asc" ]],
                 "columns": [
                     {
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex'
                     },
                     {
-                        data: 'record_type',
-                        name: 'record_type',
+                        data: 'id',
+                        name: 'id',
+                        defaultContent: '' ,
+                        visible: false
+                    },
+                    {
+                        data: 'name',
+                        name: 'name',
                         defaultContent: ''
                     },
                     {
-                        data: 'updated_at',
-                        name: 'updated_at',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'description',
-                        name: 'description',
-                        defaultContent: ''
-                    },
-                    /*{
-                        data: 'remarks',
-                        name: 'remarks',
-                        defaultContent: ''
-                    },*/
-                    {
-                        data: 'status',
-                        name: 'status',
+                        data: 'balance',
+                        name: 'balance',
                         defaultContent: ''
                     },
                     {
@@ -300,46 +199,31 @@
                         name: 'action',
                         defaultContent: '',
                         orderable: false,
-                        searchable: false,
+                        searchable: false
                     },
                 ]
             });
-            /*if (document.getElementById('datatable')) {
-                document.querySelectorAll(".export").forEach(function (el) {
-                    el.addEventListener("click", function (e) {
-                        var type = el.dataset.type;
-                        var data = {
-                            type: type,
-                            filename: "vibie-users-" + type,
-                        };
-                        if (type === "csv") {
-                            data.columnDelimiter = "|";
-                        }
-                        dataTable.export(data);
-                    });
-                });
-            };*/
             $(document).on("click", ".rowadd", function () {
-                $("#form_title").text('Add');
+                $("#form_title").text('Create');
                 $("#id").val('');
-                $("#record_type").val('');
-                $("#description").val('');
-                $("#remarks").val('');
-                $("#status").val('');
-                $('#record_type_error').text('');
-                $("#add_button").text('Create');
+                $("#name").val('');
+                $("#balance").val('');
+                $('#name_error').text('');
+                $('#balance_error').text('');
+                $('.text-danger.hidden').text('*');
+                $("#add_button").text('Add');
             });
             $(document).on("click", ".rowedit", function () {
                 $("#form_title").text('Edit');
                 $("#id").val($(this).data('id'));
-                $("#record_type").val($(this).data('record_type'));
-                $("#description").val($(this).data('description'));
-                $("#remarks").val($(this).data('remarks'));
-                $("#status").val($(this).data('status'));
-                $('#record_type_error').text('');
+                $("#name").val($(this).data('name'));
+                $("#balance").val($(this).data('balance'));
+                $('#name_error').text('');
+                $('#balance_error').text('');
+                $('.text-danger.hidden').text('');
                 $("#add_button").text('Update');
             });
-            const addForm = '{{ route('records.store') }}';
+            const addForm = '{{ route('leave-types.store') }}';
             $('#add_form').submit(function (e) {
                 e.preventDefault();
                 var form_data = new FormData(this);
@@ -354,6 +238,7 @@
                     beforeSend: function () {
                         $('#add_button').attr('disabled', 'disabled');
                         $('#name_error').text('');
+                        $('#balance_error').text('');
                     },
                     success: function (data) {
                         $("#add_form")[0].reset();
@@ -370,12 +255,13 @@
                         $('#add_button').attr('disabled', false);
                         let responseData = data.responseJSON;
                         $('#name_error').text(responseData.errors['name']);
+                        $('#balance_error').text(responseData.errors['balance']);
                     }
                 });
             });
-            $('#datatable').on('click', 'tbody .delete', function() {
+            $(document).on('click', '.rowdelete', function() {
                 var id = $(this).data('id');
-                var url = '{{ route('records.destroy', ':id') }}';
+                var url = '{{ route('leave-types.destroy', ':id') }}';
                 url = url.replace(':id', id);
                 Swal.fire({
                     title: 'Are you sure?',
@@ -388,9 +274,13 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            type: "DELETE",
                             url: url,
-                            dataType: "json",
+                            type: "DELETE",
+                            dataType: "JSON",
+                            data:{
+                                'id': id,
+                                '_token': '{{ csrf_token() }}',
+                            },
                             success: function(data) {
                                 //console.log(data);
                                 datatable.draw();

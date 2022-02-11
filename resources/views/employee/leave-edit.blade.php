@@ -3,7 +3,6 @@
 @endphp
 @extends($layout)
 
-
 @section('title', 'Request Leave')
 
 @section('style')
@@ -81,7 +80,10 @@
                                         <select class="form-control" name="leave_type_id" id="leave_type_id" placeholder="Select Leave Type">
                                             <option value="" disabled selected>-- Select --</option>
                                             @foreach($leave_categories as $category)
-                                                <option value="{{$category->id}}" @if($category->id==$data->leave_type_id) selected @endif>{{$category->name}}</option>
+                                                @php
+                                                    $leave = leave_count(auth()->user()->clockify_id, startOfYear(), endOfYear(), $data->id, $category->id);
+                                                @endphp
+                                                <option value="{{$category->id}}" @if($leave >= $category->balance) disabled @endif @if($category->id==$data->leave_type_id) selected @endif>{{$category->name}} [used {{ $leave ?? 0 }} from {{ $category->balance ?? 0 }}]</option>
                                             @endforeach
                                         </select>
                                         <span id="leave_type_id_error" class="text-danger"></span>
@@ -126,7 +128,11 @@
                                     </div>
                                 </div>
                                 <div class="text-right">
+                                    @if($applied_leave >= $total_leave)
+                                        <span class="alert alert-danger">Your leave balance you already used.</span>
+                                    @else
                                     <button type="submit" style="float: right;" class="btn bg-gradient-primary btn-sm" id="add_button">Resubmit</button>
+                                    @endif
                                 </div>
                             </div>
                         </form>

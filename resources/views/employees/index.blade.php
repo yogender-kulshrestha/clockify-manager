@@ -1,4 +1,7 @@
-@extends('layouts.master')
+@php
+    $layout = (auth()->user()->role == 'admin') ? 'layouts.master' : 'employee.master';
+@endphp
+@extends($layout)
 
 @section('title', 'All Employees')
 
@@ -44,6 +47,13 @@
 
                             </p>
                         </div>
+                        @if(auth()->user()->role == 'hr')
+                        <div class="ms-auto my-auto mt-lg-0 mt-4">
+                            <div class="ms-auto my-auto">
+                                <a href="{{route('employee.home')}}" class="btn bg-gradient-primary btn-sm mb-0"> Return to Dashboard </a>
+                            </div>
+                        </div>
+                        @endif
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
                                 {{--<button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
@@ -142,6 +152,7 @@
                             </select>
                             <span id="status_error" class="text-danger text-sm"></span>
                         </div>
+                        @if(auth()->user()->role == 'admin')
                         <div class="form-group">
                             <label for="password">Password <span class="text-danger hidden">*</span></label>
                             <input type="password" class="form-control" name="password" id="password" placeholder="Enter Password">
@@ -152,6 +163,7 @@
                             <input type="password" class="form-control" name="password_confirmation" id="password_confirmation" placeholder="Enter Confirm Password">
                             <span id="password_confirmation_error" class="text-danger text-sm"></span>
                         </div>
+                        @endif
                     </div>
                     <div class="modal-footer text-right">
                         <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>

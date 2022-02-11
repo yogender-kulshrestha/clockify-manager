@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\TimecardExport;
 use App\Models\Approver;
 use App\Models\Leave;
 use App\Models\LeaveType;
@@ -14,6 +15,7 @@ use Carbon\CarbonInterval;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use DataTables;
+use Maatwebsite\Excel\Facades\Excel;
 use Validator;
 use DB;
 use Str;
@@ -61,20 +63,24 @@ class EmployeeController extends Controller
             $now->subWeek();
             $weekOfYear=($now->weekOfYear < 10) ? '0'.$now->weekOfYear : $now->weekOfYear;
             $currentWeek = $now->year.'-W'.$weekOfYear;
-            $week[$i]['week'] = $currentWeek;
+            $week[$i] = $currentWeek;
         }
-        $time_weeks=Record::select('description as week')
+        $times=Record::select('description as week')
             ->where('user_id',auth()->user()->clockify_id)
             ->whereIn('description', $week)
-            ->where('record_type', 'timecard')->groupBy('description')->get()->toArray();
+            ->where('record_type', 'timecard')->groupBy('description')->get();
+        $time_weeks=[];
+        foreach($times as $k=>$time){
+            $time_weeks[$k] = $time->week;
+        }
         $all_weeks=[];
-        $allweeks=array_diff_key($week,$time_weeks);
-        foreach ($allweeks as $w){
-            $all_weeks[] = $w;
+        $allweeks=array_diff($week,$time_weeks);
+        foreach ($allweeks as $k=>$w) {
+            $all_weeks[]['week'] = $w;
         }
         $weekCount=count($all_weeks);
         if($weekCount == 1) {
-            $currentWeek = $all_weeks[0]->week;
+            $currentWeek = $all_weeks[0]['week'];
         }
         return view('employee.home', compact('weekCount','currentWeek', 'startDate', 'endDate'));
     }
@@ -169,7 +175,9 @@ class EmployeeController extends Controller
     public function requestLeave(Request $request)
     {
         $leave_categories = LeaveType::all();
-        return view('employee.leave', compact('leave_categories'));
+        $total_leave = LeaveType::sum('balance');
+        $applied_leave = leave_count(auth()->user()->clokify_id, startOfYear(), endOfYear());
+        return view('employee.leave', compact('leave_categories', 'total_leave', 'applied_leave'));
     }
 
     public function storeRequestLeave(Request $request)
@@ -188,6 +196,22 @@ class EmployeeController extends Controller
             $validator = Validator::make($request->all(), $rules, $messages);
             if ($validator->fails()) {
                 return response()->json(['success' => false, 'errors' => $validator->getMessageBag(), 'message' => 'Something went wrong.'], 422);
+            }
+
+            $total_leave = LeaveType::where('id',$request->leave_type_id)->sum('balance');
+            if($request->id){
+                $year_leave = leave_count($request->user_id, startOfYear(), endOfYear(), $request->id, $request->leave_type_id);
+            } else {
+                $year_leave = leave_count($request->user_id, startOfYear(), endOfYear(), null, $request->leave_type_id);
+            }
+            $year_leave_t=$year_leave+Carbon::parse($request->date_from)->diffInDays($request->date_to)+1;
+            if($year_leave_t > $total_leave) {
+                if($year_leave >= $total_leave) {
+                    return response()->json(['success' => false, 'message' => 'This leave type limit already used,Please select another one.'], 200);
+                } else {
+                    $le=$total_leave-$year_leave;
+                    return response()->json(['success' => false, 'message' => 'This leave type balance remaining '.$le.' only.'], 200);
+                }
             }
 
             if($request->user_id && $request->date_from && $request->date_to) {
@@ -269,7 +293,9 @@ class EmployeeController extends Controller
         $data = Leave::find($id);
         $leave_categories = LeaveType::all();
         if($data) {
-            return view('employee.leave-edit', compact('data', 'leave_categories'));
+            $total_leave = LeaveType::sum('balance');
+            $applied_leave = leave_count(auth()->user()->clokify_id, startOfYear(), endOfYear(), $data->id);
+            return view('employee.leave-edit', compact('data', 'leave_categories', 'total_leave', 'applied_leave'));
         }
         abort(404);
     }
@@ -902,6 +928,70 @@ class EmployeeController extends Controller
         return response()->json(['success' => false, 'message' => 'Deletion Failed.'], 200);
     }
 
+    public function exportTimecard($user_id, $week='2022-W03')
+    {
+        $user=User::where('clockify_id', $user_id)->first();
+        $seletedWeek = explode('-',Str::replace('W','',$week));
+        $date = Carbon::now();
+        $date->setISODate($seletedWeek[0],$seletedWeek[1]);
+        $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
+        $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
+        $dt = Carbon::now();
+        $net_hour = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('net_hours');
+        $ot_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('ot_hours');
+        $short_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('short_hours');
+        $unpaid_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('unpaid_hours');
+        $net_hour = $dt->diffInHours($dt->copy()->addSeconds($net_hour));
+        $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($ot_hours));
+        $short_hours = $dt->diffInHours($dt->copy()->addSeconds($short_hours));
+        $unpaid_hours = $dt->diffInHours($dt->copy()->addSeconds($unpaid_hours));
+        $leave_hours = leave_hours($user_id, $startDate, $endDate, 'Approved');
+        $nleave_hours = leave_hours($user_id, $startDate, $endDate, 'NotApproved');
+        $net_hours = $net_hour+$leave_hours;
+
+        $data = [
+            [
+                'Name' => $user->name,
+                'Email' => $user->email,
+                'Description' => 'Time Card Report of '.Carbon::parse($startDate)->format('d M, Y').' - '.Carbon::parse($endDate)->format('d M, Y').' ['.$week.']',
+                'Total Hours' => $net_hours ?? 0,
+                'OT Hours' => $ot_hours ?? 0,
+                'Leave Hours' => $leave_hours ?? 0,
+                'Unapproved Leave Hours' => $nleave_hours ?? 0,
+                'Short Hours' => $short_hours ?? 0,
+                'Unpaid Hours' => $unpaid_hours ?? 0,
+            ]
+        ];
+        $timecards=TimeCard::where('user_id',$user_id)->where('week',$week)->get();
+        $timecard=[];
+        foreach ($timecards as $t) {
+            $timecard[] = [
+                'Date' => $t->date,
+                'Flags' => strip_tags($t->flags),
+                'OT Hours' => CarbonInterval::seconds($t->ot_hours)->cascade()->forHumans(),
+                'Net Hours' => CarbonInterval::seconds($t->net_hours)->cascade()->forHumans(),
+                'Employee Remarks' => strip_tags($t->employee_remarks),
+                'Approver Remarks' => strip_tags($t->approver_remarks),
+            ];
+        }
+        $timesheets=TimeSheet::where('user_id',$user_id)->where('week',$week)->get();
+        $timesheet=[];
+        foreach ($timesheets as $t) {
+            $timesheet[] = [
+                'Start Date' => Carbon::createFromFormat('Y-m-d H:i:s', $t->start_time)->format('d-M-Y'),
+                'Start Time' => Carbon::createFromFormat('Y-m-d H:i:s', $t->start_time)->format('H:i'),
+                'End Date' => Carbon::createFromFormat('Y-m-d H:i:s', $t->end_time)->format('d-M-Y'),
+                'End Time' => Carbon::createFromFormat('Y-m-d H:i:s', $t->end_time)->format('H:i'),
+                'Duration' => CarbonInterval::seconds($t->duration_time)->cascade()->forHumans(),
+                'Error' => $t->error_eo.' '.$t->error_ot.' '.$t->error_bm.' '.$t->error_wh.' '.$t->error_le,
+                'Employee Remarks' => strip_tags($t->employee_remarks),
+                'Approver Remarks' => strip_tags($t->approver_remarks),
+            ];
+        }
+        $arrays = [$data, $timecard, $timesheet];
+        return Excel::download(new TimecardExport($arrays), $user->name.'-'.$week.'-timecard.xlsx');
+    }
+
     public function mailNotifications()
     {
         $date = Carbon::now();
@@ -919,22 +1009,26 @@ class EmployeeController extends Controller
             $date->setISODate($now->year, $weekOfYear);
             $startDate = $date->startOfWeek()->format('Y-m-d H:i:s');
             $endDate = $date->endOfWeek()->format('Y-m-d H:i:s');
-            $week = [];
+            $week=[];
             $now = Carbon::now();
-            for ($i = 0; $i < 5; $i++) {
+            for($i=0;$i<5;$i++) {
                 $now->subWeek();
-                $weekOfYear = ($now->weekOfYear < 10) ? '0' . $now->weekOfYear : $now->weekOfYear;
-                $currentWeek = $now->year . '-W' . $weekOfYear;
-                $week[$i]['week'] = $currentWeek;
+                $weekOfYear=($now->weekOfYear < 10) ? '0'.$now->weekOfYear : $now->weekOfYear;
+                $currentWeek = $now->year.'-W'.$weekOfYear;
+                $week[$i] = $currentWeek;
             }
-            $time_weeks = Record::select('description as week')
-                ->where('user_id', $user->clockify_id)
+            $times=Record::select('description as week')
+                ->where('user_id',auth()->user()->clockify_id)
                 ->whereIn('description', $week)
-                ->where('record_type', 'timecard')->groupBy('description')->get()->toArray();
-            $all_weeks = [];
-            $allweeks = array_diff_key($week, $time_weeks);
-            foreach ($allweeks as $w) {
-                $all_weeks[] = $w;
+                ->where('record_type', 'timecard')->groupBy('description')->get();
+            $time_weeks=[];
+            foreach($times as $k=>$time){
+                $time_weeks[$k] = $time->week;
+            }
+            $all_weeks=[];
+            $allweeks=array_diff($week,$time_weeks);
+            foreach ($allweeks as $k=>$w) {
+                $all_weeks[]['week'] = $w;
             }
             $weekCount = count($all_weeks);
             if ($weekCount >= 1) {

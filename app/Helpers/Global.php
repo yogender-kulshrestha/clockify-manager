@@ -37,8 +37,13 @@ function total_working_hours($user_id, $date_from, $date_to)
     echo CarbonInterval::days($days)->hours($hours)->minutes($minutes)->forHumans();*/
 }
 
-function leave_count($user_id,$startDate,$endDate,$type=null){
-    $leaves = Leave::where('user_id', $user_id)->where(function ($q) use($startDate, $endDate) {
+function leave_count($user_id,$startDate,$endDate,$type=null,$leave_type_id=null){
+    $query = DB::raw("*, (CASE WHEN (date_from >= '$startDate' AND date_to <= '$endDate') THEN datediff(date_to, date_from)+1
+    WHEN (date_from <= '$startDate' AND date_to >= '$endDate') THEN datediff('$endDate', '$startDate')+1
+    WHEN (date_from >= '$startDate' AND date_from <= '$endDate') THEN datediff('$endDate', date_from)+1
+    WHEN (date_to >= '$startDate' AND date_to <= '$endDate') THEN datediff(date_to, '$startDate')+1
+    ELSE '1' END) as leave_days");
+    $leaves = Leave::where('user_id', $user_id)->select($query)->where(function ($q) use($startDate, $endDate) {
         $q->where(function ($q) use ($startDate, $endDate) {
             $q->whereDate('date_from', '>=', $startDate)->whereDate('date_to', '<=', $endDate);
         })->orWhere(function ($q) use ($startDate, $endDate) {
@@ -52,7 +57,16 @@ function leave_count($user_id,$startDate,$endDate,$type=null){
     if($type) {
         $leaves->where('id', '!=', $type);
     }
-    return $leaves->count();
+    if($leave_type_id) {
+        $leaves->where('leave_type_id', $leave_type_id);
+    }
+    //return $leaves->count();
+    $rows=$leaves->get();
+    $leave=0;
+    foreach($rows as $row){
+        $leave+=$row->leave_days;
+    }
+    return $leave;
 }
 
 function leave_hours($user_id,$startDate,$endDate,$type=null){
@@ -83,7 +97,7 @@ function leave_hours($user_id,$startDate,$endDate,$type=null){
     foreach($rows as $row){
         $leave+=$row->leave_days;
     }
-    return $leave*10;
+    return $leave*9;
 }
 
 function total_earnings($user_id, $date_from, $date_to)
@@ -442,4 +456,12 @@ function reminderMail($type, $data)
         $sent = \Mail::to($email, $name)->send(new CommonMail($data));
     }
     return $sent ? true : false;
+}
+
+function startOfYear(){
+    return Carbon::now()->startOfYear();
+}
+
+function endOfYear(){
+    return Carbon::now()->endOfYear();
 }

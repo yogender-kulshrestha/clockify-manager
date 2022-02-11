@@ -10,6 +10,7 @@ use App\Http\Controllers\TimeSheetController;
 use App\Http\Controllers\TimeCardController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\LeaveController;
+use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmployeesTimeSheetController;
 use App\Http\Controllers\EmployeesTimeCardController;
@@ -54,11 +55,14 @@ Route::get('/clockify/user/time', [ClockifyController::class, 'timeSheet']);
 Route::get('/clockify/report', [ClockifyController::class, 'report'])->name('clockify.report');
 Route::get('/clockify/project', [ClockifyController::class, 'project'])->name('clockify.project');
 
+Route::get('export-timecard/{user_id}/{week}', [EmployeeController::class, 'exportTimecard'])->name('export.timecard');
 //Routes
+Route::resource('employees', EmployeeController::class);//->only(['index', 'store', 'destroy']);
+Route::resource('leave-types', LeaveTypeController::class)->only(['index', 'store', 'destroy']);
+
 Route::middleware('admin')->prefix('admin')->group(function() {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::resource('hr-managers', HrController::class);//->only(['index', 'store', 'destroy']);
-    Route::resource('employees', EmployeeController::class);//->only(['index', 'store', 'destroy']);
     Route::resource('approvers', ApproverController::class);
     Route::get('record', [EmployeeController::class, 'records'])->name('records');
 

@@ -88,6 +88,9 @@
                     <div class="px-3 mt-n6">
                         <h5>Name :- {{$data->user->name ?? ''}}</h5>
                         <h5>Date &nbsp; :- {{\Carbon\Carbon::parse($startDate)->format('d-M-Y')}} - {{\Carbon\Carbon::parse($endDate)->format('d-M-Y')}}</h5>
+                        @if(auth()->user()->role == 'admin' || auth()->user()->role == 'hr')
+                        <a href="{{route('export.timecard',['user_id' => $data->user->clockify_id,'week' => $week])}}" class="btn bg-gradient-primary btn-sm mb-0"> Export </a>
+                        @endif
                     </div>
                     <div class="table-responsive p-3">
                         <table class="table table-flush" id="datatable">

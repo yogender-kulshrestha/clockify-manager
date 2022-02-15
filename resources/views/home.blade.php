@@ -43,11 +43,53 @@
                                 <h2 class="font-weight-bolder mb-0">Welcome {{auth()->user()->name ?? ''}}</h2>
                             </div>
                         </div>
+                        <div class="col-lg-6">
+                            <div class="text-end text-primary">
+                                <a href="{{route('profile')}}" class="nav-link text-body p-0">
+                                    <span class="d-sm-inline d-none me-1 ">Change Password</span>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="row mt-4">
-
+            <div class="row">
+                <div class="col-md-3 mt-4">
+                    <a href="{{route('hr-managers.index')}}">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h3 class="text-gradient text-primary"><span id="status1">HR Managers</span> <span class="text-lg ms-n2"></span></h3>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3 mt-4">
+                    <a href="{{route('employees.index')}}">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h3 class="text-gradient text-primary"><span id="status1">Employees</span> <span class="text-lg ms-n2"></span></h3>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3 mt-4">
+                    <a href="{{route('approvers.index')}}">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h3 class="text-gradient text-primary"><span id="status1">Approvers</span> <span class="text-lg ms-n2"></span></h3>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3 mt-4">
+                    <a href="{{route('records')}}">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h3 class="text-gradient text-primary"><span id="status1">Records</span> <span class="text-lg ms-n2"></span></h3>
+                            </div>
+                        </div>
+                    </a>
+                </div>
             </div>
         </div>
     </div>

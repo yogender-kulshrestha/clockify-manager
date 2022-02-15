@@ -36,7 +36,7 @@ class ApproverController extends Controller
                     return '<a href="'.route('approvers.edit',['approver'=>$query->id]).'" data-id="'.$query->id.'" data-name="'.$query->name.'" data-email="'.$query->email.'" data-employees="'.$query->employees.'" class="mx-1 rowedit1" data-bs-toggle1="modal" data-bs-target1="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
                         <i class="fas fa-edit text-primary"></i>
                     </a>
-                    <a data-id="'.$query->id.'" class="mx-1 rowdelete" data-bs-toggle="tooltip" data-bs-original-title="Delete">
+                    <a data-id="'.$query->clockify_id.'" class="mx-1 rowdelete" data-bs-toggle="tooltip" data-bs-original-title="Delete">
                         <i class="fas fa-trash text-danger"></i>
                     </a>';
                 })->editColumn('employees', function ($query) {
@@ -159,7 +159,7 @@ class ApproverController extends Controller
      */
     public function destroy($id)
     {
-        $data = User::find($id)->delete();
+        $data = Approver::where('approver_id', $id)->delete();
         if($data){
             return response()->json(['success' => true, 'message' => 'Deleted Successfully.'], 200);
         }

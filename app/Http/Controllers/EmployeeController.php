@@ -93,7 +93,7 @@ class EmployeeController extends Controller
                 $data = Record::where('user_id', $request->user_id)->orderByDesc('updated_at')->get();
             } else {
                 if (auth()->user()->role == 'admin') {
-                    $approving = User::select('clockify_id')->whereIn('role', ['user', 'hr'])->get();
+                    $approving = User::select('clockify_id')->whereIn('role', ['user'])->get();
                 } elseif (auth()->user()->role == 'hr') {
                     $approving = User::select('clockify_id')->whereIn('role', ['user'])->get();
                 } else {

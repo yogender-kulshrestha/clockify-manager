@@ -46,6 +46,11 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
+                                <a href="{{route('employee.home')}}" class="btn bg-gradient-primary btn-sm mb-0"> Return to Dashboard </a>
+                            </div>
+                        </div>
+                        <div class="ms-auto my-auto mt-lg-0 mt-4">
+                            <div class="ms-auto my-auto">
                                 <a href="{{route('approvers.create')}}">
                                     <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle1="modal" data-bs-target1="#modal-create">+&nbsp; New </button>
                                 </a>
@@ -256,7 +261,7 @@
                     }
                 });
             });
-            $('#datatable').on('click', 'tbody .delete', function() {
+            $('#datatable').on('click', 'tbody .rowdelete', function() {
                 var id = $(this).data('id');
                 var url = '{{ route('approvers.destroy', ':id') }}';
                 url = url.replace(':id', id);
@@ -274,6 +279,10 @@
                             type: "DELETE",
                             url: url,
                             dataType: "json",
+                            data:{
+                                'id': id,
+                                '_token': '{{ csrf_token() }}',
+                            },
                             success: function(data) {
                                 //console.log(data);
                                 datatable.draw();

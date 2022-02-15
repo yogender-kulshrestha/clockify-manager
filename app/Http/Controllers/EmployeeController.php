@@ -1003,56 +1003,98 @@ class EmployeeController extends Controller
     {
         try {
             $rules = [
-                'date_from' => 'required',
-                'date_to' => 'required',
+                'week_from' => 'required',
+                'week_to' => 'required|after_or_equal:week_from',
                 'user_id' => 'required',
             ];
-            $validator = Validator::make($request->all(), $rules);
+            $messages=[
+                'week_to.after_or_equal' => 'The week to must be after or equal to week from.',
+            ];
+            $validator = Validator::make($request->all(), $rules, $messages);
             if ($validator->fails()) {
-                return redirect()->back()->withInput()->withError('Record Not Found.');
+                $error = '';
+                if (!empty($validator->errors())) {
+                    $error = $validator->errors()->first();
+                }
+                return redirect()->back()->withInput()->withError($error);
             }
-            $startDate = Carbon::parse($request->date_from)->startOfDay();
-            $endDate = Carbon::parse($request->date_to)->endOfDay();
+            $seletedWeek = explode('-',Str::replace('W','',$request->week_from));
+            $date = Carbon::now();
+            $date->setISODate($seletedWeek[0],$seletedWeek[1]);
+            $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
+            //$endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
+
+            $seletedWeek2 = explode('-',Str::replace('W','',$request->week_to));
+            $date2 = Carbon::now();
+            $date2->setISODate($seletedWeek2[0],$seletedWeek2[1]);
+            //$startDate=$date2->startOfWeek()->format('Y-m-d H:i:s');
+            $endDate=$date2->endOfWeek()->format('Y-m-d H:i:s');
+
             $user=User::where('clockify_id', $request->user_id)->first();
-            $timecards = TimeCard::where('user_id', $user->clockify_id)
-                ->whereDate('date', '>=', $startDate)
-                ->whereDate('date', '<=', $endDate)->get();
-            if($user && count($timecards)>0) {
+            if($user) {
                 $data = [
                     [
                         'Name' => $user->name,
                         'Email' => $user->email,
-                        'Description' => 'Time Card Report of ' . Carbon::parse($startDate)->format('d M, Y') . ' - ' . Carbon::parse($endDate)->format('d M, Y'),
+                        'Description' => 'Time Card Report of ' . $request->week_from . ' - ' . $request->week_to,
                     ]
                 ];
                 $timecards = TimeCard::where('user_id', $user->clockify_id)
                     ->whereDate('date', '>=', $startDate)
                     ->whereDate('date', '<=', $endDate)->get();
                 $timecard = [];
-                foreach ($timecards as $t) {
+                if(count($timecards) > 0) {
+                    foreach ($timecards as $t) {
+                        $otHours = CarbonInterval::seconds($t->ot_hours)->cascade()->forHumans();
+                        $otHours = ($otHours == '1 second') ? '-' : $otHours;
+                        $netHours = CarbonInterval::seconds($t->net_hours)->cascade()->forHumans();
+                        $netHours = ($netHours == '1 second') ? '-' : $netHours;
+                        $timecard[] = [
+                            'Date' => $t->date,
+                            'Flags' => strip_tags($t->flags),
+                            'OT Hours' => $otHours,
+                            'Net Hours' => $netHours,
+                            'Employee Remarks' => strip_tags($t->employee_remarks),
+                            'Approver Remarks' => strip_tags($t->approver_remarks),
+                        ];
+                    }
+                } else {
                     $timecard[] = [
-                        'Date' => $t->date,
-                        'Flags' => strip_tags($t->flags),
-                        'OT Hours' => CarbonInterval::seconds($t->ot_hours)->cascade()->forHumans(),
-                        'Net Hours' => CarbonInterval::seconds($t->net_hours)->cascade()->forHumans(),
-                        'Employee Remarks' => strip_tags($t->employee_remarks),
-                        'Approver Remarks' => strip_tags($t->approver_remarks),
+                        'Date' => '',
+                        'Flags' => '',
+                        'OT Hours' => '',
+                        'Net Hours' => '',
+                        'Employee Remarks' => '',
+                        'Approver Remarks' => '',
                     ];
                 }
                 $timesheets = TimeSheet::where('user_id', $user->clockify_id)
                     ->where('start_time', '>=', $startDate)
                     ->where('start_time', '<=', $endDate)->get();
                 $timesheet = [];
-                foreach ($timesheets as $t) {
+                if(count($timesheets) > 0) {
+                    foreach ($timesheets as $t) {
+                        $timesheet[] = [
+                            'Start Date' => Carbon::createFromFormat('Y-m-d H:i:s', $t->start_time)->format('d-M-Y'),
+                            'Start Time' => Carbon::createFromFormat('Y-m-d H:i:s', $t->start_time)->format('H:i'),
+                            'End Date' => Carbon::createFromFormat('Y-m-d H:i:s', $t->end_time)->format('d-M-Y'),
+                            'End Time' => Carbon::createFromFormat('Y-m-d H:i:s', $t->end_time)->format('H:i'),
+                            'Duration' => CarbonInterval::seconds($t->duration_time)->cascade()->forHumans(),
+                            'Error' => $t->error_eo . ' ' . $t->error_ot . ' ' . $t->error_bm . ' ' . $t->error_wh . ' ' . $t->error_le,
+                            'Employee Remarks' => strip_tags($t->employee_remarks),
+                            'Approver Remarks' => strip_tags($t->approver_remarks),
+                        ];
+                    }
+                } else {
                     $timesheet[] = [
-                        'Start Date' => Carbon::createFromFormat('Y-m-d H:i:s', $t->start_time)->format('d-M-Y'),
-                        'Start Time' => Carbon::createFromFormat('Y-m-d H:i:s', $t->start_time)->format('H:i'),
-                        'End Date' => Carbon::createFromFormat('Y-m-d H:i:s', $t->end_time)->format('d-M-Y'),
-                        'End Time' => Carbon::createFromFormat('Y-m-d H:i:s', $t->end_time)->format('H:i'),
-                        'Duration' => CarbonInterval::seconds($t->duration_time)->cascade()->forHumans(),
-                        'Error' => $t->error_eo . ' ' . $t->error_ot . ' ' . $t->error_bm . ' ' . $t->error_wh . ' ' . $t->error_le,
-                        'Employee Remarks' => strip_tags($t->employee_remarks),
-                        'Approver Remarks' => strip_tags($t->approver_remarks),
+                        'Start Date' => '',
+                        'Start Time' => '',
+                        'End Date' => '',
+                        'End Time' => '',
+                        'Duration' => '',
+                        'Error' => '',
+                        'Employee Remarks' => '',
+                        'Approver Remarks' => '',
                     ];
                 }
                 $arrays = [$data, $timecard, $timesheet];

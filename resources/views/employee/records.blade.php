@@ -57,8 +57,11 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
+                                @if(auth()->user()->role == 'user')
+                                    <a href="javascript:" class="btn bg-gradient-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#leaveBalance"> View Leave Balance</a>
+                                @endif
                                 @if($users->count() > 0)
-                                <div class="form-group">
+                                <div class="form-group mt-2">
                                     <select class="form-control" name="user_id" id="user_id" placeholder="Select an Employee">
                                         <option value="" selected>-- Select an Employee --</option>
                                         @if(auth()->user()->role != 'admin')
@@ -96,6 +99,50 @@
             </div>
         </div>
     </div>
+
+    @if(auth()->user()->role == 'user')
+        <div class="modal fade" id="leaveBalance" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="ModalLabel">Leave Balance</h5>
+                        <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    </div>
+                    <div class="modal-body">
+                        <table width="100%"  class="table table-flush">
+                            <thead class="thead-light text-uppercase text-secondary text-xs font-weight-bolder opacity-7">
+                            <tr>
+                                <td>Leave Type</td>
+                                <td>Leave Balance</td>
+                                <td>Approved Leave</td>
+                                <td>Available Balance</td>
+                            </tr>
+                            </thead>
+                            <tbody class="thead-light text-uppercase text-secondary text-xs font-weight-bolder opacity-7">
+                            @foreach(auth()->user()->leave_balances as $balance)
+                                @php
+                                    $leave = leave_count(auth()->user()->clockify_id, startOfYear(), endOfYear(), null, $balance->leave_type->id);
+                                    $available = $balance->balance-$leave;
+                                    $available = ($available > 0) ? $available : 0;
+                                @endphp
+                                <tr>
+                                    <td>{{ $balance->leave_type->name ?? '' }}</td>
+                                    <td>{{ $balance->balance ?? 0 }}</td>
+                                    <td>{{ $leave ?? 0 }}</td>
+                                    <td>{{ $available ?? 0 }}</td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    {{--<div class="modal-footer">
+                        <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn bg-gradient-primary btn-sm">Upload</button>
+                    </div>--}}
+                </div>
+            </div>
+        </div>
+    @endif
 @endsection
 
 @section('script')

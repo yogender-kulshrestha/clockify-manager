@@ -190,7 +190,8 @@ class ClockifyController extends Controller
                         'leave_type_id' => $lt->id
                     ];
                     $lt_input = [
-                        'balance' => 0
+                        //'balance' => 0,
+                        'created_at' => Carbon::now()
                     ];
                     LeaveBalance::updateOrCreate($lt_id, $lt_input);
                 }

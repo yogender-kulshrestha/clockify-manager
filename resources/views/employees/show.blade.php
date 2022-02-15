@@ -54,6 +54,7 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
+                                <a href="javascript:" class="btn bg-gradient-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#leaveBalance"> View Leave Balance</a>
                                 <table class="border text-sm mt-3 w-100" style="min-width: 150px;">
                                     <tbody class="">
                                     <tr class="border-bottom">
@@ -93,16 +94,16 @@
                         <div class="row">
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label for="date_from">Date From <span class="text-danger">*</span></label>
-                                    <input required type="date" value="{{ old('date_from') }}" class="form-control" name="date_from" id="date_from" placeholder="Select Date From">
-                                    <span id="date_from_error" class="text-danger"></span>
+                                    <label for="date_from">Week From <span class="text-danger">*</span></label>
+                                    <input required type="week" value="{{ old('week_from') }}" class="form-control" name="week_from" id="week_from" placeholder="Select Week From">
+                                    <span id="week_from_error" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label for="date_to">Date To <span class="text-danger">*</span></label>
-                                    <input required type="date" value="{{ old('date_to') }}" class="form-control" name="date_to" id="date_to" placeholder="Select Date To">
-                                    <span id="date_to_error" class="text-danger"></span>
+                                    <label for="week_to">Week To <span class="text-danger">*</span></label>
+                                    <input required type="week" value="{{ old('week_to') }}" class="form-control" name="week_to" id="week_to" placeholder="Select Week To">
+                                    <span id="week_to_error" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -159,6 +160,48 @@
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="leaveBalance" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ModalLabel">Leave Balance</h5>
+                    <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                </div>
+                <div class="modal-body">
+                    <table width="100%"  class="table table-flush">
+                        <thead class="thead-light text-uppercase text-secondary text-xs font-weight-bolder opacity-7">
+                            <tr>
+                                <td>Leave Type</td>
+                                <td>Leave Balance</td>
+                                <td>Approved Leave</td>
+                                <td>Available Balance</td>
+                            </tr>
+                        </thead>
+                        <tbody class="thead-light text-uppercase text-secondary text-xs font-weight-bolder opacity-7">
+                            @foreach($data->leave_balances as $balance)
+                            @php
+                                $leave = leave_count($data->clockify_id, startOfYear(), endOfYear(), null, $balance->leave_type->id);
+                                $available = $balance->balance-$leave;
+                                $available = ($available > 0) ? $available : 0;
+                            @endphp
+                            <tr>
+                                <td>{{ $balance->leave_type->name ?? '' }}</td>
+                                <td>{{ $balance->balance ?? 0 }}</td>
+                                <td>{{ $leave ?? 0 }}</td>
+                                <td>{{ $available ?? 0 }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                {{--<div class="modal-footer">
+                    <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn bg-gradient-primary btn-sm">Upload</button>
+                </div>--}}
             </div>
         </div>
     </div>

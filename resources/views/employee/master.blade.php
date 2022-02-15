@@ -14,6 +14,7 @@
     <!-- Nucleo Icons -->
     <link href="{{asset('assets/css/nucleo-icons.css')}}" rel="stylesheet" />
     <link href="{{asset('assets/css/nucleo-svg.css')}}" rel="stylesheet" />
+    <link href="{{asset('assets/css/spinner.css')}}" rel="stylesheet" />
     <!-- Font Awesome Icons -->
     <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
     <link href="{{asset('assets/css/nucleo-svg.css')}}" rel="stylesheet" />
@@ -34,6 +35,9 @@
 </head>
 
 <body class="g-sidenav-show  bg-gray-100">
+<div id="spinner">
+    <img src="{{ asset('assets/img/loading-buffering.gif') }}"/>
+</div>
 {{--@include('layouts.sidebar')--}}
 <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
     <!-- Navbar -->
@@ -127,6 +131,12 @@
             }
         }).magnificPopup('open');
     });
+    function spinnershow() {
+        document.getElementById("spinner").classList.add("show");
+    }
+    function spinnerhide() {
+        document.getElementById("spinner").classList.remove("show");
+    }
 </script>
 </body>
 

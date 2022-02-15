@@ -110,9 +110,9 @@ function total_earnings($user_id, $date_from, $date_to)
 
 function my_employees() {
     if(auth()->user()->role == 'admin' || auth()->user()->role == 'hr') {
-        return User::where('role', 'user')->latest()->get();
+        return User::with('leave_balances.leave_type')->where('role', 'user')->latest()->get();
     } elseif(auth()->user()->role == 'user') {
-        return User::where('role', 'user')->whereIn('id', Approver::select('user_id')->where('approver_id', auth()->user()->id)->get())->latest()->get();
+        return User::with('leave_balances.leave_type')->where('role', 'user')->whereIn('id', Approver::select('user_id')->where('approver_id', auth()->user()->id)->get())->latest()->get();
     } else {
         return [];
     }

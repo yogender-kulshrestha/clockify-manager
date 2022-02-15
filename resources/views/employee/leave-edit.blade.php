@@ -78,12 +78,13 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="leave_type_id">Leave Type <span class="text-danger">*</span></label>
-                                        <select class="form-control" name="leave_type_id" id="leave_type_id" placeholder="Select Leave Type">
+                                        <select required class="form-control" name="leave_type_id" id="leave_type_id" placeholder="Select Leave Type">
                                             <option value="" disabled selected>-- Select --</option>
                                             @foreach($leave_categories as $category)
                                                 @php
                                                     $leave = leave_count(auth()->user()->clockify_id, startOfYear(), endOfYear(), $data->id, $category->id);
-                                                    $balance = $category->balance - $leave;
+                                                    $total_balance = \App\Models\LeaveBalance::where('user_id', $data->user_id)->where('leave_type_id',$category->id)->sum('balance');
+                                                    $balance = $total_balance - $leave;
                                                     $balance = ($balance > 0) ? $balance : 0;
                                                 @endphp
                                                 <option value="{{$category->id}}" @if($category->id==$data->leave_type_id) selected @endif>{{$category->name}} [balance {{ $balance ?? 0 }}]</option>
@@ -95,14 +96,14 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="date_from">Date From <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" name="date_from" value="{{$data->date_from}}" id="date_from" placeholder="Select Date From">
+                                        <input required type="date" class="form-control" name="date_from" value="{{$data->date_from}}" id="date_from" placeholder="Select Date From">
                                         <span id="date_from_error" class="text-danger"></span>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="date_to">Date To <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" name="date_to" value="{{$data->date_to}}" id="date_to" placeholder="Select Date To">
+                                        <input required type="date" class="form-control" name="date_to" value="{{$data->date_to}}" id="date_to" placeholder="Select Date To">
                                         <span id="date_to_error" class="text-danger"></span>
                                     </div>
                                 </div>
@@ -131,11 +132,7 @@
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    @if($applied_leave >= $total_leave)
-                                        <span class="alert alert-danger">Your leave balance you already used.</span>
-                                    @else
                                     <button type="submit" style="float: right;" class="btn bg-gradient-primary btn-sm" id="add_button">Resubmit</button>
-                                    @endif
                                 </div>
                             </div>
                         </form>
@@ -231,7 +228,7 @@
                                 }
                                 $('#add_button').attr('disabled', false);
                             },
-                            error: function (data) {
+                            error: function(data) {
                                 $('#add_button').attr('disabled', false);
                                 let responseData = data.responseJSON;
                                 //$('#title_error').text(responseData.errors['title']);

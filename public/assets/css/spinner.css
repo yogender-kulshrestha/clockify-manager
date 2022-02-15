@@ -1,4 +1,4 @@
-/* (A) FULL SCREEN WRAPPER */
+/* FULL SCREEN WRAPPER */
 #spinner {
     position: fixed;
     top: 0; left: 0; z-index: 9999;
@@ -7,14 +7,15 @@
     transition: opacity 0.2s;
 }
 
-/* (B) CENTER LOADING SPINNER */
+/* CENTER LOADING SPINNER */
 #spinner img {
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%);
+    width: 50px;
 }
 
-/* (C) SHOW & HIDE */
+/* SHOW & HIDE */
 #spinner {
     visibility: hidden;
     opacity: 0;

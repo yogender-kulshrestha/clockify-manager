@@ -251,6 +251,13 @@
                         d.start_time = '',
                         d.end_time = '',
                         d.seletedWeek = ''
+                    },
+                    error: function(xhr, error, thrown) {
+                        if(thrown == 'Unauthorized') {
+                            window.location.reload();
+                        }
+                        console.log("Error occurred!");
+                        console.log(xhr, error, thrown);
                     }
                 },
                 "order": [[ 3, "desc" ],[ 4, "desc" ]],

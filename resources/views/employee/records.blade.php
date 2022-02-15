@@ -105,6 +105,7 @@
         $(document).ready(function (){
             var url = '{{ (auth()->user()->role == 'admin') ? route('records') : route('employee.records') }}'
             var datatable = $('#datatable').DataTable({
+
                 dom: '<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
                 //dom: 'Blfrtip',
                 language: {
@@ -133,6 +134,13 @@
                     data: function (d) {
                         d.user_id = $('#user_id').val();
                     },
+                    error: function(xhr, error, thrown) {
+                        if(thrown == 'Unauthorized') {
+                            window.location.reload();
+                        }
+                        console.log("Error occurred!");
+                        console.log(xhr, error, thrown);
+                    }
                 },
                 "columns": [
                     {
@@ -203,6 +211,13 @@
                                 } else {
                                     toastr.error(data.message)
                                 }
+                            },
+                            error: function(xhr, error, thrown) {
+                                if(thrown == 'Unauthorized') {
+                                    window.location.reload();
+                                }
+                                console.log("Error occurred!");
+                                console.log(xhr, error, thrown);
                             }
                         });
                     }

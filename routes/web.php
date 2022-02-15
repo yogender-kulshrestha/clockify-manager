@@ -56,6 +56,7 @@ Route::get('/clockify/report', [ClockifyController::class, 'report'])->name('clo
 Route::get('/clockify/project', [ClockifyController::class, 'project'])->name('clockify.project');
 
 Route::get('export-timecard/{user_id}/{week}', [EmployeeController::class, 'exportTimecard'])->name('export.timecard');
+Route::get('export-timecard', [EmployeeController::class, 'exportTimecardByDate'])->name('export.timesheet');
 //Routes
 Route::resource('employees', EmployeeController::class);//->only(['index', 'store', 'destroy']);
 Route::resource('leave-types', LeaveTypeController::class)->only(['index', 'store', 'destroy']);

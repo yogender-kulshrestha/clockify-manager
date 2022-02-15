@@ -36,7 +36,7 @@
 
 <body class="g-sidenav-show  bg-gray-100">
 <div id="spinner">
-    <img src="ajax-loader.gif"/>
+    <img src="{{ asset('assets/img/loading-buffering.gif') }}"/>
 </div>
 @include('layouts.sidebar')
 <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
@@ -131,6 +131,12 @@
             }
         }).magnificPopup('open');
     });
+    function spinnershow() {
+        document.getElementById("spinner").classList.add("show");
+    }
+    function spinnerhide() {
+        document.getElementById("spinner").classList.remove("show");
+    }
 </script>
 </body>
 

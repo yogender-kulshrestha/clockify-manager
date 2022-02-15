@@ -113,7 +113,7 @@
         </div>
     </div>
     <div class="modal fade" id="modal-create" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <form id="add_form" autocomplete="off" enctype="multipart/form-data">
                     @csrf
@@ -122,18 +122,19 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
+                        <div class="row">
                         <input type="hidden" name="id" id="id"/>
-                        <div class="form-group">
+                        <div class="form-group col-md-6">
                             <label for="name">Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="name" id="name" placeholder="Enter Name">
                             <span id="name_error" class="text-danger text-sm"></span>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group col-md-6">
                             <label for="email">Email <span class="text-danger hidden">*</span></label>
                             <input type="email" class="form-control" name="email" id="email" placeholder="Enter Email" disabled readonly>
                             <span id="email_error" class="text-danger text-sm"></span>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group col-md-6">
                             <label for="status">Employee Type <span class="text-danger">*</span></label>
                             <select class="form-control" name="type" id="type">
                                 <option value="">-- Select --</option>
@@ -143,7 +144,7 @@
                             </select>
                             <span id="type_error" class="text-danger text-sm"></span>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group col-md-6">
                             <label for="status">Status <span class="text-danger">*</span></label>
                             <select class="form-control" name="status" id="status">
                                 <option value="">-- Select --</option>
@@ -153,17 +154,23 @@
                             <span id="status_error" class="text-danger text-sm"></span>
                         </div>
                         @if(auth()->user()->role == 'admin')
-                        <div class="form-group">
+                        <div class="form-group col-md-6">
                             <label for="password">Password <span class="text-danger hidden">*</span></label>
                             <input type="password" class="form-control" name="password" id="password" placeholder="Enter Password">
                             <span id="password_error" class="text-danger text-sm"></span>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group col-md-6">
                             <label for="password_confirmation">Confirm Password <span class="text-danger hidden">*</span></label>
                             <input type="password" class="form-control" name="password_confirmation" id="password_confirmation" placeholder="Enter Confirm Password">
                             <span id="password_confirmation_error" class="text-danger text-sm"></span>
                         </div>
                         @endif
+                        @if(auth()->user()->role == 'hr')
+                            <div class="col-md-12">
+                                <div id="leave_balances" class="row"></div>
+                            </div>
+                        @endif
+                        </div>
                     </div>
                     <div class="modal-footer text-right">
                         <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
@@ -267,6 +274,15 @@
                 $("#add_button").text('Add');
             });
             $(document).on("click", ".rowedit", function () {
+                $('#leave_balances').html('<span>Leave Balance</span>');
+                let leave_balances = $(this).data('leave_balances');
+                $.each(leave_balances, function (key, val) {
+                    $('#leave_balances').append('<div class="form-group col-md-6"> ' +
+                        '<label for="leave_balances'+key+'">' +val.leave_type.name+ ' Balance <span class="text-danger">*</span></label> ' +
+                        '<input type="hidden" name="leave_balances['+key+'][leave_type_id]" value="'+val.leave_type.id+'"/>' +
+                        '<input required type="number" min="0" class="form-control" value="'+val.balance+'" name="leave_balances['+key+'][balance]" id="leave_balances'+key+'" placeholder="Enter '+val.leave_type.name+' Balance"> ' +
+                        '</div>');
+                });
                 $("#form_title").text('Edit');
                 $("#id").val($(this).data('id'));
                 $("#name").val($(this).data('name'));

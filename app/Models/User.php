@@ -51,4 +51,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Approver::class, 'approver_id', 'clockify_id');
     }
+
+    public function leave_balances()
+    {
+        return $this->hasMany(LeaveBalance::class, 'user_id', 'clockify_id');
+    }
 }

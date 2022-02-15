@@ -83,7 +83,8 @@
                                             @foreach($leave_categories as $category)
                                                 @php
                                                 $leave = leave_count(auth()->user()->clockify_id, startOfYear(), endOfYear(), null, $category->id);
-                                                $balance = $category->balance - $leave;
+                                                $total_balance = \App\Models\LeaveBalance::where('user_id', auth()->user()->clockify_id)->where('leave_type_id',$category->id)->sum('balance');
+                                                $balance = $total_balance - $leave;
                                                 $balance = ($balance > 0) ? $balance : 0;
                                                 @endphp
                                                 <option value="{{$category->id}}">{{$category->name}} [balance {{ $balance ?? 0 }}]</option>
@@ -121,11 +122,7 @@
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    @if($applied_leave >= $total_leave)
-                                        <span class="alert alert-danger">Your leave balance you already used.</span>
-                                    @else
                                     <button type="submit" style="float: right;" class="btn bg-gradient-primary btn-sm" id="add_button">Submit</button>
-                                    @endif
                                 </div>
                             </div>
                         </form>

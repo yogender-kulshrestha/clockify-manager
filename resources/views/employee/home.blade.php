@@ -66,7 +66,7 @@
                     </a>
                 </div>
                 @if(auth()->user()->role == 'hr')
-                <div class="col-md-4 mt-md-0 mt-4">
+                <div class="col-md-4 mt-md-0 mt-4 d-none">
                     <a href="{{route('leave-types.index')}}">
                         <div class="card">
                             <div class="card-body text-center">

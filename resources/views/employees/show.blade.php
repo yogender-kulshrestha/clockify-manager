@@ -87,6 +87,31 @@
                 <div class="card-body px-0 pb-0">
                     <div class="px-3 mt-n6">
                         <h5>Name :- {{$data->name ?? ''}}</h5>
+                        <form action="{{ route('export.timesheet') }}" id="add_form" autocomplete="off" enctype="multipart/form-data">
+                            @csrf
+                            <input type="hidden" value="{{$data->clockify_id}}" name="user_id"/>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="date_from">Date From <span class="text-danger">*</span></label>
+                                    <input required type="date" value="{{ old('date_from') }}" class="form-control" name="date_from" id="date_from" placeholder="Select Date From">
+                                    <span id="date_from_error" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="date_to">Date To <span class="text-danger">*</span></label>
+                                    <input required type="date" value="{{ old('date_to') }}" class="form-control" name="date_to" id="date_to" placeholder="Select Date To">
+                                    <span id="date_to_error" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <button type="submit" style="margin-top: 37px;" class="btn bg-gradient-primary btn-sm" id="add_button">Export</button>
+                                </div>
+                            </div>
+                        </div>
+                        </form>
                     </div>
                     <div class="table-responsive p-3">
                         <table class="table table-flush" id="datatable">
@@ -134,75 +159,6 @@
                         </table>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="import" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog mt-lg-10">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="ModalLabel">Import CSV</h5>
-                    <i class="fas fa-upload ms-3"></i>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>You can browse your computer for a file.</p>
-                    <input type="text" placeholder="Browse file..." class="form-control mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="" id="importCheck" checked="">
-                        <label class="custom-control-label" for="importCheck">I accept the terms and conditions</label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn bg-gradient-primary btn-sm">Upload</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="modal-create" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="add_form" autocomplete="off" enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="form_title">Create</h5>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" name="id" id="id"/>
-                        <input type="hidden" name="user_id" value="{{$data->clockify_id}}">
-                        <div class="form-group">
-                            <label for="record_type">Record Type <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="record_type" id="record_type" placeholder="Enter Record Type">
-                            <span id="record_type_error" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="description">Description <span class="text-danger">*</span></label>
-                            <textarea class="form-control" name="description" id="description" placeholder="Enter Description"></textarea>
-                            <span id="description_error" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="status">Status <span class="text-danger">*</span></label>
-                            <select class="form-control" name="status" id="status" placeholder="Select Status" required>
-                                <option value="" disabled selected>-- Select --</option>
-                                <option value="submitted">Submitted</option>
-                                <option value="in review">In Review</option>
-                                <option value="approved">Approved</option>
-                                <option value="rejected">Rejected</option>
-                            </select>
-                            <span id="status_error" class="text-danger"></span>
-                        </div>
-                        <div class="form-group" disabled="">
-                            <label for="remarks">Remarks <span class="text-danger">*</span></label>
-                            <textarea class="form-control" name="remarks" id="remarks" placeholder="Enter Remarks"></textarea>
-                            <span id="remarks_error" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="modal-footer text-right">
-                        <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn bg-gradient-primary btn-sm" id="add_button">Add</button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
@@ -304,43 +260,8 @@
                     },
                 ]
             });
-            /*if (document.getElementById('datatable')) {
-                document.querySelectorAll(".export").forEach(function (el) {
-                    el.addEventListener("click", function (e) {
-                        var type = el.dataset.type;
-                        var data = {
-                            type: type,
-                            filename: "vibie-users-" + type,
-                        };
-                        if (type === "csv") {
-                            data.columnDelimiter = "|";
-                        }
-                        dataTable.export(data);
-                    });
-                });
-            };*/
-            $(document).on("click", ".rowadd", function () {
-                $("#form_title").text('Add');
-                $("#id").val('');
-                $("#record_type").val('');
-                $("#description").val('');
-                $("#remarks").val('');
-                $("#status").val('');
-                $('#record_type_error').text('');
-                $("#add_button").text('Create');
-            });
-            $(document).on("click", ".rowedit", function () {
-                $("#form_title").text('Edit');
-                $("#id").val($(this).data('id'));
-                $("#record_type").val($(this).data('record_type'));
-                $("#description").val($(this).data('description'));
-                $("#remarks").val($(this).data('remarks'));
-                $("#status").val($(this).data('status'));
-                $('#record_type_error').text('');
-                $("#add_button").text('Update');
-            });
-            const addForm = '{{ route('records.store') }}';
-            $('#add_form').submit(function (e) {
+            const addForm = '{{ route('export.timesheet') }}';
+            $('#add_form2').submit(function (e) {
                 e.preventDefault();
                 var form_data = new FormData(this);
                 $.ajax({
@@ -353,56 +274,25 @@
                     headers: {"X-CSRF-Token": $('meta[name="csrf-token"]').attr('content')},
                     beforeSend: function () {
                         $('#add_button').attr('disabled', 'disabled');
-                        $('#name_error').text('');
+                        $('#user_id_error').text('');
+                        $('#date_from_error').text('');
+                        $('#date_to_error').text('');
                     },
                     success: function (data) {
-                        $("#add_form")[0].reset();
-                        $('#modal-create').modal('hide');
-                        datatable.draw();
-                        if (data.success === true) {
-                            toastr.success(data.message);
-                        } else {
-                            toastr.error(data.message);
-                        }
                         $('#add_button').attr('disabled', false);
+                        if(data.success === true) {
+                        } else {
+                            toastr.danger(data.message);
+                        }
                     },
                     error: function (data) {
                         $('#add_button').attr('disabled', false);
                         let responseData = data.responseJSON;
-                        $('#name_error').text(responseData.errors['name']);
+                        $('#user_id_error').text(responseData.errors['user_id']);
+                        $('#date_from_error').text(responseData.errors['date_from']);
+                        $('#date_to_error').text(responseData.errors['date_to']);
                     }
                 });
-            });
-            $('#datatable').on('click', 'tbody .delete', function() {
-                var id = $(this).data('id');
-                var url = '{{ route('records.destroy', ':id') }}';
-                url = url.replace(':id', id);
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You won't be able to revert this!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, delete it!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            type: "DELETE",
-                            url: url,
-                            dataType: "json",
-                            success: function(data) {
-                                //console.log(data);
-                                datatable.draw();
-                                if (data.success === true) {
-                                    toastr.success(data.message)
-                                } else {
-                                    toastr.error(data.message)
-                                }
-                            }
-                        });
-                    }
-                })
             });
         });
     </script>

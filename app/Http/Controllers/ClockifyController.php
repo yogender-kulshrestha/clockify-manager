@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\SendRegistrationMail;
+use App\Models\LeaveBalance;
+use App\Models\LeaveType;
 use App\Models\Project;
 use App\Models\Record;
 use App\Models\TimeSheet;
@@ -181,6 +183,17 @@ class ClockifyController extends Controller
                     $input['password'] = $password;
                 }
                 $insert = User::updateOrCreate($id, $input);
+                $leave_types = LeaveType::all();
+                foreach ($leave_types as  $lt) {
+                    $lt_id = [
+                        'user_id' => $user->id,
+                        'leave_type_id' => $lt->id
+                    ];
+                    $lt_input = [
+                        'balance' => 0
+                    ];
+                    LeaveBalance::updateOrCreate($lt_id, $lt_input);
+                }
                 if($insert->wasRecentlyCreated){
                     dispatch(new SendRegistrationMail($insert))->onQueue('mail');
                 }

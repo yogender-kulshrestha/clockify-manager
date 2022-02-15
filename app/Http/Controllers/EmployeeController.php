@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\TimecardExport;
 use App\Models\Approver;
 use App\Models\Leave;
+use App\Models\LeaveBalance;
 use App\Models\LeaveType;
 use App\Models\Record;
 use App\Models\TimeCard;
@@ -175,7 +176,7 @@ class EmployeeController extends Controller
     public function requestLeave(Request $request)
     {
         $leave_categories = LeaveType::all();
-        $total_leave = LeaveType::sum('balance');
+        $total_leave = LeaveBalance::where('user_id', auth()->user()->clockify_id)->sum('balance');
         $applied_leave = leave_count(auth()->user()->clokify_id, startOfYear(), endOfYear());
         return view('employee.leave', compact('leave_categories', 'total_leave', 'applied_leave'));
     }
@@ -199,17 +200,17 @@ class EmployeeController extends Controller
             }
 
             if($request->user_id && $request->date_from && $request->date_to) {
-                if($request->id){
-                    $leave_hours = leave_count($request->user_id, $request->date_from, $request->date_to, $request->id, null, 'status');
-                } else {
-                    $leave_hours = leave_count($request->user_id, $request->date_from, $request->date_to, null, null, 'status');
-                }
-                if($leave_hours > 0) {
-                    return response()->json(['success' => false, 'type' => '1', 'message' => 'Leave request already exists between date from and date to.'], 200);
-                }
-
                 if($request->exception != '1') {
-                    $total_leave = LeaveType::where('id',$request->leave_type_id)->sum('balance');
+                    if($request->id){
+                        $leave_hours = leave_count($request->user_id, $request->date_from, $request->date_to, $request->id, null, 'status');
+                    } else {
+                        $leave_hours = leave_count($request->user_id, $request->date_from, $request->date_to, null, null, 'status');
+                    }
+                    if($leave_hours > 0) {
+                        return response()->json(['success' => false, 'type' => '1', 'message' => 'Leave request already exists between date from and date to.'], 200);
+                    }
+
+                    $total_leave = LeaveBalance::where('user_id', auth()->user()->clockify_id)->where('leave_type_id',$request->leave_type_id)->sum('balance');
                     if($request->id){
                         $year_leave = leave_count($request->user_id, startOfYear(), endOfYear(), $request->id, $request->leave_type_id);
                     } else {
@@ -765,15 +766,12 @@ class EmployeeController extends Controller
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function($query){
-                    return '<a data-id="'.$query->id.'" data-name="'.$query->name.'" data-email="'.$query->email.'" data-type="'.$query->type.'" data-status="'.$query->status.'" class="mx-1 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
-                        <i class="fas fa-edit text-primary"></i>
+                    return "<a data-leave_balances='".$query->leave_balances."' data-id='".$query->id."' data-name='".$query->name."' data-email='".$query->email."' data-type='".$query->type."' data-status='".$query->status."' class='mx-1 rowedit' data-bs-toggle='modal' data-bs-target='#modal-create' data-bs-toggle='tooltip' data-bs-original-title='Edit'>
+                        <i class='fas fa-edit text-primary'></i>
                     </a>
-                    <a href="'.route('employees.show',['employee'=>$query->clockify_id]).'" data-bs-toggle="tooltip" data-bs-original-title="View">
-                        <i class="fas fa-eye text-success"></i>
-                    </a>
-                    <!--<a data-id="'.$query->id.'" class="mx-1 rowdelete" data-bs-toggle="tooltip" data-bs-original-title="Delete">
-                        <i class="fas fa-trash text-danger"></i>
-                    </a>-->';
+                    <a href='".route('employees.show',['employee'=>$query->clockify_id])."' data-bs-toggle='tooltip' data-bs-original-title='View'>
+                        <i class='fas fa-eye text-success'></i>
+                    </a>";
                 })->editColumn('type', function ($query) {
                     return ($query->type == 'fulltime') ? 'Full Time' : ucfirst($query->type);
                 })->editColumn('status', function ($query) {
@@ -822,6 +820,11 @@ class EmployeeController extends Controller
             ];
             $insert = User::updateOrCreate($id, $input);
             if ($insert) {
+                foreach($request->leave_balances as $balance) {
+                    $user = User::find($insert->id);
+                    LeaveBalance::where('user_id', $user->clockify_id)
+                        ->where('leave_type_id', $balance['leave_type_id'])->update(['balance' => $balance['balance']]);
+                }
                 $message = $request->id ? 'Updated Successfully.' : 'Added Successfully.';
                 return response()->json(['success' => true, 'message' => $message], 200);
             }
@@ -994,6 +997,71 @@ class EmployeeController extends Controller
         }
         $arrays = [$data, $timecard, $timesheet];
         return Excel::download(new TimecardExport($arrays), $user->name.'-'.$week.'-timecard.xlsx');
+    }
+
+    public function exportTimecardByDate(Request $request)
+    {
+        try {
+            $rules = [
+                'date_from' => 'required',
+                'date_to' => 'required',
+                'user_id' => 'required',
+            ];
+            $validator = Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return redirect()->back()->withInput()->withError('Record Not Found.');
+            }
+            $startDate = Carbon::parse($request->date_from)->startOfDay();
+            $endDate = Carbon::parse($request->date_to)->endOfDay();
+            $user=User::where('clockify_id', $request->user_id)->first();
+            $timecards = TimeCard::where('user_id', $user->clockify_id)
+                ->whereDate('date', '>=', $startDate)
+                ->whereDate('date', '<=', $endDate)->get();
+            if($user && count($timecards)>0) {
+                $data = [
+                    [
+                        'Name' => $user->name,
+                        'Email' => $user->email,
+                        'Description' => 'Time Card Report of ' . Carbon::parse($startDate)->format('d M, Y') . ' - ' . Carbon::parse($endDate)->format('d M, Y'),
+                    ]
+                ];
+                $timecards = TimeCard::where('user_id', $user->clockify_id)
+                    ->whereDate('date', '>=', $startDate)
+                    ->whereDate('date', '<=', $endDate)->get();
+                $timecard = [];
+                foreach ($timecards as $t) {
+                    $timecard[] = [
+                        'Date' => $t->date,
+                        'Flags' => strip_tags($t->flags),
+                        'OT Hours' => CarbonInterval::seconds($t->ot_hours)->cascade()->forHumans(),
+                        'Net Hours' => CarbonInterval::seconds($t->net_hours)->cascade()->forHumans(),
+                        'Employee Remarks' => strip_tags($t->employee_remarks),
+                        'Approver Remarks' => strip_tags($t->approver_remarks),
+                    ];
+                }
+                $timesheets = TimeSheet::where('user_id', $user->clockify_id)
+                    ->where('start_time', '>=', $startDate)
+                    ->where('start_time', '<=', $endDate)->get();
+                $timesheet = [];
+                foreach ($timesheets as $t) {
+                    $timesheet[] = [
+                        'Start Date' => Carbon::createFromFormat('Y-m-d H:i:s', $t->start_time)->format('d-M-Y'),
+                        'Start Time' => Carbon::createFromFormat('Y-m-d H:i:s', $t->start_time)->format('H:i'),
+                        'End Date' => Carbon::createFromFormat('Y-m-d H:i:s', $t->end_time)->format('d-M-Y'),
+                        'End Time' => Carbon::createFromFormat('Y-m-d H:i:s', $t->end_time)->format('H:i'),
+                        'Duration' => CarbonInterval::seconds($t->duration_time)->cascade()->forHumans(),
+                        'Error' => $t->error_eo . ' ' . $t->error_ot . ' ' . $t->error_bm . ' ' . $t->error_wh . ' ' . $t->error_le,
+                        'Employee Remarks' => strip_tags($t->employee_remarks),
+                        'Approver Remarks' => strip_tags($t->approver_remarks),
+                    ];
+                }
+                $arrays = [$data, $timecard, $timesheet];
+                return Excel::download(new TimecardExport($arrays), $user->name.'-'.Carbon::now().'-timecard.xlsx');
+            }
+            return redirect()->back()->withInput()->withError('Record Not Found.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->withError('Record Not Found.');
+        }
     }
 
     public function mailNotifications()

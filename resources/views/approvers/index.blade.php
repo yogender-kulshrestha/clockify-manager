@@ -166,6 +166,13 @@
                 "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
                 "ajax": {
                     url: '{{ route('approvers.index') }}',
+                    error: function(xhr, error, thrown) {
+                        if(thrown == 'Unauthorized') {
+                            window.location.reload();
+                        }
+                        console.log("Error occurred!");
+                        console.log(xhr, error, thrown);
+                    }
                 },
                 "columns": [
                     {
@@ -237,7 +244,12 @@
                         }
                         $('#add_button').attr('disabled', false);
                     },
-                    error: function (data) {
+                    error: function(data, xhr, error, thrown) {
+                        if(thrown == 'Unauthorized') {
+                            window.location.reload();
+                        }
+                        console.log("Error occurred!");
+                        console.log(xhr, error, thrown);
                         $('#add_button').attr('disabled', false);
                         let responseData = data.responseJSON;
                         $('#name_error').text(responseData.errors['name']);
@@ -270,6 +282,13 @@
                                 } else {
                                     toastr.error(data.message)
                                 }
+                            },
+                            error: function(xhr, error, thrown) {
+                                if(thrown == 'Unauthorized') {
+                                    window.location.reload();
+                                }
+                                console.log("Error occurred!");
+                                console.log(xhr, error, thrown);
                             }
                         });
                     }

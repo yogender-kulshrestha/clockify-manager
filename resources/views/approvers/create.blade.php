@@ -122,10 +122,11 @@
                 let employees = $(this).val();
                 employeesAjax(employees);
             });
-            let options = '';
-
             function employeesAjax(employees) {
                 $.getJSON("{{route('employees.ajax')}}?employees=" + employees, function (json) {
+                    spinnershow();
+                    $('#employees').empty();
+                    let options = '';
                     //options = '<select class="form-control" name="approver" id="approver">' +
                     //options = '<option value="" disabled>-- Select --</option>';
                     console.log(json.data);
@@ -134,6 +135,7 @@
                     });
                     //options += '</select>';
                     $('#employees').html(options);
+                    spinnerhide();
                 });
             }
         });

@@ -115,7 +115,8 @@ class ApproverController extends Controller
     {
         $data = User::where('role', 'user')->where('id', $id)->first();
         if($data !== null){
-            $users= User::where('role', 'user')->where('id', '!=', $id)->get();
+            $approvers = Approver::select('user_id')->where('approver_id', '!=', $data->clockify_id)->get();
+            $users= User::where('role', 'user')->whereNotIn('clockify_id', $approvers)->where('id', '!=', $id)->get();
             $semployees=Approver::select('user_id')->where('approver_id', $data->clockify_id)->get();
             $employees=[];
             foreach ($semployees as $e){

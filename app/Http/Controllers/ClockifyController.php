@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\SendRegistrationMail;
+use App\Mail\CommonMail;
 use App\Models\LeaveBalance;
 use App\Models\LeaveType;
 use App\Models\Project;
@@ -166,11 +167,13 @@ class ClockifyController extends Controller
             $users = json_decode($users);
             foreach ($users as $user) {
                 $id = [
-                    'email' => $user->email,
+                    'clockify_id' => $user->id,
+                    //'email' => $user->email,
                 ];
                 $input = [
                     'clockify_id' => $user->id,
                     'name' => $user->name,
+                    'email' => $user->email,
                     'image' => $user->profilePicture,
                     'memberships' => $user->memberships,
                     'settings' => $user->settings,
@@ -178,7 +181,7 @@ class ClockifyController extends Controller
                 ];
                 $find = User::where('email', $user->email)->first();
                 if (!$find) {
-                    $random = '12345678';//Str::random(10);
+                    $random = Str::random(10);
                     $password = Hash::make($random);
                     $input['password'] = $password;
                 }
@@ -196,7 +199,15 @@ class ClockifyController extends Controller
                     LeaveBalance::updateOrCreate($lt_id, $lt_input);
                 }
                 if($insert->wasRecentlyCreated){
-                    dispatch(new SendRegistrationMail($insert))->onQueue('mail');
+                    $data=$insert;
+                    $email = $insert->email;
+                    $name = $insert->name;
+                    $data['to'] = $insert;
+                    $data['owner'] = $insert;
+                    $data['subject'] = 'Register Successfully.';
+                    $data['title'] = 'Register Successfully.';
+                    $data['body'] = 'You will successfully registered on Matthew Clockify Portal. <br/> <br/> Your login credentials here:-<br/>username: '.$insert->email.'<br/>password: '.$random;
+                    $sent = \Mail::to($email, $name)->send(new CommonMail($data));
                 }
             }
         }

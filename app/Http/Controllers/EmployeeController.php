@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\TimecardExport;
+use App\Mail\CommonMail;
 use App\Models\Approver;
 use App\Models\Leave;
 use App\Models\LeaveBalance;
@@ -740,12 +741,14 @@ class EmployeeController extends Controller
     public function employeesAjax(Request $request)
     {
         if(request()->ajax()) {
-            $sql = User::query();
+            $employees = [];
             if($request->employees) {
-                $employees = explode(',',$request->employees);
-                $sql->whereNotIn('clockify_id', $employees);
+                $employees = explode(',', $request->employees);
             }
-            $users=$sql->where('role', 'user')->get();
+            $approvers = Approver::select('user_id')->get();
+            $users = User::whereNotIn('clockify_id', $employees)
+                ->whereNotIn('clockify_id', $approvers)
+                ->where('role', 'user')->get();
             if($users->count() > 0) {
                 return response()->json(['success' => true, 'message' => 'Data found successfully.', 'data' => $users], 200);
             }
@@ -839,6 +842,15 @@ class EmployeeController extends Controller
                         ];
                         LeaveBalance::updateOrCreate($lt_id, $lt_input);
                     }
+                    $data=$insert;
+                    $email = $insert->email;
+                    $name = $insert->name;
+                    $data['to'] = $insert;
+                    $data['owner'] = $insert;
+                    $data['subject'] = 'Register Successfully.';
+                    $data['title'] = 'Register Successfully.';
+                    $data['body'] = 'You will successfully registered on Matthew Clockify Portal. <br/> <br/> Your login credentials here:-<br/>username: '.$insert->email.'<br/>password: '.$request->password;
+                    $sent = \Mail::to($email, $name)->send(new CommonMail($data));
                 }
                 $message = $request->id ? 'Updated Successfully.' : 'Added Successfully.';
                 return response()->json(['success' => true, 'message' => $message], 200);

@@ -90,14 +90,13 @@ class HrController extends Controller
                 return response()->json(['success' => false, 'errors' => $validator->getMessageBag(), 'message' => 'Something went wrong.'], 422);
             }
             $input = $request->only('name', 'email', 'status');
-            $input['password']='hr';
+            $input['role']='hr';
             if($request->password) {
-                $input['role']=Hash::make($request->password);
+                $input['password']=Hash::make($request->password);
             }
             if($request->id) {
                 $id = [
                     'id' => $request->id,
-                    'role' => 'hr',
                 ];
                 $insert = User::updateOrCreate($id, $input);
             } else {

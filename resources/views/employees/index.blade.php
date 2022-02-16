@@ -54,8 +54,10 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
-                                {{--<button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
-                                <button type="button" class="btn bg-gradient-primary btn-sm mb-0"><i class="fa fa-rotate-270"></i> @</button>
+                                @if(auth()->user()->role == 'admin')
+                                <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
+                                @endif
+                                {{--<button type="button" class="btn bg-gradient-primary btn-sm mb-0"><i class="fa fa-rotate-270"></i> @</button>
                                --}} {{--<button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
                                     Import
                                 </button>
@@ -129,7 +131,7 @@
                         </div>
                         <div class="form-group col-md-6">
                             <label for="email">Email <span class="text-danger hidden">*</span></label>
-                            <input type="email" class="form-control" name="email" id="email" placeholder="Enter Email" disabled readonly>
+                            <input type="email" class="form-control" name="email" id="email" placeholder="Enter Email">
                             <span id="email_error" class="text-danger text-sm"></span>
                         </div>
                         <div class="form-group col-md-6">
@@ -262,6 +264,7 @@
                 $("#id").val('');
                 $("#name").val('');
                 $("#email").val('');
+                //$("#email").attr('disabled', false);
                 $("#status").val('');
                 $('#name_error').text('');
                 $('#email_error').text('');
@@ -285,6 +288,7 @@
                 $("#id").val($(this).data('id'));
                 $("#name").val($(this).data('name'));
                 $("#email").val($(this).data('email'));
+                //$("#email").attr('disabled', 'disabled');
                 $("#type").val($(this).data('type'));
                 $("#status").val($(this).data('status'));
                 $('#name_error').text('');

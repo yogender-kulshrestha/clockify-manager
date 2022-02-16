@@ -801,7 +801,7 @@ class EmployeeController extends Controller
         try {
             $rules = [
                 'name' => 'required|min:3|max:255',
-                'email' => 'required_if:id,null|email|exists:users,email',
+                'email' => 'required|email|max:255|unique:users,email,'.$request->id.',id',
                 'type' => 'required',
                 'status' => 'required|in:active,inactive',
                 'password' => 'required_without:id|confirmed'
@@ -810,7 +810,7 @@ class EmployeeController extends Controller
             if ($validator->fails()) {
                 return response()->json(['success' => false, 'errors' => $validator->getMessageBag(), 'message' => 'Something went wrong.'], 422);
             }
-            $input = $request->only('name', 'status', 'type');
+            $input = $request->only('name', 'email', 'status', 'type');
             if($request->password) {
                 $input['password']=Hash::make($request->password);
             }
@@ -820,10 +820,25 @@ class EmployeeController extends Controller
             ];
             $insert = User::updateOrCreate($id, $input);
             if ($insert) {
-                foreach($request->leave_balances as $balance) {
-                    $user = User::find($insert->id);
-                    LeaveBalance::where('user_id', $user->clockify_id)
-                        ->where('leave_type_id', $balance['leave_type_id'])->update(['balance' => $balance['balance']]);
+                $user = User::find($insert->id);
+                if($request->id) {
+                    foreach($request->leave_balances as $balance) {
+                        LeaveBalance::where('user_id', $user->clockify_id)
+                            ->where('leave_type_id', $balance['leave_type_id'])->update(['balance' => $balance['balance']]);
+                    }
+                } else {
+                    User::where('id', $user->id)->update(['clockify_id' => $user->id]);
+                    $leave_types = LeaveType::all();
+                    foreach ($leave_types as  $lt) {
+                        $lt_id = [
+                            'user_id' => $user->id,
+                            'leave_type_id' => $lt->id
+                        ];
+                        $lt_input = [
+                            'created_at' => Carbon::now()
+                        ];
+                        LeaveBalance::updateOrCreate($lt_id, $lt_input);
+                    }
                 }
                 $message = $request->id ? 'Updated Successfully.' : 'Added Successfully.';
                 return response()->json(['success' => true, 'message' => $message], 200);

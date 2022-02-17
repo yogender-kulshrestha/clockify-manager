@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Approver;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use DataTables;
 use Validator;
 
@@ -40,11 +38,6 @@ class ApproverController extends Controller
                         <i class="fas fa-trash text-danger"></i>
                     </a>';
                 })->editColumn('employees', function ($query) {
-                    /*$employees='';
-                    foreach ($query->employees as $key=>$employee) {
-                        $employees.='<span class="badge badge-sm badge-primary mx-1">'.$employee->user->name.'</span>';
-                    }
-                    return $employees;*/
                     return $query->employees->count() ?? 0;
                 })
                 ->rawColumns(['action','employees'])

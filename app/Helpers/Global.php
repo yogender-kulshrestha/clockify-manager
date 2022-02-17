@@ -15,12 +15,6 @@ function total_hours($user_id, $project_id, $date_from, $date_to)
             $q->where('start_time', '>=', $date_from)->where('end_time', '<=', $date_to);
         })->sum(DB::raw("TIME_TO_SEC(duration_time)"));
     return CarbonInterval::seconds($sum)->cascade()->format('%H:%I:%S');//->forHumans();
-    /*$value = $sum;
-    $dt = Carbon::now();
-    $days = $dt->diffInDays($dt->copy()->addSeconds($value));
-    $hours = $dt->diffInHours($dt->copy()->addSeconds($value)->subDays($days));
-    $minutes = $dt->diffInMinutes($dt->copy()->addSeconds($value)->subDays($days)->subHours($hours));
-    echo CarbonInterval::days($days)->hours($hours)->minutes($minutes)->forHumans();*/
 }
 
 function total_working_hours($user_id, $date_from, $date_to)
@@ -29,12 +23,6 @@ function total_working_hours($user_id, $date_from, $date_to)
             $q->where('start_time', '>=', $date_from)->where('end_time', '<=', $date_to);
         })->sum(DB::raw("TIME_TO_SEC(duration_time)"));
     return CarbonInterval::seconds($sum)->cascade()->format('%H');//->forHumans();
-    /*$value = $sum;
-    $dt = Carbon::now();
-    $days = $dt->diffInDays($dt->copy()->addSeconds($value));
-    $hours = $dt->diffInHours($dt->copy()->addSeconds($value)->subDays($days));
-    $minutes = $dt->diffInMinutes($dt->copy()->addSeconds($value)->subDays($days)->subHours($hours));
-    echo CarbonInterval::days($days)->hours($hours)->minutes($minutes)->forHumans();*/
 }
 
 function leave_count($user_id,$startDate,$endDate,$type=null,$leave_type_id=null,$status=null){
@@ -63,7 +51,6 @@ function leave_count($user_id,$startDate,$endDate,$type=null,$leave_type_id=null
     if($status != 'status') {
         $leaves->where('status', 'Final Approved');
     }
-    //return $leaves->count();
     $rows=$leaves->get();
     $leave=0;
     foreach($rows as $row){
@@ -101,11 +88,6 @@ function leave_hours($user_id,$startDate,$endDate,$type=null){
         $leave+=$row->leave_days;
     }
     return $leave*9;
-}
-
-function total_earnings($user_id, $date_from, $date_to)
-{
-    return $user_id.' '.$date_from.' '.$date_to;
 }
 
 function my_employees() {
@@ -148,33 +130,11 @@ function timecard_description($week, $user_id, $user_name) {
     }
 }
 
-function ot_hours($id, $user_id)
-{
-    return '';
-}
-
-function entry_overlay($id, $user_id)
-{
-    return '';
-}
-
-function working_hours($id, $user_id)
-{
-    return '';
-}
-
-function without_break($id)
-{
-    $data = TimeSheet::where('clockify_id',$id)->first();
-    return $data;
-}
-
 function verify_working_hours($week, $start, $end, $user_id) {
     $seletedWeek = explode('-',Str::replace('W','',$week));
     $date = Carbon::now();
-    //$date->setISODate($seletedWeek[0],$seletedWeek[1]);
-    $startDate=Carbon::parse($start)->format('Y-m-d H:i:s');//$date->startOfWeek()->format('Y-m-d H:i:s');
-    $endDate=Carbon::parse($end)->format('Y-m-d H:i:s');//$date->endOfWeek()->format('Y-m-d H:i:s');
+    $startDate=Carbon::parse($start)->format('Y-m-d H:i:s');
+    $endDate=Carbon::parse($end)->format('Y-m-d H:i:s');
     $rows = TimeSheet::query()->where('start_time', '>=', $startDate)
         ->where('start_time', '<=', $endDate)
         ->where('user_id', $user_id)->orderBy('start_time')->get();
@@ -310,7 +270,6 @@ function sendMail($type, $data)
         $owner = User::where('clockify_id', $data->user_id)->first();
         $approver = Approver::select('approver_id')->where('user_id', $owner->clockify_id)->get();
         $users = User::whereIn('role', ['hr'])->orWhereIn('clockify_id', $approver)->get();
-        //\Illuminate\Support\Facades\Log::info(json_encode($users));
         foreach($users as $user) {
             $email = $user->email;
             $name = $user->name;

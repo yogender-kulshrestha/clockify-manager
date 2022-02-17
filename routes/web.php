@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClockifyController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\HrController;
@@ -12,11 +13,6 @@ use App\Http\Controllers\RecordController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\EmployeesTimeSheetController;
-use App\Http\Controllers\EmployeesTimeCardController;
-use App\Http\Controllers\EmployeesRecordController;
-use App\Http\Controllers\EmployeesLeaveController;
-use App\Http\Controllers\AuthController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -28,9 +24,7 @@ use App\Http\Controllers\AuthController;
 |
 */
 
-/*Route::get('/', function () {
-    return view('auth.login');
-})->middleware('guest');*/
+//Login
 Route::get('/signin', function () {
     return view('auth.login');
 })->name('signin');
@@ -42,6 +36,7 @@ Auth::routes([
     'verify' => false,
 ]);
 
+//mail reminder
 Route::get('mail-notifications', [ClockifyController::class, 'mailNotifications']);
 
 //Clockify Routes
@@ -50,20 +45,20 @@ Route::get('/clockify/users', [ClockifyController::class, 'users'])->name('clock
 Route::get('/clockify/projects', [ClockifyController::class, 'projects'])->name('clockify.projects');
 Route::get('/clockify/user/times', [ClockifyController::class, 'timeSheets']);
 
-Route::get('/clockify/user', [ClockifyController::class, 'index'])->name('clockify.user');
-Route::get('/clockify/user/time', [ClockifyController::class, 'timeSheet']);
-Route::get('/clockify/report', [ClockifyController::class, 'report'])->name('clockify.report');
-Route::get('/clockify/project', [ClockifyController::class, 'project'])->name('clockify.project');
-
+//Export time entries excel routes
 Route::get('export-timecard/{user_id}/{week}', [EmployeeController::class, 'exportTimecard'])->name('export.timecard');
 Route::get('export-timecard', [EmployeeController::class, 'exportTimecardByDate'])->name('export.timesheet');
-//Routes
-Route::resource('employees', EmployeeController::class);//->only(['index', 'store', 'destroy']);
+
+//Employee routes
+Route::resource('employees', EmployeeController::class);
+
+//Leave type routes
 Route::resource('leave-types', LeaveTypeController::class)->only(['index', 'store', 'destroy']);
 
+//Admin routes
 Route::middleware('admin')->prefix('admin')->group(function() {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
-    Route::resource('hr-managers', HrController::class);//->only(['index', 'store', 'destroy']);
+    Route::resource('hr-managers', HrController::class);
     Route::resource('approvers', ApproverController::class);
     Route::get('record', [EmployeeController::class, 'records'])->name('records');
 
@@ -72,16 +67,9 @@ Route::middleware('admin')->prefix('admin')->group(function() {
     Route::resource('records', RecordController::class);
     Route::resource('leaves', LeaveController::class);
     Route::get('profile', [ProfileController::class, 'index'])->name('profile');
-
-    Route::resource('employees-time-sheets', EmployeesTimeSheetController::class);
-    Route::resource('employees-time-cards', EmployeesTimeCardController::class);
-    Route::resource('employees-records', EmployeesRecordController::class);
-    Route::resource('employees-leaves', EmployeesLeaveController::class);
 });
-/*Route::name('hr.')->prefix('hr-manager')->middleware('hr')->group(function() {
-    Route::get('/', [EmployeeController::class, 'home'])->name('home');
-});*/
 
+//Employee & Hr routes
 Route::get('/employee/ajax', [EmployeeController::class, 'employeesAjax'])->name('employees.ajax');
 Route::name('employee.')->group(function(){
     Route::middleware(['employee'])->group(function() {
@@ -92,17 +80,14 @@ Route::name('employee.')->group(function(){
         Route::get('/request-leave', [EmployeeController::class, 'requestLeave'])->name('request-leave');
 
         Route::get('/timesheet', [EmployeeController::class, 'timesheet'])->name('timesheet');
-//        Route::get('/timecard', [EmployeeController::class, 'timecard'])->name('timecard');
-//        Route::post('/timecard', [EmployeeController::class, 'addTimeCard']);
         Route::post('/timecard/create', [EmployeeController::class, 'createTimeCard'])->name('timecard.create');
         Route::get('/timecard/{week}', [EmployeeController::class, 'timecard'])->name('timecard');
         Route::post('/timecard/{week}', [EmployeeController::class, 'addTimeCard']);
-//        Route::post('/timecard/{week}/create', [EmployeeController::class, 'createTimeCard'])->name('timecard.create');
     });
+
     Route::post('profile', [ProfileController::class, 'store']);
 
     Route::post('/request-leave', [EmployeeController::class, 'storeRequestLeave']);
-
     Route::get('/leave/{id}/view', [EmployeeController::class, 'viewRequestLeave'])->name('leave.view');
     Route::get('/leave/{id}/edit', [EmployeeController::class, 'editRequestLeave'])->name('leave.edit');
     Route::get('/leave/{id}/review', [EmployeeController::class, 'reviewRequestLeave'])->name('leave.review');

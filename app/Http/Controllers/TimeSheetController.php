@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\TimeSheet;
-use App\Models\User;
 use Illuminate\Http\Request;
 use DataTables;
 use Carbon\Carbon;
@@ -44,8 +43,6 @@ class TimeSheetController extends Controller
             $six=Carbon::parse($newDate->addDays());
             $seven=Carbon::parse($date->endOfWeek());
             $data=TimeSheet::select('project_id')->groupBy('project_id')->get();
-            //$data = User::where('role', 'user')->orderBy('name')->latest()->get();
-            //$data = TimeSheet::where('user_id', auth()->user()->clockify_id)->latest()->get();
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('project', function($query){

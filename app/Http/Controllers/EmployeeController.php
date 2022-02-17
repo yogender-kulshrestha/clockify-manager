@@ -34,6 +34,9 @@ class EmployeeController extends Controller
         $this->middleware('auth');
     }
 
+    /**
+     * Employee & HR Dashboard
+     */
     public function home()
     {
         $now = Carbon::now()->subWeek();
@@ -43,22 +46,6 @@ class EmployeeController extends Controller
         $date->setISODate($now->year,$weekOfYear);
         $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
         $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
-
-        /*$fromDate = Carbon::now()->subWeeks(5)->startOfWeek();
-        $time_weeks=Record::select('description as week')
-            ->where('user_id',auth()->user()->clockify_id)->where('record_type', 'timecard')->groupBy('description')->get();
-        $date2 = Carbon::now();
-        $weekOfYear2=($date2->weekOfYear < 10) ? '0'.$date2->weekOfYear : $date2->weekOfYear;
-        $currentWeek2 = $date2->year.'-W'.$weekOfYear2;
-        $all_weeks=TimeSheet::select('week')
-            ->where('user_id',auth()->user()->clockify_id)
-            ->where('week', '!=', $currentWeek2)
-            //->where('start_time', '>=', $fromDate)
-            ->whereNotIn('week', $time_weeks)
-            ->whereNotNull('week')
-            ->where('week', '!=', '')
-            ->where('week', '!=', ' ')
-            ->groupBy('week')->limit(5)->orderByDesc('start_time')->get();*/
         $week=[];
         $now = Carbon::now();
         for($i=0;$i<5;$i++) {
@@ -87,6 +74,9 @@ class EmployeeController extends Controller
         return view('employee.home', compact('weekCount','currentWeek', 'startDate', 'endDate'));
     }
 
+    /**
+     * Get all records
+     */
     public function records(Request $request)
     {
         if($request->ajax()) {
@@ -136,12 +126,6 @@ class EmployeeController extends Controller
                     }
                     return $action;
                 })->editColumn('status', function ($query) {
-                    /*if($query->status == 'active'){
-                        $status = 'badge-success';
-                    } else {
-                        $status = 'badge-danger';
-                    }
-                    return '<span class="badge badge-sm '.$status.'">'.$query->status.'</span>';*/
                     return '<span>'.$query->status.'</span>';
                 })->editColumn('record_type', function ($query) {
                     if($query->user_id == auth()->user()->clockify_id) {
@@ -174,6 +158,9 @@ class EmployeeController extends Controller
         return view('employee.records', compact('users'));
     }
 
+    /**
+     * request for leave
+     */
     public function requestLeave(Request $request)
     {
         $leave_categories = LeaveType::all();
@@ -182,6 +169,9 @@ class EmployeeController extends Controller
         return view('employee.leave', compact('leave_categories', 'total_leave', 'applied_leave'));
     }
 
+    /**
+     * store leave request
+     */
     public function storeRequestLeave(Request $request)
     {
         try {
@@ -274,6 +264,9 @@ class EmployeeController extends Controller
         }
     }
 
+    /**
+     * View leave detail
+     */
     public function viewRequestLeave($id)
     {
         $data = Leave::find($id);
@@ -284,6 +277,9 @@ class EmployeeController extends Controller
         abort(404);
     }
 
+    /**
+     * Review leave request
+     */
     public function reviewRequestLeave($id)
     {
         $data = Leave::find($id);
@@ -294,6 +290,9 @@ class EmployeeController extends Controller
         abort(404);
     }
 
+    /**
+     * Edit leave request
+     */
     public function editRequestLeave($id)
     {
         $data = Leave::find($id);
@@ -306,6 +305,9 @@ class EmployeeController extends Controller
         abort(404);
     }
 
+    /**
+     * Create time card
+     */
     public function timecard($week, Request $request)
     {
         if($request->ajax()) {
@@ -355,9 +357,6 @@ class EmployeeController extends Controller
                 ->rawColumns(['error','status','action','start_date','start_time','end_date','end_time','time_duration','created_at'])
                 ->make(true);
         }
-        /*$now = Carbon::now()->subWeek();
-        $weekOfYear=($now->weekOfYear < 10) ? '0'.$now->weekOfYear : $now->weekOfYear;
-        $currentWeek = $now->year.'-W'.$weekOfYear;*/
         $currentWeek=$week;
         $seletedWeek = explode('-',Str::replace('W','',$week));
         $date = Carbon::now();
@@ -367,6 +366,9 @@ class EmployeeController extends Controller
         return view('employee.timecard', compact('currentWeek','startDate','endDate'));
     }
 
+    /**
+     * Add & edit time entry
+     */
     public function addTimeCard($week, Request $request)
     {
         try {
@@ -415,6 +417,9 @@ class EmployeeController extends Controller
         }
     }
 
+    /**
+     * Remove time entry
+     */
     public function deleteTimeCard(Request $request){
         try {
             TimeSheet::where('id',$request->id)->delete();
@@ -424,6 +429,9 @@ class EmployeeController extends Controller
         }
     }
 
+    /**
+     * Time entry requested & remove exception
+     */
     public function statusTimeCard(Request $request){
         try {
             TimeSheet::where('id',$request->id)->update(['exception' => strval($request->status)]);
@@ -434,6 +442,9 @@ class EmployeeController extends Controller
         }
     }
 
+    /**
+     * create/store time card
+     */
     public function createTimeCard(Request $request)
     {
         $rules = [
@@ -513,14 +524,6 @@ class EmployeeController extends Controller
                 'employee_remarks' => $employee_remarks
             ];
             $insert = TimeCard::updateOrCreate($id, $input);
-            /*$dt = Carbon::now();
-            $hours = $dt->diffInHours($dt->copy()->addSeconds($net_hours));
-            $minutes = $dt->diffInMinutes($dt->copy()->addSeconds($net_hours)->subHours($hours));
-            if($minutes <= 15) {
-            } elseif ($minutes > 15 || $minutes <= 30) {
-            } elseif ($minutes > 30 || $minutes <= 45) {
-            } else {
-            }*/
         }
         if($insert) {
             return redirect()->to(route('employee.timecard.submit',['week' => $currentWeek]))->withSuccess('Time card create successfully.');
@@ -528,6 +531,9 @@ class EmployeeController extends Controller
         return redirect()->back()->withError('Timecard not create.');
     }
 
+    /**
+     * Ready for submit time card
+     */
     public function forSubmitTimeCard($week)
     {
         $user_id=auth()->user()->clockify_id;
@@ -557,6 +563,9 @@ class EmployeeController extends Controller
         return redirect()->back()->withError('Please create timecard first.');
     }
 
+    /**
+     * submit and store time card
+     */
     public function submitTimeCard(Request $request)
     {
         $request->validate([
@@ -599,6 +608,9 @@ class EmployeeController extends Controller
         return redirect()->back()->withError('Timecard not submit.');
     }
 
+    /**
+     * View time card
+     */
     public function viewTimecard($id)
     {
         $data = Record::where('record_type', 'timecard')->where('id', $id)->first();
@@ -629,6 +641,9 @@ class EmployeeController extends Controller
         return redirect()->to(route('employee.records'))->withError('Please create timecard first.');
     }
 
+    /**
+     * Edit time card
+     */
     public function editTimecard($id)
     {
         $data = Record::where('record_type', 'timecard')->where('id', $id)->first();
@@ -660,6 +675,9 @@ class EmployeeController extends Controller
         return redirect()->to(route('employee.records'))->withError('Please create timecard first.');
     }
 
+    /**
+     * Review time card
+     */
     public function reviewTimecard($id)
     {
         $data = Record::where('record_type', 'timecard')->where('id', $id)->first();
@@ -690,6 +708,9 @@ class EmployeeController extends Controller
         return redirect()->to(route('employee.records'))->withError('Please create timecard first.');
     }
 
+    /**
+     * Approve and Review & Resubmit time card
+     */
     public function submitReviewTimecard($week, Request $request)
     {
         $remarks = $request->remarks;
@@ -711,6 +732,9 @@ class EmployeeController extends Controller
         return redirect()->to(route('employee.records'))->withError('Timecard '.$request->status.' failed.');
     }
 
+    /**
+     * Time card submitting drop-down
+     */
     public function timesheet(Request $request)
     {
         $week=[];
@@ -738,6 +762,9 @@ class EmployeeController extends Controller
         return view('employee.timesheet', compact('all_weeks'));
     }
 
+    /**
+     * Get employees to assign approver
+     */
     public function employeesAjax(Request $request)
     {
         if(request()->ajax()) {
@@ -758,14 +785,12 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * Gel all employees
      */
     public function index(Request $request)
     {
         if($request->ajax()) {
-            $data = my_employees();//User::where('role', 'user')->latest()->get();
+            $data = my_employees();
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function($query){
@@ -794,10 +819,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * Store and update employee
      */
     public function store(Request $request)
     {
@@ -825,9 +847,11 @@ class EmployeeController extends Controller
             if ($insert) {
                 $user = User::find($insert->id);
                 if($request->id) {
-                    foreach($request->leave_balances as $balance) {
-                        LeaveBalance::where('user_id', $user->clockify_id)
-                            ->where('leave_type_id', $balance['leave_type_id'])->update(['balance' => $balance['balance']]);
+                    if($request->leave_balances) {
+                        foreach ($request->leave_balances as $balance) {
+                            LeaveBalance::where('user_id', $user->clockify_id)
+                                ->where('leave_type_id', $balance['leave_type_id'])->update(['balance' => $balance['balance']]);
+                        }
                     }
                 } else {
                     User::where('id', $user->id)->update(['clockify_id' => $user->id]);
@@ -850,7 +874,7 @@ class EmployeeController extends Controller
                     $data['subject'] = 'Register Successfully.';
                     $data['title'] = 'Register Successfully.';
                     $data['body'] = 'You will successfully registered on Matthew Clockify Portal. <br/> <br/> Your login credentials here:-<br/>username: '.$insert->email.'<br/>password: '.$request->password;
-                    $sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                    \Mail::to($email, $name)->send(new CommonMail($data));
                 }
                 $message = $request->id ? 'Updated Successfully.' : 'Added Successfully.';
                 return response()->json(['success' => true, 'message' => $message], 200);
@@ -863,10 +887,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * Get employee records
      */
     public function show($id, Request $request)
     {
@@ -905,12 +926,6 @@ class EmployeeController extends Controller
                     }
                     return $action;
                 })->editColumn('status', function ($query) {
-                    /*if($query->status == 'active'){
-                        $status = 'badge-success';
-                    } else {
-                        $status = 'badge-danger';
-                    }
-                    return '<span class="badge badge-sm '.$status.'">'.$query->status.'</span>';*/
                     return '<span>'.$query->status.'</span>';
                 })->editColumn('record_type', function ($query) {
                     if($query->user_id == auth()->user()->clockify_id) {
@@ -953,6 +968,9 @@ class EmployeeController extends Controller
         abort(404);
     }
 
+    /**
+     * Remove employee
+     */
     public function destroy($id)
     {
         $data = User::find($id)->delete();
@@ -962,6 +980,9 @@ class EmployeeController extends Controller
         return response()->json(['success' => false, 'message' => 'Deletion Failed.'], 200);
     }
 
+    /**
+     * Export time card of a single week
+     */
     public function exportTimecard($user_id, $week='2022-W03')
     {
         $user=User::where('clockify_id', $user_id)->first();
@@ -1026,6 +1047,9 @@ class EmployeeController extends Controller
         return Excel::download(new TimecardExport($arrays), $user->name.'-'.$week.'-timecard.xlsx');
     }
 
+    /**
+     * Export time card with week range
+     */
     public function exportTimecardByDate(Request $request)
     {
         try {
@@ -1049,12 +1073,10 @@ class EmployeeController extends Controller
             $date = Carbon::now();
             $date->setISODate($seletedWeek[0],$seletedWeek[1]);
             $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
-            //$endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
 
             $seletedWeek2 = explode('-',Str::replace('W','',$request->week_to));
             $date2 = Carbon::now();
             $date2->setISODate($seletedWeek2[0],$seletedWeek2[1]);
-            //$startDate=$date2->startOfWeek()->format('Y-m-d H:i:s');
             $endDate=$date2->endOfWeek()->format('Y-m-d H:i:s');
 
             $user=User::where('clockify_id', $request->user_id)->first();
@@ -1131,52 +1153,5 @@ class EmployeeController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->withInput()->withError('Record Not Found.');
         }
-    }
-
-    public function mailNotifications()
-    {
-        $date = Carbon::now();
-        $records = Record::where('status', 'Submitted')->whereDate('updated_at', '<', $date)->get();
-        foreach ($records as $record) {
-            reminderMail('approver', $record);
-        }
-
-        $users = User::where('role', 'user')->get();
-        foreach ($users as $user) {
-            $now = Carbon::now()->subWeek();
-            $weekOfYear = ($now->weekOfYear < 10) ? '0' . $now->weekOfYear : $now->weekOfYear;
-            $currentWeek = $now->year . '-W' . $weekOfYear;
-            $date = Carbon::now();
-            $date->setISODate($now->year, $weekOfYear);
-            $startDate = $date->startOfWeek()->format('Y-m-d H:i:s');
-            $endDate = $date->endOfWeek()->format('Y-m-d H:i:s');
-            $week=[];
-            $now = Carbon::now();
-            for($i=0;$i<5;$i++) {
-                $now->subWeek();
-                $weekOfYear=($now->weekOfYear < 10) ? '0'.$now->weekOfYear : $now->weekOfYear;
-                $currentWeek = $now->year.'-W'.$weekOfYear;
-                $week[$i] = $currentWeek;
-            }
-            $times=Record::select('description as week')
-                ->where('user_id',auth()->user()->clockify_id)
-                ->whereIn('description', $week)
-                ->where('record_type', 'timecard')->groupBy('description')->get();
-            $time_weeks=[];
-            foreach($times as $k=>$time){
-                $time_weeks[$k] = $time->week;
-            }
-            $all_weeks=[];
-            $allweeks=array_diff($week,$time_weeks);
-            foreach ($allweeks as $k=>$w) {
-                $all_weeks[]['week'] = $w;
-            }
-            $weekCount = count($all_weeks);
-            if ($weekCount >= 1) {
-                $user['weekCount'] = $weekCount;
-                reminderMail('employee', $user);
-            }
-        }
-        return response()->json(['message' => 'Reminder mail sent successfully.']);
     }
 }

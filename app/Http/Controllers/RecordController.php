@@ -34,10 +34,7 @@ class RecordController extends Controller
                 ->addColumn('action', function($query){
                     return '<a data-id="'.$query->id.'" data-record_type="'.$query->record_type.'" data-description="'.$query->description.'" data-remarks="'.$query->remarks.'" data-status="'.$query->status.'" class="mx-1 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
                         <i class="fas fa-edit text-primary"></i>
-                    </a>
-                    <!--<a data-id="'.$query->id.'" class="mx-1 rowdelete" data-bs-toggle="tooltip" data-bs-original-title="Delete">
-                        <i class="fas fa-trash text-danger"></i>
-                    </a>-->';
+                    </a>';
                 })->editColumn('status', function ($query) {
                     if($query->status == 'active'){
                         $status = 'badge-success';

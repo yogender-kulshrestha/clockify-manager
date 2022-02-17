@@ -3,12 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\LeaveType;
-use App\Models\Record;
-use App\Models\TimeCard;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use DataTables;
 use Validator;
 
@@ -39,10 +35,7 @@ class LeaveTypeController extends Controller
                 ->addColumn('action', function($query){
                     return '<a data-id="'.$query->id.'" data-name="'.$query->name.'" data-balance="'.$query->balance.'" class="mx-1 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
                         <i class="fas fa-edit text-primary"></i>
-                    </a>
-                    <!--<a data-id="'.$query->id.'" class="mx-1 rowdelete" data-bs-toggle="tooltip" data-bs-original-title="Delete">
-                        <i class="fas fa-trash text-danger"></i>
-                    </a>-->';
+                    </a>';
                 })->editColumn('created_at', function ($query) {
                     return Carbon::createFromFormat('Y-m-d H:i:s', $query->created_at)->format('d M, Y');
                 })

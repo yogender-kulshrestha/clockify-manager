@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\TimeSheet;
-use App\Models\User;
 use Illuminate\Http\Request;
 use DataTables;
 use Carbon\Carbon;
@@ -31,14 +30,6 @@ class TimeCardController extends Controller
     public function index(Request $request)
     {
         if($request->ajax()) {
-            /*$seletedWeek = explode('-',$request->seletedWeek);
-            $date = Carbon::now();
-            $date->setISODate($seletedWeek[0],Str::replace('W', '', $seletedWeek[1]));
-            $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
-            $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
-            $data = TimeSheet::whereDate('start_time', '>=', $startDate)
-                ->whereDate('start_time', '<=', $endDate)
-                ->where('user_id', auth()->user()->clockify_id)->latest()->get();*/
             $data = TimeSheet::query();
             if($request->date_from && $request->date_to) {
                 $data->whereDate('start_time', '>=', $request->date_from)->whereDate('start_time', '<=', $request->date_to);
@@ -68,10 +59,6 @@ class TimeCardController extends Controller
                 })->editColumn('end_time', function ($query) {
                     return Carbon::createFromFormat('Y-m-d H:i:s', $query->end_time)->format('H:i:s');
                 })->addColumn('time_duration', function ($query) {
-                    /*$date_from = Carbon::parse($query->start_time);
-                    $date_to = Carbon::parse($query->end_time);
-                    $diff = $date_from->diff($date_to)->format('%H:%I:%S');
-                    return $diff;*/
                     return $query->duration_time;
                 })
                 ->rawColumns(['status','action','start_date','start_time','end_date','end_time','time_duration','created_at'])

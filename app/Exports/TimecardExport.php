@@ -2,8 +2,6 @@
 
 namespace App\Exports;
 
-use App\Models\TimeCard;
-use App\Models\TimeSheet;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
@@ -37,6 +35,5 @@ class TimecardExport implements FromCollection
     public function collection()
     {
         return $this->collection;
-        //return Timecard::all();
     }
 }

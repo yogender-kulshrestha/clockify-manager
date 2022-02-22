@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Approver;
 use App\Models\Leave;
+use App\Models\Setting;
 use App\Mail\CommonMail;
 
 function total_hours($user_id, $project_id, $date_from, $date_to)
@@ -162,9 +163,9 @@ function verify_working_hours($week, $start, $end, $user_id) {
 
         //error_ot
         $start=Carbon::parse($row->start_time);
-        $time=$start->startOfDay();
-        $startTime = $time->addHour(config('clockify.start_time'))->format('Y-m-d H:i:s');
-        $endTime = $time->addHour(config('clockify.end_time')-config('clockify.start_time'))->format('Y-m-d H:i:s');
+        $time=$start->startOfDay()->format('Y-m-d');
+        $startTime = Carbon::parse($time.setting('working_time_from'))->format('Y-m-d H:i:s');
+        $endTime = Carbon::parse($time.setting('working_time_to'))->format('Y-m-d H:i:s');
         $h_hours = 0;
         if($startTime > $row->start_time || $endTime < $row->end_time) {
             if($startTime > $row->start_time) {
@@ -175,7 +176,13 @@ function verify_working_hours($week, $start, $end, $user_id) {
                 }
             }
             if($endTime < $row->end_time) {
-                $h_hours += Carbon::parse($endTime)->diffInSeconds($row->end_time);
+                if($startTime < $row->end_time) {
+                    $h_hours += 0;
+                } elseif($startTime < $row->start_time) {
+                    $h_hours += Carbon::parse($row->end_time)->diffInSeconds($startTime);
+                } else {
+                    $h_hours += Carbon::parse($row->end_time)->diffInSeconds($endTime);
+                }
             }
             $dt = Carbon::now();
             $d_hours = $dt->diffInHours($dt->copy()->addSeconds($h_hours));
@@ -212,12 +219,12 @@ function verify_working_hours($week, $start, $end, $user_id) {
             $net_hours += $sheet->duration_time ?? 0;
         }
         $ot_hours = 0;
-        $working_hours = (16*60)*60;
+        $working_hours = (setting('overclocking_hours')*60)*60;
         if($net_hours > $working_hours) {
             $ot_hours = $net_hours-$working_hours;
             TimeSheet::where('start_time', '>=', $start)
                 ->where('start_time', '<=', $end)
-                ->where('user_id', $user_id)->update(['error_wh'=>'16+ working hours.']);
+                ->where('user_id', $user_id)->update(['error_wh'=>setting('overclocking_hours').'+ working hours.']);
         } else {
             TimeSheet::where('start_time', '>=', $start)
                 ->where('start_time', '<=', $end)
@@ -431,4 +438,10 @@ function startOfYear(){
 
 function endOfYear(){
     return Carbon::now()->endOfYear();
+}
+
+function setting($value)
+{
+    $find = Setting::query()->first();
+    return $find->$value;
 }

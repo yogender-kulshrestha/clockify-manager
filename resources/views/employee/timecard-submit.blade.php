@@ -100,7 +100,6 @@
                                 <td>Net Hours</td>
                                 <td>Employee Remarks</td>
                                 <td>Approver Remarks</td>
-                                {{--<td>Action</td>--}}
                             </tr>
                             </thead>
                             <tbody class="text-xs">
@@ -112,7 +111,7 @@
                                     $net_hours2 = $dt->diffInHours($dt->copy()->addSeconds($row->net_hours));
                                     $net_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->net_hours)->subHours($net_hours2));
                                 @endphp
-                                <tr @if($row->exception == 1 ) style="background-color: rgba(255,0,0,0.3);" @endif>
+                                <tr style="@if($row->exception == 1 && empty($row->flags)) background-color: rgba(1,0,0,0.2); @elseif($row->exception == 1) background-color: rgba(255,0,0,0.3); @endif">
                                     <td>{{$row->date}}</td>
                                     <td>{!! $row->flags !!}</td>
                                     <td>{{$ot_hours}}:{{$ot_minutes}}</td>
@@ -158,81 +157,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="import" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog mt-lg-10">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="ModalLabel">Import CSV</h5>
-                    <i class="fas fa-upload ms-3"></i>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>You can browse your computer for a file.</p>
-                    <input type="text" placeholder="Browse file..." class="form-control mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="" id="importCheck" checked="">
-                        <label class="custom-control-label" for="importCheck">I accept the terms and conditions</label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn bg-gradient-primary btn-sm">Upload</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="modal-create" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="add_form2" autocomplete="off" enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="form_title">Create Leave Request</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" name="id" id="id"/>
-                        {{--<input type="hidden" name="status" id="status" value="Submitted"/>--}}
-                        <input type="hidden" name="user_id" id="user_id" value="{{auth()->user()->clockify_id}}"/>
-                        <div class="form-group">
-                            <label for="leave_type_id">Leave Type <span class="text-danger">*</span></label>
-                            <select required class="form-control" name="leave_type_id" id="leave_type_id" placeholder="Select Leave Type">
-                                <option value="" disabled selected>-- Select --</option>
-                                @foreach($leave_categories as $category)
-                                    <option value="{{$category->id}}">{{$category->name}}</option>
-                                @endforeach
-                            </select>
-                            <span id="leave_type_id_error" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="date_from">Date From <span class="text-danger">*</span></label>
-                            <input required type="date" class="form-control" name="date_from" id="date_from" placeholder="Select Date From">
-                            <span id="date_from_error" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="date_to">Date To <span class="text-danger">*</span></label>
-                            <input required type="date" class="form-control" name="date_to" id="date_to" placeholder="Select Date To">
-                            <span id="date_to_error" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="title">Explanation / Handover of Responsibilities</label>
-                            <textarea class="form-control" name="title" id="title" placeholder="Enter Explanation / Handover of Responsibilities"></textarea>
-                            <span id="title_error" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <label class="" for="attachment">Attachment</label>
-                            <input type="file" class="form-control" name="attachment" id="attachment"/>
-                            <span id="attachment_error" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="modal-footer text-right">
-                        <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn bg-gradient-primary btn-sm" id="add_button2">Submit</button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>

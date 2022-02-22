@@ -56,13 +56,9 @@
                             <div class="ms-auto my-auto">
                                 @if(auth()->user()->role == 'admin')
                                 <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
+                                <button type="button" class="btn bg-gradient-danger btn-sm mb-0 flashRecords">@&nbsp; Flash Records </button>
                                 @endif
-                                {{--<button type="button" class="btn bg-gradient-primary btn-sm mb-0"><i class="fa fa-rotate-270"></i> @</button>
-                               --}} {{--<button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
-                                    Import
-                                </button>
-                                <button class="btn btn-outline-primary btn-sm export mb-0 mt-sm-0 mt-1" data-type="csv" type="button" name="button">Export</button>
-                            --}}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -85,29 +81,6 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="import" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog mt-lg-10">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="ModalLabel">Import CSV</h5>
-                    <i class="fas fa-upload ms-3"></i>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>You can browse your computer for a file.</p>
-                    <input type="text" placeholder="Browse file..." class="form-control mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="" id="importCheck" checked="">
-                        <label class="custom-control-label" for="importCheck">I accept the terms and conditions</label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn bg-gradient-primary btn-sm">Upload</button>
                 </div>
             </div>
         </div>
@@ -300,6 +273,7 @@
                 $('.text-danger.hidden').text('');
                 $("#add_button").text('Update');
             });
+
             const addForm = '{{ route('employees.store') }}';
             $('#add_form').submit(function (e) {
                 e.preventDefault();
@@ -344,12 +318,11 @@
                     }
                 });
             });
-            $(document).on('click', '.rowdelete', function() {
-                var id = $(this).data('id');
-                var url = '{{ route('employees.destroy', ':id') }}';
-                url = url.replace(':id', id);
+
+            $(document).on('click', '.flashRecords', function() {
+                var url = '{{ route('delete.all-records') }}';
                 Swal.fire({
-                    title: 'Are you sure?',
+                    title: 'Are you sure to delete all records?',
                     text: "You won't be able to revert this!",
                     icon: 'warning',
                     showCancelButton: true,
@@ -358,17 +331,53 @@
                     confirmButtonText: 'Yes, delete it!'
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        spinnershow();
                         $.ajax({
                             url: url,
-                            type: "DELETE",
+                            type: "POST",
                             dataType: "JSON",
                             data:{
-                                'id': id,
                                 '_token': '{{ csrf_token() }}',
                             },
                             success: function(data) {
                                 //console.log(data);
-                                datatable.draw();
+                                spinnerhide();
+                                if (data.success === true) {
+                                    toastr.success(data.message)
+                                } else {
+                                    toastr.error(data.message)
+                                }
+                            }
+                        });
+                    }
+                })
+            });
+
+            $(document).on('click', '.flash-records', function() {
+                var id = $(this).data('id');
+                var url = '{{ route('delete.user-records') }}';
+                Swal.fire({
+                    title: 'Are you sure to delete all records?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        spinnershow();
+                        $.ajax({
+                            url: url,
+                            type: "POST",
+                            dataType: "JSON",
+                            data:{
+                                'user_id': id,
+                                '_token': '{{ csrf_token() }}',
+                            },
+                            success: function(data) {
+                                //console.log(data);
+                                spinnerhide();
                                 if (data.success === true) {
                                     toastr.success(data.message)
                                 } else {

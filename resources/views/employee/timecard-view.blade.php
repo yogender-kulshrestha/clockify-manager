@@ -102,7 +102,6 @@
                                 <td>Net Hours</td>
                                 <td>Employee Remarks</td>
                                 <td>Approver Remarks</td>
-                                {{--<td>Action</td>--}}
                             </tr>
                             </thead>
                             <tbody class="text-xs">
@@ -114,7 +113,7 @@
                                     $net_hours = $dt->diffInHours($dt->copy()->addSeconds($row->net_hours));
                                     $net_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->net_hours)->subHours($net_hours));
                                 @endphp
-                                <tr @if($row->exception == 1 ) style="background-color: rgba(255,0,0,0.3);" @endif>
+                                <tr style="@if($row->exception == 1 && empty($row->flags)) background-color: rgba(1,0,0,0.2); @elseif($row->exception == 1) background-color: rgba(255,0,0,0.3); @endif">
                                     <td>{{$row->date}}</td>
                                     <td>{!! $row->flags !!}</td>
                                     <td>{{$ot_hours}}:{{$ot_minutes}}</td>
@@ -125,82 +124,8 @@
                             @endforeach
                             </tbody>
                         </table>
-                        <div class="text-center">
-                            {{--<form id="add_form" method="POST" action="{{route('employee.timecard.submit', ['week' => $week])}}">
-                                @csrf
-                                <input type="hidden" name="start_time" value="{{$startDate}}"/>
-                                <input type="hidden" name="end_time" value="{{$endDate}}"/>
-                                <input type="hidden" name="week" value="{{$week}}"/>
-                                <input type="hidden" name="user_id" value="{{auth()->user()->clockify_id}}"/>
-                                <input type="hidden" name="status" value="Submitted"/>
-                                <input type="submit" value="Submit Timecard" id="submit_button" class="btn btn-success btn-sm"/>
-                            </form>--}}
-                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="import" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog mt-lg-10">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="ModalLabel">Import CSV</h5>
-                    <i class="fas fa-upload ms-3"></i>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>You can browse your computer for a file.</p>
-                    <input type="text" placeholder="Browse file..." class="form-control mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="" id="importCheck" checked="">
-                        <label class="custom-control-label" for="importCheck">I accept the terms and conditions</label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn bg-gradient-primary btn-sm">Upload</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="modal-create" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="add_form" autocomplete="off" enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="form_title">Create</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" name="id" id="id"/>
-                        <div class="form-group">
-                            <label for="description">Description <span class="text-danger">*</span></label>
-                            <textarea class="form-control" name="description" id="description" placeholder="Enter Description"></textarea>
-                            <span id="description_error" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="duration">From <span class="text-danger">*</span></label>
-                            <input type="datetime-local" class="form-control" name="start_time" id="start_time"/>
-                            <span id="start_time_error" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="duration">To <span class="text-danger">*</span></label>
-                            <input type="datetime-local" class="form-control" name="end_time" id="end_time"/>
-                            <span id="end_time_error" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="remarks">Remarks <span class="text-danger">*</span></label>
-                            <textarea class="form-control" name="employee_remarks" id="remarks" placeholder="Enter Remarks"></textarea>
-                            <span id="remarks_error" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="modal-footer text-right">
-                        <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn bg-gradient-primary btn-sm" id="add_button">Add</button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
@@ -210,130 +135,10 @@
     <!--  Datatable JS  -->
     <script src="{{asset('assets/js/plugins/datatables.js')}}"></script>
     <script>
-
         $(document).ready(function (){
             var datatable = $('#datatable').DataTable({
                 dom: 'f',
                 'ordering': false,
-            });
-            var datatable = $('#datatable2').DataTable({
-                //dom: 'B<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',
-                dom: '',
-                language: {
-                    paginate: {
-                        next: '›',
-                        previous: '‹'
-                    }
-                },
-                "select": true,
-                "paging": true,
-                "pageLength": "-1",
-                "lengthMenu": [
-                    [5, 10, 25, 50, 100, 1000, -1],
-                    [5, 10, 25, 50, 100, 1000, 'ALL']
-                ],
-                "processing": true,
-                "serverSide": true,
-                "searching": true,
-                "responsive": true,
-                "lengthChange": false,
-                'ordering': false,
-                "autoWidth": false,
-                "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
-                "ajax": {
-                    url: '{{ route('employee.timecard', ['week' => $week]) }}',
-                    data: function (d) {
-                        d.start_time = '',
-                        d.end_time = '',
-                        d.seletedWeek = ''
-                    }
-                },
-                "order": [[ 3, "desc" ],[ 4, "desc" ]],
-                "columns": [
-                    {
-                        data: 'DT_RowIndex',
-                        name: 'DT_RowIndex',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'id',
-                        name: 'id',
-                        defaultContent: '' ,
-                        visible: false
-                    },
-                    {
-                        data: 'description',
-                        name: 'description',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'start_date',
-                        name: 'start_date',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'start_time',
-                        name: 'start_time',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'end_date',
-                        name: 'end_date',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'end_time',
-                        name: 'end_time',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'time_duration',
-                        name: 'time_duration',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'time_error',
-                        name: 'time_error',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'employee_remarks',
-                        name: 'employee_remarks',
-                        defaultContent: ''
-                    },
-                    {
-                        data: 'action',
-                        name: 'action',
-                        defaultContent: '',
-                        orderable: false,
-                        searchable: false
-                    },
-                ],
-                "createdRow": function( row, data, dataIndex){
-                    if(data.exception == 1 ){
-                        $(row).css('background-color', 'rgba(255,0,0,0.3)');
-                    }else{
-                    }
-                },
-            });
-
-            const addForm = '{{ route('employee.request-leave') }}';
-            $('#add_form').submit(function (e) {
-                e.preventDefault();
-                //var form_data = new FormData(this);
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "Once you submit you cannot make changes.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, submit it!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        this.submit();
-                    }
-                })
             });
         });
     </script>

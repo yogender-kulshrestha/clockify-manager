@@ -90,6 +90,15 @@
                         </div>
                     </a>
                 </div>
+                <div class="col-md-3 mt-4">
+                    <a href="{{route('settings')}}">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h3 class="text-gradient text-primary"><span id="status1">Settings</span> <span class="text-lg ms-n2"></span></h3>
+                            </div>
+                        </div>
+                    </a>
+                </div>
             </div>
         </div>
     </div>

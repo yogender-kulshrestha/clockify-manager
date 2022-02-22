@@ -58,6 +58,12 @@ Route::resource('leave-types', LeaveTypeController::class)->only(['index', 'stor
 //Admin routes
 Route::middleware('admin')->prefix('admin')->group(function() {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/settings', [HomeController::class, 'settings'])->name('settings');
+    Route::post('/settings', [HomeController::class, 'settingsPost']);
+
+    Route::post('/delete-all-records', [HomeController::class, 'deleteAllRecords'])->name('delete.all-records');
+    Route::post('/delete-user-records', [HomeController::class, 'deleteAllRecordsByUser'])->name('delete.user-records');
+
     Route::resource('hr-managers', HrController::class);
     Route::resource('approvers', ApproverController::class);
     Route::get('record', [EmployeeController::class, 'records'])->name('records');

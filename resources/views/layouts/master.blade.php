@@ -1,3 +1,11 @@
+<!--
+|--------------------------------------------------------------------------
+| master
+|--------------------------------------------------------------------------
+|
+| This view handles all the mail content for view file like css, js and html.
+|
+-->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -44,9 +52,12 @@
     @include('layouts.header-employee')
     <!-- End Navbar -->
     <div class="container-fluid py-4">
+        <!-- Start Content -->
         @yield('content')
-
+        <!-- End Content -->
+        <!-- Start Footer -->
         @include('layouts.footer')
+        <!-- End Footer -->
     </div>
 </main>
 @include('layouts.theme')
@@ -77,6 +88,7 @@
 <script src="{{ asset('plugins/datatables-buttons/js/buttons.html5.min.js') }}"></script>
 <script src="{{ asset('plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
 <script src="{{ asset('plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
+<!-- Start Toastr msg -->
 <script type="text/javascript">
     @if(Session()->has('success'))
         toastr.options = {"progressBar": true}
@@ -102,35 +114,15 @@
         }
     }
 </script>
-@yield('script')
+<!-- End Toastr msg -->
+{{--@yield('script')--}}
 <!-- Github buttons -->
 <script async defer src="https://buttons.github.io/buttons.js"></script>
 <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
 <script src="{{asset('assets/js/soft-ui-dashboard.min.js?v=1.0.5')}}"></script>
 <script src="{{ asset('assets/js/jquery.magnific-popup.min.js') }}"></script>
+<!-- Start Spinner js -->
 <script type="text/javascript">
-    $(document).on('click','.ply-btn',function(e){
-        e.preventDefault();
-        $(this).magnificPopup({
-            disableOn: 700,
-            type: 'iframe',
-            mainClass: 'mfp-fade',
-            removalDelay: 160,
-            preloader: false,
-            fixedContentPos: false
-        }).magnificPopup('open');
-    });
-    $(document).on('click','.full-image',function(e){
-        e.preventDefault();
-        $(this).magnificPopup({
-            type: 'image',
-            closeOnContentClick: true,
-            mainClass: 'mfp-img-mobile',
-            image: {
-                verticalFit: true
-            }
-        }).magnificPopup('open');
-    });
     function spinnershow() {
         document.getElementById("spinner").classList.add("show");
     }
@@ -138,6 +130,7 @@
         document.getElementById("spinner").classList.remove("show");
     }
 </script>
+<!-- End Spinner js -->
 </body>
 
 </html>

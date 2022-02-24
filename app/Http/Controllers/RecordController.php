@@ -10,6 +10,16 @@ use Validator;
 
 class RecordController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Record Controller
+    |--------------------------------------------------------------------------
+    |
+    | This controller handles leave/timecard record for the application.
+    | The controller uses a trait to conveniently provide leave/timecard record to your applications.
+    |
+    */
+
     /**
      * Create a new controller instance.
      *

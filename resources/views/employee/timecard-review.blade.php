@@ -58,7 +58,10 @@
                                     <tbody class="">
                                     <tr class="border-bottom">
                                         <td>Total Hours</td>
-                                        <td>{{$net_hours ?? '0'}}</td>
+                                        @php
+                                            $total_net_hours=$net_hours ?? 0;
+                                        @endphp
+                                        <td>{{$total_net_hours ?? '0'}}</td>
                                     </tr>
                                     <tr class="border-bottom">
                                         <td>Leave Hours</td>
@@ -161,10 +164,38 @@
                 $('#status').val($(this).val());
             });
 
-            const addForm = '{{ route('employee.request-leave') }}';
             $('#add_form').submit(function (e) {
                 e.preventDefault();
-                this.submit();
+                var status = $('#status').val();
+                var net_hours = '{{$total_net_hours ?? 0}}';
+                var weekly_hours = '{{ setting('weekly_hours') }}';
+                console.log(net_hours);
+                console.log(weekly_hours);
+                var titleText = 'Are you sure?';
+                var msgText = "Once you "+status+" you cannot make changes.";
+                var buttonText = 'Yes, '+status+'!';
+                if(net_hours > weekly_hours && status=='Approved') {
+                    titleText = 'Oops!';
+                    msgText = 'The employee working hours are greater then '+weekly_hours+' hours.';
+                    buttonText = 'Yes, '+status+'!';
+                } else {
+                    var titleText = 'Are you sure?';
+                    var msgText = "Once you "+status+" you cannot make changes.";
+                    var buttonText = 'Yes, '+status+'!';
+                }
+                Swal.fire({
+                    title: titleText,
+                    text: msgText,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: buttonText
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.submit();
+                    }
+                })
             });
         });
     </script>

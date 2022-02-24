@@ -10,6 +10,16 @@ use Validator;
 
 class LeaveTypeController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | LeaveType Controller
+    |--------------------------------------------------------------------------
+    |
+    | This controller handles leave type for the application.
+    | The controller uses a trait to conveniently provide leave type records to your applications.
+    |
+    */
+
     /**
      * Create a new controller instance.
      *

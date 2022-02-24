@@ -18,6 +18,16 @@ use Str;
 
 class ClockifyController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Clockify Controller
+    |--------------------------------------------------------------------------
+    |
+    | This controller handles clockify users and time entries for the application.
+    | The controller uses a trait to conveniently provide user time entries to your applications.
+    |
+    */
+
     private $clockify;
     /**
      * Create a new controller instance.
@@ -32,7 +42,7 @@ class ClockifyController extends Controller
     /**
      * Get all workspaces from clockify
      */
-    public function workspaces(Request $request)
+    public function workspaces()
     {
         $workspaces = $this->clockify->apiRequest('workspaces');
         $rows = json_decode($workspaces);
@@ -56,7 +66,7 @@ class ClockifyController extends Controller
     /**
      * Get all users from clockify
      */
-    public function users(Request $request)
+    public function users()
     {
         $workspaces = Workspace::all();
         foreach ($workspaces as $workspace) {
@@ -112,7 +122,7 @@ class ClockifyController extends Controller
     /**
      * Get all projects from clockify
      */
-    public function projects(Request $request)
+    public function projects()
     {
         $workspaces = Workspace::all();
         foreach ($workspaces as $workspace) {
@@ -134,7 +144,7 @@ class ClockifyController extends Controller
     /**
      * Get all time entries of current week from clockify
      */
-    public function timeSheets(Request $request)
+    public function timeSheets()
     {
         $dayOfTheWeek = Carbon::now()->dayOfWeek;
         $weekday = $dayOfTheWeek-1;

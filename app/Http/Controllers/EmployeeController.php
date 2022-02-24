@@ -18,12 +18,24 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use DataTables;
 use Maatwebsite\Excel\Facades\Excel;
+use Ramsey\Uuid\Type\Integer;
 use Validator;
 use DB;
 use Str;
 
 class EmployeeController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Employee Controller
+    |--------------------------------------------------------------------------
+    |
+    | This controller handles employees leave/timecard records for the application.
+    | The controller uses a trait to conveniently provide employee, leave, timecard
+    | and approvers record to your applications.
+    |
+    */
+
     /**
      * Create a new controller instance.
      *
@@ -46,7 +58,7 @@ class EmployeeController extends Controller
         $date->setISODate($now->year,$weekOfYear);
         $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
         $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
-        //get last 5 weeks
+        /** start last 5 weeks section */
         $week=[];
         $now = Carbon::now();
         for($i=0;$i<5;$i++) {
@@ -55,7 +67,8 @@ class EmployeeController extends Controller
             $currentWeek = $now->year.'-W'.$weekOfYear;
             $week[$i] = $currentWeek; //push week in week array
         }
-        //get weeks of already submitted timecard
+        /** end last 5 weeks section */
+        /** start - get weeks of already submitted timecard */
         $times=Record::select('description as week')
             ->where('user_id',auth()->user()->clockify_id)
             ->whereIn('description', $week)
@@ -64,25 +77,28 @@ class EmployeeController extends Controller
         foreach($times as $k=>$time){
             $time_weeks[$k] = $time->week;
         }
-        //get week this time card submission is pending
+        /** end - get weeks of already submitted timecard */
+        /** start - get week this time card submission is pending */
         $all_weeks=[];
         $allweeks=array_diff($week,$time_weeks);
         foreach ($allweeks as $k=>$w) {
             $all_weeks[]['week'] = $w;
         }
-        //get count of week this time card submission is pending
-        $weekCount=count($all_weeks);
+        /** end - get week this time card submission is pending */
+        $weekCount=count($all_weeks); //get count of week this time card submission is pending
         if($weekCount == 1) {
-            $currentWeek = $all_weeks[0]['week'];
+            $currentWeek = $all_weeks[0]['week']; //set current week
         }
         return view('employee.home', compact('weekCount','currentWeek', 'startDate', 'endDate'));
     }
 
     /**
      * Get all records
+     * @param Request $request for getting request data
      */
     public function records(Request $request)
     {
+        /** start ajax section */
         if($request->ajax()) {
             if($request->user_id) {
                 //get records of a specific user
@@ -96,7 +112,7 @@ class EmployeeController extends Controller
                 }
                 $data = Record::where('user_id', auth()->user()->clockify_id)->orWhereIn('user_id', $approving)->orderByDesc('updated_at')->get();
             }
-            //set data in datatable
+            /** start - set data in datatable */
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function($query) {
@@ -153,7 +169,9 @@ class EmployeeController extends Controller
                     }
                 })->rawColumns(['record_type','status','action','created_at','updated_at'])
                 ->make(true);
+            /** end - set data in datatable */
         }
+        /** end ajax section */
         if(auth()->user()->role == 'admin' || auth()->user()->role == 'hr'){
             $users = User::whereIn('role', ['user'])->get();
         } else {
@@ -166,7 +184,7 @@ class EmployeeController extends Controller
     /**
      * request for leave form
      */
-    public function requestLeave(Request $request)
+    public function requestLeave()
     {
         //get all leave categories
         $leave_categories = LeaveType::all();
@@ -179,6 +197,7 @@ class EmployeeController extends Controller
 
     /**
      * store leave request to db
+     * @param Request $request for getting request data
      */
     public function storeRequestLeave(Request $request)
     {
@@ -314,6 +333,7 @@ class EmployeeController extends Controller
 
     /**
      * Edit leave request
+     * @param Integer $id leave id
      */
     public function editRequestLeave($id)
     {
@@ -329,10 +349,13 @@ class EmployeeController extends Controller
 
     /**
      * Create time card
+     * @param Week $week week format like 2022-W01
+     * @param Request $request for getting request data
      */
     public function timecard($week, Request $request)
     {
         if($request->ajax()) {
+            //call verify_working_hours helper for time entries error testing
             verify_working_hours($week, $request->start_time, $request->end_time, auth()->user()->clockify_id);
             $data = TimeSheet::query()->where('start_time', '>=', $request->start_time)
                 ->where('start_time', '<=', $request->end_time)
@@ -390,6 +413,7 @@ class EmployeeController extends Controller
 
     /**
      * Add & edit time entry
+     * @param Request $request for getting request data
      */
     public function addTimeCard($week, Request $request)
     {
@@ -441,6 +465,7 @@ class EmployeeController extends Controller
 
     /**
      * Remove time entry
+     * @param Request $request for getting request data
      */
     public function deleteTimeCard(Request $request){
         try {
@@ -453,6 +478,7 @@ class EmployeeController extends Controller
 
     /**
      * Time entry requested & remove exception
+     * @param Request $request for getting request data
      */
     public function statusTimeCard(Request $request){
         try {
@@ -466,6 +492,7 @@ class EmployeeController extends Controller
 
     /**
      * create/store time card
+     * @param Request $request for getting request data
      */
     public function createTimeCard(Request $request)
     {
@@ -491,6 +518,7 @@ class EmployeeController extends Controller
             $sheets = TimeSheet::where('start_time', '>=', $start)
                 ->where('start_time', '<=', $end)
                 ->where('user_id', auth()->user()->clockify_id)->get();
+            /** start - timecard entries error finding and store day wise section*/
             $flags = '';
             $description = '';
             $net_hours = 0;
@@ -519,6 +547,7 @@ class EmployeeController extends Controller
             $flags .= $error_bm ? $error_bm.'<br/>' : '';
             $flags .= $error_wh ? $error_wh.'<br/>' : '';
             $flags .= $error_le ? $error_le.'<br/>' : '';
+            /** start - timecard entries error finding and store day wise section*/
             $now = Carbon::parse($start);
             $weekOfYear=($now->weekOfYear < 10) ? '0'.$now->weekOfYear : $now->weekOfYear;
             $currentWeek = $now->year.'-W'.$weekOfYear;
@@ -555,6 +584,7 @@ class EmployeeController extends Controller
 
     /**
      * Ready for submit time card
+     * @param Week $week week format like 2021-W01
      */
     public function forSubmitTimeCard($week)
     {
@@ -587,6 +617,7 @@ class EmployeeController extends Controller
 
     /**
      * submit and store time card
+     * @param Request $request for getting request data
      */
     public function submitTimeCard(Request $request)
     {
@@ -632,6 +663,7 @@ class EmployeeController extends Controller
 
     /**
      * View time card
+     * @param Integer $id timecard record id
      */
     public function viewTimecard($id)
     {
@@ -665,6 +697,7 @@ class EmployeeController extends Controller
 
     /**
      * Edit time card
+     * @param Integer $id timecard record id
      */
     public function editTimecard($id)
     {
@@ -698,6 +731,7 @@ class EmployeeController extends Controller
 
     /**
      * Review time card
+     * @param Integer $id timecard record id
      */
     public function reviewTimecard($id)
     {
@@ -731,6 +765,8 @@ class EmployeeController extends Controller
 
     /**
      * Approve and Review & Resubmit time card
+     * @param Week $week week format like 2022-W01
+     * @param Request $request for getting request data
      */
     public function submitReviewTimecard($week, Request $request)
     {
@@ -756,7 +792,7 @@ class EmployeeController extends Controller
     /**
      * Time card submitting drop-down
      */
-    public function timesheet(Request $request)
+    public function timesheet()
     {
         $week=[];
         $now = Carbon::now();
@@ -785,6 +821,7 @@ class EmployeeController extends Controller
 
     /**
      * Get employees to assign approver
+     * @param Request $request for getting request data
      */
     public function employeesAjax(Request $request)
     {
@@ -807,6 +844,7 @@ class EmployeeController extends Controller
 
     /**
      * Gel all employees
+     * @param Request $request for getting request data
      */
     public function index(Request $request)
     {
@@ -844,6 +882,7 @@ class EmployeeController extends Controller
 
     /**
      * Store and update employee
+     * @param Request $request for getting request data
      */
     public function store(Request $request)
     {
@@ -912,6 +951,8 @@ class EmployeeController extends Controller
 
     /**
      * Get employee records
+     * @param Integer $id employee user_id
+     * @param Request $request for getting request data
      */
     public function show($id, Request $request)
     {
@@ -994,6 +1035,7 @@ class EmployeeController extends Controller
 
     /**
      * Remove employee
+     * @param Integer $id employee id
      */
     public function destroy($id)
     {
@@ -1006,6 +1048,8 @@ class EmployeeController extends Controller
 
     /**
      * Export time card of a single week
+     * @param String $user_id employee user_id
+     * @param Week $week week format like 2022-W01
      */
     public function exportTimecard($user_id, $week='2022-W03')
     {
@@ -1016,6 +1060,7 @@ class EmployeeController extends Controller
         $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
         $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
         $dt = Carbon::now();
+        /** start - calculate the net_hour, ot_hours, short_hours, leave_hours and pending leave_hours */
         $net_hour = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('net_hours');
         $ot_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('ot_hours');
         $short_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('short_hours');
@@ -1027,7 +1072,9 @@ class EmployeeController extends Controller
         $leave_hours = leave_hours($user_id, $startDate, $endDate, 'Approved');
         $nleave_hours = leave_hours($user_id, $startDate, $endDate, 'NotApproved');
         $net_hours = $net_hour+$leave_hours;
+        /** end - calculate the net_hour, ot_hours, short_hours, leave_hours and pending leave_hours */
 
+        /** start - @var $data for set timecard employee details */
         $data = [
             [
                 'Name' => $user->name,
@@ -1041,6 +1088,8 @@ class EmployeeController extends Controller
                 'Unpaid Hours' => $unpaid_hours ?? 0,
             ]
         ];
+        /** end - @var $data for set timecard employee details */
+        /** start - @var $timecard for set timecard day wise report */
         $timecards=TimeCard::where('user_id',$user_id)->where('week',$week)->get();
         $timecard=[];
         foreach ($timecards as $t) {
@@ -1053,6 +1102,8 @@ class EmployeeController extends Controller
                 'Approver Remarks' => strip_tags($t->approver_remarks),
             ];
         }
+        /** end - @var $timecard for set timecard day wise report */
+        /** start - @var $timesheets for set timecard all time entries */
         $timesheets=TimeSheet::where('user_id',$user_id)->where('week',$week)->get();
         $timesheet=[];
         foreach ($timesheets as $t) {
@@ -1067,12 +1118,14 @@ class EmployeeController extends Controller
                 'Approver Remarks' => strip_tags($t->approver_remarks),
             ];
         }
-        $arrays = [$data, $timecard, $timesheet];
-        return Excel::download(new TimecardExport($arrays), $user->name.'-'.$week.'-timecard.xlsx');
+        /** start - @var $timesheets for set timecard all time entries */
+        $arrays = [$data, $timecard, $timesheet]; //create array for excel export
+        return Excel::download(new TimecardExport($arrays), $user->name.'-'.$week.'-timecard.xlsx'); //export excel
     }
 
     /**
      * Export time card with week range
+     * @param Request $request for getting request data
      */
     public function exportTimecardByDate(Request $request)
     {
@@ -1105,6 +1158,7 @@ class EmployeeController extends Controller
 
             $user=User::where('clockify_id', $request->user_id)->first();
             if($user) {
+                /** start - @var $data for set timecard employee details */
                 $data = [
                     [
                         'Name' => $user->name,
@@ -1112,6 +1166,9 @@ class EmployeeController extends Controller
                         'Description' => 'Time Card Report of ' . $request->week_from . ' - ' . $request->week_to,
                     ]
                 ];
+                /** end - @var $data for set timecard employee details */
+
+                /** start - @var $timesheets for set timecard day wise entries */
                 $timecards = TimeCard::where('user_id', $user->clockify_id)
                     ->whereDate('date', '>=', $startDate)
                     ->whereDate('date', '<=', $endDate)->get();
@@ -1141,6 +1198,9 @@ class EmployeeController extends Controller
                         'Approver Remarks' => '',
                     ];
                 }
+                /** end - @var $timesheets for set timecard day wise entries */
+
+                /** start - @var $timesheets for set timecard all time entries */
                 $timesheets = TimeSheet::where('user_id', $user->clockify_id)
                     ->where('start_time', '>=', $startDate)
                     ->where('start_time', '<=', $endDate)->get();
@@ -1170,8 +1230,9 @@ class EmployeeController extends Controller
                         'Approver Remarks' => '',
                     ];
                 }
-                $arrays = [$data, $timecard, $timesheet];
-                return Excel::download(new TimecardExport($arrays), $user->name.'-'.Carbon::now().'-timecard.xlsx');
+                /** end - @var $timesheets for set timecard all time entries */
+                $arrays = [$data, $timecard, $timesheet]; //create export data array
+                return Excel::download(new TimecardExport($arrays), $user->name.'-'.Carbon::now().'-timecard.xlsx'); //export excel
             }
             return redirect()->back()->withInput()->withError('Record Not Found.');
         } catch (\Exception $e) {

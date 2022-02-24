@@ -2,10 +2,19 @@
 
 namespace App\Helpers;
 
-use DateInterval;
+use phpDocumentor\Reflection\Types\Boolean;
 
 class Clockify
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Clockify Helper
+    |--------------------------------------------------------------------------
+    |
+    | This helper handles clockify api request and response for the application.
+    | The helper used for calling the clockify api's
+    |
+    */
 
     public $apiKey;
     public $apiEndpoint;
@@ -16,8 +25,6 @@ class Clockify
      * @param String $apiKey clockify API key (see https://clockify.github.io/clockify_api_docs/)
      * @param String $workspace clockify API key (see https://clockify.github.io/clockify_api_docs/#tag-Workspace)
      * @param String $apiEndpoint you shouldn't have to change this
-     * @throws \Exception if $apiKey or $workspace are not provided, or an invalid $apiEndpoint is specified
-     * @returns \MoIsmailzai\Clockify
      */
     public function __construct($apiKey, $workspace, $apiEndpoint = "https://api.clockify.me/api/v1/")
     {
@@ -52,129 +59,11 @@ class Clockify
         return $this;
     }
 
-    public function getReportByDay($day = "2021-12-27")
-    {
-        $report = array();
-
-        try {
-            $result = json_decode(
-                $this->apiRequest('workspaces/' . $this->workspaceId . '/reports/summary/',
-                    json_encode(array(
-                        "archived" => "Active",
-                        "billable" => "BOTH",
-                        "clientIds" => [],
-                        "description" => "",
-                        "endDate" => $day . "T23:59:59.999Z",
-                        "firstTime" => true,
-                        "includeTimeEntries" => true,
-                        "me" => false,
-                        "name" => "",
-                        "projectIds" => [],
-                        "startDate" => $day . "T00:00:00.000Z",
-                        "tagIds" => [],
-                        "taskIds" => [],
-                        "userGroupIds" => [],
-                        "userIds" => [],
-                        "zoomLevel" => "week"
-                    ))
-                )
-            );
-        } catch (\Exception $e) {
-            return $e;
-        }
-
-        try {
-            $report['total'] = new DateInterval($this->cleanDateInterval($result->totalTime));
-        } catch (\Exception $e) {
-            return $e;
-        }
-
-        $report['date'] = $day;
-        $report['projects'] = array();
-        $report['total'] = $report['total']->format('%h hours, %i minutes, %S seconds');
-
-        foreach ($result->projectAndTotalTime as $project) {
-
-            try {
-                $time = new DateInterval($this->cleanDateInterval($project->duration));
-            } catch (\Exception $e) {
-                return $e;
-            }
-
-            $report['projects'][$project->projectName] = array();
-            $report['projects'][$project->projectName]['time'] = $time->format('%h hours, %i minutes, %S seconds');
-            $report['projects'][$project->projectName]['entries'] = array();
-        }
-
-        foreach ($result->timeEntries as $timeEntry) {
-            $entry = &$report['projects'][$timeEntry->project->name]['entries'][$timeEntry->description];
-
-            if (!$entry) {
-                $report['projects'][$timeEntry->project->name]['entries'][$timeEntry->description] = array();
-                $entry = &$report['projects'][$timeEntry->project->name]['entries'][$timeEntry->description];
-                $entry['intervals'] = array();
-            }
-
-            array_push($entry['intervals'], $timeEntry->timeInterval);
-
-            try {
-                $timeEntryDuration = ClockifyDateInterval::fromDateInterval(new DateInterval($this->cleanDateInterval($timeEntry->timeInterval->duration)));
-            } catch (\Exception $e) {
-                return $e;
-            }
-
-            if (array_key_exists('total', $entry)) {
-
-                try {
-                    $previousTotalDuration = new DateInterval($this->cleanDateInterval($entry['total']));
-                } catch (\Exception $e) {
-                    return $e;
-                }
-
-                $timeEntryDuration->add($previousTotalDuration);
-                $entry['total'] = $timeEntryDuration->format('PT%hH%iM%sS');
-                $entry['totalString'] = $timeEntryDuration->format('%h hours, %i minutes, %S seconds');
-            } else {
-                $entry['total'] = $timeEntryDuration->format('PT%hH%iM%sS');
-                $entry['totalString'] = $timeEntryDuration->format('%h hours, %i minutes, %S seconds');
-            }
-        }
-
-        return $report;
-    }
-
-    public function cleanDateInterval($dateInterval)
-    {
-        // because PHP is broken: https://bugs.php.net/bug.php?id=53831
-        $fixed = explode(".", $dateInterval);
-        if ($dateInterval[1]) {
-            $fixed = $fixed[0] . substr($fixed[1], -1);
-        } else {
-            $fixed = $fixed[0];
-        }
-        return $fixed;
-    }
-
-    public function formatReport($report)
-    {
-        $result = "---------------------------------------------------------\n";
-        $result .= " Report for " . $report['date'] . " (" . $report['total'] . ")\n";
-        $result .= "---------------------------------------------------------\n";
-
-        foreach ($report['projects'] as $key => $project) {
-            $result .= "\n";
-            $result .= $key . " (" . $project['time'] . "): \n\n";
-
-            foreach ($project['entries'] as $key2 => $entry) {
-                $result .= "• " . $key2 . " (" . $entry['totalString'] . ")\n";
-            }
-
-        }
-
-        $result .= "\n";
-        return $result;
-    }
-
+    /**
+     * Request to api and return the data
+     * @param String $apiPath clockify API relative path
+     * @param Boolean $payload for set request method
+     */
     public function apiRequest($apiPath, $payload = false)
     {
         $requestHeaders = array(
@@ -201,6 +90,13 @@ class Clockify
         }
     }
 
+    /**
+     * create a curl object
+     * @param String $apiPath clockify API path
+     * @param Object $payload for set header objects
+     * @param Boolean $payload for set request method
+     * @param Boolean $headerFunction for set header function
+     */
     public function getCurlObject($url, $headers, $payload, $headerFunction = false)
     {
         $ch = curl_init();

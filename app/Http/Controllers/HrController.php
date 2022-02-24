@@ -11,6 +11,16 @@ use Validator;
 
 class HrController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Hr Controller
+    |--------------------------------------------------------------------------
+    |
+    | This controller handles hr managers for the application.
+    | The controller uses a trait to conveniently provide hr managers records to your applications.
+    |
+    */
+
     /**
      * Create a new controller instance.
      *

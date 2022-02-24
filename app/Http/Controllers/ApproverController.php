@@ -10,6 +10,16 @@ use Validator;
 
 class ApproverController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Appover Controller
+    |--------------------------------------------------------------------------
+    |
+    | This controller is responsible for handling approver.
+    | The controller uses are assign approver, remover approver and displaying.
+    |
+    */
+
     /**
      * Create a new controller instance.
      *

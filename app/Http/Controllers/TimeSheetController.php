@@ -10,6 +10,16 @@ use Str;
 
 class TimeSheetController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | TimeSheet Controller
+    |--------------------------------------------------------------------------
+    |
+    | This controller handles time entries for the application.
+    | The controller uses a trait to conveniently provide time entries records to your applications.
+    |
+    */
+
     /**
      * Create a new controller instance.
      *

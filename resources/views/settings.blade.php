@@ -60,7 +60,7 @@
                         <form id="add_form" method="POST" autocomplete="off" enctype="multipart/form-data">
                             @csrf
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="working_time_from">Working Time From <span class="text-danger">*</span></label>
                                         <input required type="time" value="{{Carbon\Carbon::parse(setting('working_time_from'))->format('H:i')}}" class="form-control" name="working_time_from" id="working_time_from" placeholder="Select Working Time From">
@@ -69,7 +69,7 @@
                                         @enderror
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="working_time_to">Working Time To <span class="text-danger">*</span></label>
                                         <input required type="time" value="{{Carbon\Carbon::parse(setting('working_time_to'))->format('H:i')}}" class="form-control" name="working_time_to" id="working_time_to" placeholder="Select Working Time To">
@@ -78,12 +78,21 @@
                                         @enderror
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="overclocking_hours">Overclocking Hours <span class="text-danger">*</span></label>
                                         <input required type="number" value="{{setting('overclocking_hours')}}" class="form-control" name="overclocking_hours" min="1" max="24" id="overclocking_hours" placeholder="Enter Overclocking Hours"></input>
                                         @error('overclocking_hours')
                                         <span id="overclocking_hours_error" class="text-danger"></span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="weekly_hours">Max Weekly Hours <span class="text-danger">*</span></label>
+                                        <input required type="number" value="{{setting('weekly_hours')}}" class="form-control" name="weekly_hours" min="1" max="84" id="weekly_hours" placeholder="Enter Weekly Hours"></input>
+                                        @error('weekly_hours')
+                                        <span id="weekly_hours_error" class="text-danger"></span>
                                         @enderror
                                     </div>
                                 </div>

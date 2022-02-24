@@ -12,6 +12,16 @@ use Validator;
 
 class HomeController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Home Controller
+    |--------------------------------------------------------------------------
+    |
+    | This controller handles admin home and setting for the application.
+    | The controller uses a trait to conveniently provide admin interface to your applications.
+    |
+    */
+
     /**
      * Create a new controller instance.
      *
@@ -46,10 +56,11 @@ class HomeController extends Controller
         $request->validate([
             'working_time_from' => 'required',
             'working_time_to' => 'required|after:working_time_from',
-            'overclocking_hours' => 'required|numeric|min:1|max:24'
+            'overclocking_hours' => 'required|numeric|min:1|max:24',
+            'weekly_hours' => 'required|numeric|min:1|max:84'
         ]);
 
-        $input = $request->only('working_time_from', 'working_time_to', 'overclocking_hours');
+        $input = $request->only('working_time_from', 'working_time_to', 'overclocking_hours', 'weekly_hours');
         Setting::query()->update($input);
         return redirect()->back()->withSuccess('Setting updated successfully.');
     }

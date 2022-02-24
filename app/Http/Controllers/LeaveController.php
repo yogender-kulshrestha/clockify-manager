@@ -11,6 +11,16 @@ use Validator;
 
 class LeaveController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Leave Controller
+    |--------------------------------------------------------------------------
+    |
+    | This controller handles employee leaves for the application.
+    | The controller uses a trait to conveniently provide employee leaves records to your applications.
+    |
+    */
+
     /**
      * Create a new controller instance.
      *

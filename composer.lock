@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "070f08b2ea36af45ce27616e6cee9f9c",
+    "content-hash": "d9e44d13d4c8bdf2e8a7b3a12744e89a",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -2005,52 +2005,6 @@
                 "source": "https://github.com/MarkBaker/PHPMatrix/tree/3.0.0"
             },
             "time": "2021-07-01T19:01:15+00:00"
-        },
-        {
-            "name": "moismailzai/clockify",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/moismailzai/clockify.git",
-                "reference": "300eb89d2e2d387d643ec497faf64156899431a1"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/moismailzai/clockify/zipball/300eb89d2e2d387d643ec497faf64156899431a1",
-                "reference": "300eb89d2e2d387d643ec497faf64156899431a1",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^7.0"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "MoIsmailzai\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Mo Ismailzai",
-                    "email": "moismailzai@gmail.com",
-                    "homepage": "https://www.ismailzai.com",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Rough PHP bindings for the Clockify API. The main reason I built this is because none of Clockify's built-in reports allow time entries with duplicate titles to be aggregated.",
-            "keywords": [
-                "clockify"
-            ],
-            "support": {
-                "issues": "https://github.com/moismailzai/clockify/issues",
-                "source": "https://github.com/moismailzai/clockify/tree/master"
-            },
-            "time": "2021-01-07T02:33:09+00:00"
         },
         {
             "name": "monolog/monolog",
@@ -8721,9 +8675,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "moismailzai/clockify": 20
-    },
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

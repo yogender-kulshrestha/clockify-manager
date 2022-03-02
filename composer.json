@@ -12,7 +12,6 @@
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
         "laravel/ui": "^3.4",
-        "moismailzai/clockify": "dev-master",
         "yajra/laravel-datatables": "^1.5"
     },
     "require-dev": {

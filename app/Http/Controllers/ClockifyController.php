@@ -79,16 +79,16 @@ class ClockifyController extends Controller
                 $input = [
                     'clockify_id' => $user->id,
                     'name' => $user->name,
-                    'email' => $user->email,
                     'image' => $user->profilePicture,
                     'memberships' => $user->memberships,
                     'settings' => $user->settings,
                     'status' => (Str::lower($user->status) == 'active') ? 'active' : 'inactive',
                 ];
-                $find = User::where('email', $user->email)->first();
+                $find = User::where('clockify_id', $user->id)->first();
                 if (!$find) {
                     $random = Str::random(10);
                     $password = Hash::make($random);
+                    $input['email'] = $user->email;
                     $input['password'] = $password;
                 }
                 $insert = User::updateOrCreate($id, $input);
@@ -171,6 +171,8 @@ class ClockifyController extends Controller
                                 $currentWeek = $startTime->subYear()->year.'-W'.$weekOfYear;
                             }
                         }
+                        $start_time = str_replace('Z', '', str_replace('T', ' ', $row->timeInterval->start));
+                        $end_time = $row->timeInterval->end ? str_replace('Z', '', str_replace('T', ' ', $row->timeInterval->end)) : Carbon::now();
                         if($startTime > $endTime) {
                             $input = [
                                 'description' => $row->description,
@@ -180,8 +182,8 @@ class ClockifyController extends Controller
                                 'task_id' => $row->taskId,
                                 'project_id' => $row->projectId,
                                 'week' => $currentWeek,
-                                'start_time' => $endTime,
-                                'end_time' => $startTime,
+                                'start_time' => $end_time,
+                                'end_time' => $start_time,
                                 'duration_time' => $diff,
                                 'duration' => $row->timeInterval->duration,
                                 'workspace_id' => $row->workspaceId,
@@ -197,8 +199,8 @@ class ClockifyController extends Controller
                                 'task_id' => $row->taskId,
                                 'project_id' => $row->projectId,
                                 'week' => $currentWeek,
-                                'start_time' => $startTime,
-                                'end_time' => $endTime,
+                                'start_time' => $start_time,
+                                'end_time' => $end_time,
                                 'duration_time' => $diff,
                                 'duration' => $row->timeInterval->duration,
                                 'workspace_id' => $row->workspaceId,

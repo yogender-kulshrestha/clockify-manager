@@ -49,15 +49,15 @@
 {{--@include('layouts.sidebar')--}}
 <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
     <!-- Navbar -->
-    @include('layouts.header-employee')
-    <!-- End Navbar -->
+@include('layouts.header-employee')
+<!-- End Navbar -->
     <div class="container-fluid py-4">
         <!-- Start Content -->
-        @yield('content')
-        <!-- End Content -->
+    @yield('content')
+    <!-- End Content -->
         <!-- Start Footer -->
-        @include('layouts.footer')
-        <!-- End Footer -->
+    @include('layouts.footer')
+    <!-- End Footer -->
     </div>
 </main>
 @include('layouts.theme')
@@ -92,19 +92,19 @@
 <script type="text/javascript">
     @if(Session()->has('success'))
         toastr.options = {"progressBar": true}
-        toastr.success('{{ Session('success') }}')
+    toastr.success('{{ Session('success') }}')
     @endif
-    @if(Session()->has('info'))
+        @if(Session()->has('info'))
         toastr.options = {"progressBar": true}
-        toastr.info('{{ Session('info') }}')
+    toastr.info('{{ Session('info') }}')
     @endif
-    @if(Session()->has('error'))
+        @if(Session()->has('error'))
         toastr.options = {"progressBar": true}
-        toastr.error('{{ Session('error') }}')
+    toastr.error('{{ Session('error') }}')
     @endif
-    @if(Session()->has('warning'))
+        @if(Session()->has('warning'))
         toastr.options = {"progressBar": true}
-        toastr.warning('{{ Session('warning') }}')
+    toastr.warning('{{ Session('warning') }}')
     @endif
     function numbersonly(e) {
         var unicode = e.charCode ? e.charCode : e.keyCode
@@ -115,7 +115,7 @@
     }
 </script>
 <!-- End Toastr msg -->
-{{--@yield('script')--}}
+@yield('script')
 <!-- Github buttons -->
 <script async defer src="https://buttons.github.io/buttons.js"></script>
 <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->

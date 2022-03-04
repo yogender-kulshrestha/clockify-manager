@@ -144,14 +144,15 @@ class ClockifyController extends Controller
     /**
      * Get all time entries of current week from clockify
      */
-    public function timeSheets()
+    public function timeSheets(Request $request)
     {
         $dayOfTheWeek = Carbon::now()->dayOfWeek;
         $weekday = $dayOfTheWeek-1;
         if($dayOfTheWeek == 0) {
             $weekday = $dayOfTheWeek-1;
         }
-        $start = Carbon::now()->startOfDay()->subDay($weekday)->format('Y-m-d\TH:i:s\Z');
+        $subWeek = ($request->week > 0) ? $request->week : 0;
+        $start = Carbon::now()->startOfDay()->subWeek($subWeek)->subDay($weekday)->format('Y-m-d\TH:i:s\Z');
         $workspaces = Workspace::get();
         foreach ($workspaces as $workspace) {
             $users = User::select('*')

@@ -206,6 +206,26 @@ CREATE TABLE `records` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `settings`
+--
+
+CREATE TABLE `settings` (
+  `working_time_from` time NOT NULL,
+  `working_time_to` time NOT NULL,
+  `overclocking_hours` int NOT NULL,
+  `weekly_hours` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `settings`
+--
+
+INSERT INTO `settings` (`working_time_from`, `working_time_to`, `overclocking_hours`, `weekly_hours`) VALUES
+('06:00:00', '20:00:00', 16, 10);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `time_cards`
 --
 

@@ -63,6 +63,7 @@
                     <div class="px-5">
                         <h5>Name :- {{$data->user->name ?? ''}}</h5>
                         <h5>Date &nbsp; :- {{\Carbon\Carbon::parse($data->updated_at)->format('d-M-Y')}}</h5>
+                        <h5>Status :- {{$data->status ?? ''}}</h5>
                         <form id="add_form" autocomplete="off" enctype="multipart/form-data">
                             @csrf
                             <div class="row">
@@ -122,12 +123,14 @@
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    @if(auth()->user()->role == 'hr')
+                                    @if(auth()->user()->role == 'hr' || auth()->user()->role == 'admin')
                                     <button type="submit" value="Final Approved" style="float: right;" class="btn btn-success btn-sm" id="add_button">Final Approve</button>
+                                    <button type="submit" value="Rejected" style="float: right;" class="btn btn-danger btn-sm mx-2" id="add_button">Reject</button>
                                     @else
-                                    <button type="submit" value="Approved" style="float: right;" class="btn btn-success btn-sm" id="add_button">Approve</button>
+                                    <button type="submit" value="Approved" style="float: right;" class="btn btn-success btn-sm mx-2" id="add_button">Approve</button>
+                                    <button type="submit" value="Rejected" style="float: right;" class="btn btn-danger btn-sm mx-2" id="add_button">Reject</button>
                                     @endif
-                                    <button type="submit" value="Revise and Resubmit" style="float: right;" class="btn btn-danger btn-sm mx-2" id="add2_button">Revise/Resubmit</button>
+                                    <button type="submit" value="Revise and Resubmit" style="float: right;" class="btn btn-info btn-sm" id="add2_button">Revise/Resubmit</button>
                                 </div>
                             </div>
                         </form>

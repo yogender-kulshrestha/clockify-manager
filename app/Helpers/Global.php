@@ -67,7 +67,9 @@ function leave_count($user_id,$startDate,$endDate,$type=null,$leave_type_id=null
     if($leave_type_id) {
         $leaves->where('leave_type_id', $leave_type_id); //by leave type
     }
-    if($status != 'status') {
+    if($status == 'status') {
+        $leaves->whereNotIn('status', ['Cancelled','Rejected']);
+    } else {
         $leaves->where('status', 'Final Approved'); //final approved leave
     }
     $rows=$leaves->get();
@@ -312,8 +314,8 @@ function verify_working_hours($week, $start, $end, $user_id) {
  */
 function sendMail($type, $data)
 {
-    $types = ['leaveSubmit', 'leaveResubmit', 'timesheetSubmit', 'timesheetResubmit']; //mail type for employee
-    $types_approver = ['leaveRevise', 'leaveApproved', 'leaveFinalApproved', 'timesheetRevise', 'timesheetApproved',]; //mail type for approver
+    $types = ['leaveSubmit', 'leaveResubmit', 'timesheetSubmit', 'timesheetResubmit', 'leaveCancelled']; //mail type for employee
+    $types_approver = ['leaveRevise', 'leaveApproved', 'leaveFinalApproved', 'timesheetRevise', 'timesheetApproved', 'leaveRejected']; //mail type for approver
     /** start employee mail section */
     if(in_array($type, $types)) {
         /** start send mail to approver/hr section */
@@ -339,6 +341,10 @@ function sendMail($type, $data)
                 $subject = 'Timecard Re-Submitted';
                 $title = '';
                 $body = 'Timecard re-submitted by '.$owner->name.'.';
+            } elseif ($type == 'leaveCancelled') { //leave cancel mail
+                $subject = 'Leave Request Cancelled';
+                $title = '';
+                $body = 'Leave request cancelled by '.$owner->name.'.';
             }
             $data['to'] = $user;
             $data['owner'] = $owner;
@@ -369,6 +375,10 @@ function sendMail($type, $data)
             $subject = 'Timecard Re-Submitted';
             $title = '';
             $body = 'Your timecard re-submitted successfully.';
+        } elseif ($type == 'leaveCancelled') { //leave cancel mail
+            $subject = 'Leave Request Cancelled';
+            $title = '';
+            $body = 'Your leave request cancelled successfully.';
         }
         $data['to'] = $user;
         $data['owner'] = $owner;
@@ -406,6 +416,10 @@ function sendMail($type, $data)
             $subject = 'Timecard Approved';
             $title = '';
             $body = 'Your timecard Approved by '.$owner->name.'.';
+        } elseif ($type == 'leaveRejected') { //leave rejected mail
+            $subject = 'Leave Rejected';
+            $title = '';
+            $body = 'Your leave request Rejected by '.$owner->name.'.';
         }
         $data['to'] = $user;
         $data['owner'] = $owner;
@@ -436,6 +450,10 @@ function sendMail($type, $data)
             $subject = 'Timecard Approved';
             $title = '';
             $body = 'Timecard Approved of '.$owner->name.'.';
+        } elseif ($type == 'leaveRejected') { //leave rejected mail
+            $subject = 'Leave Rejected';
+            $title = '';
+            $body = 'Leave request Rejected of '.$owner->name.'.';
         }
         $data['to'] = $user;
         $data['owner'] = $owner;

@@ -63,6 +63,7 @@
                     <div class="px-5">
                         <h5>Name :- {{$data->user->name ?? ''}}</h5>
                         <h5>Date &nbsp; :- {{\Carbon\Carbon::parse($data->updated_at)->format('d-M-Y')}}</h5>
+                        <h5>Status :- {{$data->status ?? ''}}</h5>
                         <form id="add_form" autocomplete="off" enctype="multipart/form-data">
                             @csrf
                             <div class="row">
@@ -117,14 +118,23 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="remarks">Approver Comment</label>
-                                        <textarea @if(auth()->user()->role == 'user' || auth()->user()->role == 'admin') disabled @endif class="form-control" name="remarks" id="remarks">{{$data->remarks}}</textarea>
+                                        <textarea @if(auth()->user()->role == 'user') disabled @endif class="form-control" name="remarks" id="remarks">{{$data->remarks}}</textarea>
                                         <span id="remarks_error" class="text-danger"></span>
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    @if(auth()->user()->role == 'hr')
+                                    @if(auth()->user()->role == 'hr' || auth()->user()->role == 'admin')
+                                        @if($data->status != 'Final Approved' && $data->status != 'Rejected' && $data->status != 'Cancelled')
                                         <button type="submit" value="Final Approved" style="float: right;" class="btn btn-success btn-sm" id="add_button">Final Approve</button>
-                                        <button type="submit" value="Revise and Resubmit" style="float: right;" class="btn btn-danger btn-sm mx-2" id="add2_button">Revise/Resubmit</button>
+                                        <button type="submit" value="Rejected" style="float: right;" class="btn btn-danger btn-sm mx-2" id="add_button">Reject</button>
+                                        <button type="submit" value="Revise and Resubmit" style="float: right;" class="btn btn-info btn-sm" id="add2_button">Revise/Resubmit</button>
+                                        @endif
+                                    @elseif(auth()->user()->id != $data->user->id $data->status != 'Final Approved' && $data->status != 'Rejected' && $data->status != 'Cancelled')
+                                        <button type="submit" value="Rejected" style="float: right;" class="btn btn-danger btn-sm mx-2" id="add_button">Reject</button>
+                                    @else
+                                    @if($data->status != 'Rejected' && $data->status != 'Cancelled')
+                                        <button type="submit" value="Cancelled" style="float: right;" class="btn btn-danger btn-sm mx-2" id="add_button">Cancel</button>
+                                        @endif
                                     @endif
                                 </div>
                             </div>

@@ -83,7 +83,7 @@ CREATE TABLE `leaves` (
   `remarks` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `attachment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `exception` int NOT NULL DEFAULT '0',
-  `status` enum('Submitted','Revise and Resubmit','Approved','Final Approved') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Submitted',
+  `status` enum('Submitted','Revise and Resubmit','Approved','Final Approved','Rejected','Cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Submitted',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -197,7 +197,7 @@ CREATE TABLE `records` (
   `user_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `record_type` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `status` enum('Submitted','Revise and Resubmit','Approved','Edit Later','Resubmitted','Final Approved') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Submitted',
+  `status` enum('Submitted','Revise and Resubmit','Approved','Edit Later','Resubmitted','Final Approved','Rejected','Cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Submitted',
   `remarks` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL

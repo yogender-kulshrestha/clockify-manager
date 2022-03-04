@@ -16,3 +16,23 @@ composer install
 ```
 php artisan serve
 ```
+
+### Sync Clockify Data
+
+#### Sync all workspaces
+open clockify workspces url in browser 
+``
+{domain}/clockify/workspaces
+``
+###
+#### Sync all users
+open clockify users url in browser
+``
+{domain}/clockify/users
+``
+###
+#### Sync weekly time entries
+open clockify time entries url in browser or set a cron job for one time in a day
+``
+{domain}/clockify/user/times
+``

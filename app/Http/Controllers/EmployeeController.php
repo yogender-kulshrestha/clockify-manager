@@ -207,7 +207,7 @@ class EmployeeController extends Controller
                 'leave_type_id' => 'required_if:id,null|exists:leave_types,id',
                 'date_from' => 'required_if:id,null',
                 'date_to' => 'required_if:id,null|after_or_equal:date_from',
-                'status' => 'required|in:Submitted,Revise and Resubmit,Approved,Final Approved',
+                'status' => 'required|in:Submitted,Revise and Resubmit,Approved,Final Approved,Rejected,Cancelled',
                 'user_id' => 'required'
             ];
             //custom validation messages
@@ -223,17 +223,17 @@ class EmployeeController extends Controller
 
             //exception validation
             if($request->user_id && $request->date_from && $request->date_to) {
-                if($request->exception != '1') {
-                    //validate leave request already exists between date from and date to
-                    if($request->id){
-                        $leave_hours = leave_count($request->user_id, $request->date_from, $request->date_to, $request->id, null, 'status');
-                    } else {
-                        $leave_hours = leave_count($request->user_id, $request->date_from, $request->date_to, null, null, 'status');
-                    }
-                    if($leave_hours > 0) {
-                        return response()->json(['success' => false, 'type' => '1', 'message' => 'Leave request already exists between date from and date to.'], 200);
-                    }
+                //validate leave request already exists between date from and date to
+                if($request->id){
+                    $leave_hours = leave_count($request->user_id, $request->date_from, $request->date_to, $request->id, null, 'status');
+                } else {
+                    $leave_hours = leave_count($request->user_id, $request->date_from, $request->date_to, null, null, 'status');
+                }
+                if($leave_hours > 0) {
+                    return response()->json(['success' => false, 'type' => '1', 'message' => 'Leave request already exists between date from and date to.'], 200);
+                }
 
+                if($request->exception != '1') {
                     //leave type balance validation
                     $total_leave = LeaveBalance::where('user_id', auth()->user()->clockify_id)->where('leave_type_id',$request->leave_type_id)->sum('balance');
                     if($request->id){
@@ -288,6 +288,10 @@ class EmployeeController extends Controller
                     $status = 'leaveApproved';
                 } elseif($request->status == 'Final Approved') {
                     $status = 'leaveFinalApproved';
+                } elseif($request->status == 'Rejected') {
+                    $status = 'leaveRejected';
+                } elseif($request->status == 'Cancelled') {
+                    $status = 'leaveCancelled';
                 } elseif($request->status == 'Revise and Resubmit') {
                     $status = 'leaveRevise';
                 } else {

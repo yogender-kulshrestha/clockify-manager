@@ -88,7 +88,7 @@
                     </div>
                 </div>
                 <div class="card-body px-0 pb-0">
-                    <div class="px-3 mt-n6">
+                    <div class="px-3 mt-lg-n6">
                         <h5>Name :- {{$data->name ?? ''}}</h5>
                         <form action="{{ route('export.timesheet') }}" id="add_form" autocomplete="off" enctype="multipart/form-data">
                             @csrf

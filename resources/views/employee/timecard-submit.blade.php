@@ -86,7 +86,7 @@
                     </div>
                 </div>
                 <div class="card-body px-0 pb-0">
-                    <div class="px-3 mt-n6">
+                    <div class="px-3 mt-lg-n6">
                         <h5>Name :- {{auth()->user()->name ?? ''}}</h5>
                         <h5>Date &nbsp; :- {{\Carbon\Carbon::parse($startDate)->format('d-M-Y')}} - {{\Carbon\Carbon::parse($endDate)->format('d-M-Y')}}</h5>
                     </div>
@@ -110,12 +110,14 @@
                                     $ot_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->ot_hours)->subHours($ot_hours));
                                     $net_hours2 = $dt->diffInHours($dt->copy()->addSeconds($row->net_hours));
                                     $net_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->net_hours)->subHours($net_hours2));
+                                    $leave_hours = leave_hours($row->user_id, $row->date, $row->date, 'Approved');
+                                    $total_net_hours = $net_hours2+$leave_hours;
                                 @endphp
                                 <tr style="@if($row->exception == 1 && empty($row->flags)) background-color: rgba(1,0,0,0.2); @elseif($row->exception == 1) background-color: rgba(255,0,0,0.3); @endif">
                                     <td>{{$row->date}}</td>
                                     <td>{!! $row->flags !!}</td>
                                     <td>{{$ot_hours}}:{{$ot_minutes}}</td>
-                                    <td>{{$net_hours2}}:{{$net_minutes}}</td>
+                                    <td>{{$total_net_hours}}:{{$net_minutes}}</td>
                                     <td>{!! $row->employee_remarks !!}</td>
                                     <td>{{$row->approver_remarks}}</td>
                                 </tr>

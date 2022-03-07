@@ -129,7 +129,7 @@
                                         <button type="submit" value="Rejected" style="float: right;" class="btn btn-danger btn-sm mx-2" id="add_button">Reject</button>
                                         <button type="submit" value="Revise and Resubmit" style="float: right;" class="btn btn-info btn-sm" id="add2_button">Revise/Resubmit</button>
                                         @endif
-                                    @elseif(auth()->user()->id != $data->user->id $data->status != 'Final Approved' && $data->status != 'Rejected' && $data->status != 'Cancelled')
+                                    @elseif(auth()->user()->id != $data->user->id && $data->status != 'Final Approved' && $data->status != 'Rejected' && $data->status != 'Cancelled')
                                         <button type="submit" value="Rejected" style="float: right;" class="btn btn-danger btn-sm mx-2" id="add_button">Reject</button>
                                     @else
                                     @if($data->status != 'Rejected' && $data->status != 'Cancelled')

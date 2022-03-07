@@ -29,6 +29,16 @@ class ProfileController extends Controller
     }
 
     /**
+     * Display a listing of the profile resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        return view('employee.profile');
+    }
+
+    /**
      * Store updated password.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -48,7 +58,7 @@ class ProfileController extends Controller
             }
 
             $user=User::find(auth()->user()->id);
-            if (!Hash::check($request->password, $user->password)) {
+            if (!Hash::check($request->old_password, $user->password)) {
                 $error = [
                     "old_password" => ["The old password is not matched with our record."]
                 ];

@@ -73,46 +73,47 @@ class ClockifyController extends Controller
             $users = $this->clockify->apiRequest('workspaces/'.$workspace->clockify_id.'/users');
             $users = json_decode($users);
             foreach ($users as $user) {
-                $id = [
-                    'clockify_id' => $user->id,
-                ];
-                $input = [
-                    'clockify_id' => $user->id,
-                    'name' => $user->name,
-                    'image' => $user->profilePicture,
-                    'memberships' => $user->memberships,
-                    'settings' => $user->settings,
-                    'status' => (Str::lower($user->status) == 'active') ? 'active' : 'inactive',
-                ];
-                $find = User::where('clockify_id', $user->id)->first();
-                if (!$find) {
+                $find_clockify_id = User::where('clockify_id', $user->id)->count();
+                $find_email = User::where('email', $user->email)->count();
+                if($find_clockify_id == 0 && $find_email == 0 && Str::lower($user->status) == 'active') {
                     $random = Str::random(10);
                     $password = Hash::make($random);
-                    $input['email'] = $user->email;
-                    $input['password'] = $password;
-                }
-                $insert = User::updateOrCreate($id, $input);
-                $leave_types = LeaveType::all();
-                foreach ($leave_types as  $lt) {
-                    $lt_id = [
-                        'user_id' => $user->id,
-                        'leave_type_id' => $lt->id
+                    $input = [
+                        'clockify_id' => $user->id,
+                        'name' => $user->name,
+                        'image' => $user->profilePicture,
+                        'email' => $user->email,
+                        'password' => $password,
+                        'memberships' => $user->memberships,
+                        'settings' => $user->settings,
+                        'status' => (Str::lower($user->status) == 'active') ? 'active' : 'inactive',
                     ];
-                    $lt_input = [
-                        'created_at' => Carbon::now()
-                    ];
-                    LeaveBalance::updateOrCreate($lt_id, $lt_input);
-                }
-                if($insert->wasRecentlyCreated){
-                    $data=$insert;
-                    $email = $insert->email;
-                    $name = $insert->name;
-                    $data['to'] = $insert;
-                    $data['owner'] = $insert;
-                    $data['subject'] = 'Register Successfully.';
-                    $data['title'] = 'Register Successfully.';
-                    $data['body'] = 'You will successfully registered on Matthew Clockify Portal. <br/> <br/> Your login credentials here:-<br/>username: '.$insert->email.'<br/>password: '.$random;
-                    \Mail::to($email, $name)->send(new CommonMail($data));
+
+                    $insert = User::create($input);
+                    $leave_types = LeaveType::all();
+                    if($insert) {
+                        foreach ($leave_types as $lt) {
+                            $lt_id = [
+                                'user_id' => $user->id,
+                                'leave_type_id' => $lt->id
+                            ];
+                            $lt_input = [
+                                'created_at' => Carbon::now()
+                            ];
+                            LeaveBalance::updateOrCreate($lt_id, $lt_input);
+                        }
+
+                        $data=$insert;
+                        $email = $insert->email;
+                        $name = $insert->name;
+                        $data['to'] = $insert;
+                        $data['owner'] = $insert;
+                        $data['subject'] = 'Register Successfully.';
+                        $data['title'] = 'Register Successfully.';
+                        $data['body'] = 'You will successfully registered on Matthew Clockify Portal. <br/> <br/> Your login credentials here:-<br/>username: '.$insert->email.'<br/>password: '.$random;
+                        //\Mail::to($email, $name)->send(new CommonMail($data));
+                        $sent = sendgridMail($data);
+                    }
                 }
             }
         }
@@ -172,8 +173,8 @@ class ClockifyController extends Controller
                                 $currentWeek = $startTime->subYear()->year.'-W'.$weekOfYear;
                             }
                         }
-                        $start_time = str_replace('Z', '', str_replace('T', ' ', $row->timeInterval->start));
-                        $end_time = $row->timeInterval->end ? str_replace('Z', '', str_replace('T', ' ', $row->timeInterval->end)) : Carbon::now();
+                        $start_time = Carbon::parse($startTime)->setTimezone('GMT+02:00')->format('Y-m-d H:i:s');//str_replace('Z', '', str_replace('T', ' ', $row->timeInterval->start));
+                        $end_time = Carbon::parse($endTime)->setTimezone('GMT+02:00')->format('Y-m-d H:i:s');//$row->timeInterval->end ? str_replace('Z', '', str_replace('T', ' ', $row->timeInterval->end)) : Carbon::now();
                         if($startTime > $endTime) {
                             $input = [
                                 'description' => $row->description,

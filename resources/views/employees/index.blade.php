@@ -56,7 +56,8 @@
                             <div class="ms-auto my-auto">
                                 @if(auth()->user()->role == 'admin')
                                 <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
-                                <button type="button" class="btn bg-gradient-danger btn-sm mb-0 flashRecords">@&nbsp; Flash Records </button>
+                                <button type="button" class="btn bg-gradient-danger btn-sm mb-0 flashRecords"><i class='fas fa-sync fa-3x text-white'></i>&nbsp; Flash Records </button>
+                                <button type="button" class="btn bg-gradient-danger btn-sm mb-0 flashUsers"><i class='fas fa-trash fa-3x text-white'></i>&nbsp; Flash Users </button>
                                 @endif
                             </div>
                         </div>
@@ -68,7 +69,8 @@
                             <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                             <tr>
                                 <td>#</td>
-                                <th>ID</th>
+                                <th>Employee ID</th>
+                                <th>Image</th>
                                 <td>Name</td>
                                 <td>Email</td>
                                 <td>Employee Type</td>
@@ -108,10 +110,11 @@
                             <span id="email_error" class="text-danger text-sm"></span>
                         </div>
                         <div class="form-group col-md-6">
-                            <label for="status">Employee Type <span class="text-danger">*</span></label>
+                            <label for="status">Employee Type</label>
                             <select class="form-control" name="type" id="type">
                                 <option value="">-- Select --</option>
-                                <option value="fulltime">Full Time</option>
+                                <option value="full time - permanent">Full time - permanent</option>
+                                <option value="full time – fixed contract">Full time – fixed contract</option>
                                 <option value="fellows">Fellows</option>
                                 <option value="contractors">Contractors</option>
                             </select>
@@ -125,6 +128,11 @@
                                 <option value="inactive">Inactive</option>
                             </select>
                             <span id="status_error" class="text-danger text-sm"></span>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="image">Image</label>
+                            <input type="file" class="form-control" name="image" id="image" placeholder="Select Image">
+                            <span id="image_error" class="text-danger text-sm"></span>
                         </div>
                         @if(auth()->user()->role == 'admin')
                         <div class="form-group col-md-6">
@@ -193,10 +201,14 @@
                         name: 'DT_RowIndex'
                     },
                     {
-                        data: 'id',
-                        name: 'id',
+                        data: 'employee_id',
+                        name: 'employee_id',
                         defaultContent: '' ,
-                        visible: false
+                    },
+                    {
+                        data: 'image',
+                        name: 'image',
+                        defaultContent: ''
                     },
                     {
                         data: 'name',
@@ -239,6 +251,7 @@
                 $("#email").val('');
                 //$("#email").attr('disabled', false);
                 $("#status").val('');
+                $('#image_error').text('');
                 $('#name_error').text('');
                 $('#email_error').text('');
                 $('#status_error').text('');
@@ -264,6 +277,7 @@
                 //$("#email").attr('disabled', 'disabled');
                 $("#type").val($(this).data('type'));
                 $("#status").val($(this).data('status'));
+                $('#image_error').text('');
                 $('#name_error').text('');
                 $('#email_error').text('');
                 $('#type_error').text('');
@@ -288,6 +302,7 @@
                     headers: {"X-CSRF-Token": $('meta[name="csrf-token"]').attr('content')},
                     beforeSend: function () {
                         $('#add_button').attr('disabled', 'disabled');
+                        $('#image_error').text('');
                         $('#name_error').text('');
                         $('#email_error').text('');
                         $('#type_error').text('');
@@ -309,6 +324,7 @@
                     error: function (data) {
                         $('#add_button').attr('disabled', false);
                         let responseData = data.responseJSON;
+                        $('#image_error').text(responseData.errors['image']);
                         $('#name_error').text(responseData.errors['name']);
                         $('#email_error').text(responseData.errors['email']);
                         $('#type_error').text(responseData.errors['type']);
@@ -366,6 +382,77 @@
                     confirmButtonText: 'Yes, delete it!'
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        spinnershow();
+                        $.ajax({
+                            url: url,
+                            type: "POST",
+                            dataType: "JSON",
+                            data:{
+                                'user_id': id,
+                                '_token': '{{ csrf_token() }}',
+                            },
+                            success: function(data) {
+                                //console.log(data);
+                                spinnerhide();
+                                if (data.success === true) {
+                                    toastr.success(data.message)
+                                } else {
+                                    toastr.error(data.message)
+                                }
+                            }
+                        });
+                    }
+                })
+            });
+
+            $(document).on('click', '.flashUsers', function() {
+                var url = '{{ route('delete.all-users') }}';
+                Swal.fire({
+                    title: 'Are you sure to delete all users?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        spinnershow();
+                        $.ajax({
+                            url: url,
+                            type: "POST",
+                            dataType: "JSON",
+                            data:{
+                                '_token': '{{ csrf_token() }}',
+                            },
+                            success: function(data) {
+                                datatable.draw();
+                                spinnerhide();
+                                if (data.success === true) {
+                                    toastr.success(data.message)
+                                } else {
+                                    toastr.error(data.message)
+                                }
+                            }
+                        });
+                    }
+                })
+            });
+
+            $(document).on('click', '.rowdelete', function() {
+                var id = $(this).data('id');
+                var url = '{{ route('delete.user') }}';
+                Swal.fire({
+                    title: 'Are you sure to delete this user?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        datatable.draw();
                         spinnershow();
                         $.ajax({
                             url: url,

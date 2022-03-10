@@ -7,7 +7,9 @@ use App\Models\Record;
 use App\Models\Setting;
 use App\Models\TimeCard;
 use App\Models\TimeSheet;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Ramsey\Uuid\Type\Time;
 use Validator;
 
 class HomeController extends Controller
@@ -102,6 +104,50 @@ class HomeController extends Controller
             Leave::where('user_id', $user_id)->delete();
             Record::where('user_id', $user_id)->delete();
             return response()->json(['success' => true, 'message' => 'All records deleted successfully.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+        }
+    }
+
+    /**
+     * Delete all users
+     */
+    public function deleteAllUsers(){
+        try {
+            User::where('role', 'user')->delete();
+            TimeCard::query()->delete();
+            TimeSheet::query()->delete();
+            Leave::query()->delete();
+            Record::query()->delete();
+            return response()->json(['success' => true, 'message' => 'All users deleted successfully.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+        }
+    }
+
+    /**
+     * Delete a specific user
+     */
+    public function deleteByUserId(Request $request){
+        try {
+            $rules = [
+                'user_id' => 'required',
+            ];
+            $validator = Validator::make($request->all(), $rules);
+            if($validator->fails()) {
+                $error = '';
+                if (!empty($validator->errors())) {
+                    $error = $validator->errors()->first();
+                }
+                return response()->json(['success' => false, 'message' => $error]);
+            }
+            $user_id = $request->user_id;
+            User::where('clockify_id', $user_id)->delete();
+            TimeCard::where('user_id', $user_id)->delete();
+            TimeSheet::where('user_id', $user_id)->delete();
+            Leave::where('user_id', $user_id)->delete();
+            Record::where('user_id', $user_id)->delete();
+            return response()->json(['success' => true, 'message' => 'Deleted successfully.'], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
         }

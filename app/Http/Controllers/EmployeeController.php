@@ -863,11 +863,14 @@ class EmployeeController extends Controller
                     <a href='".route('employees.show',['employee'=>$query->clockify_id])."' data-bs-toggle='tooltip' data-bs-original-title='View'>
                         <i class='fas fa-eye text-success'></i>
                     </a>
-                    <a href='javascript:' class='flash-records' style='margin-left: 5px;' data-id='".$query->clockify_id."' data-bs-toggle='tooltip' data-bs-original-title='Flush All Records'>
+                    <a href='javascript:' class='flash-records  mx-2' data-id='".$query->clockify_id."' data-bs-toggle='tooltip' data-bs-original-title='Flush All Records'>
                         <i class='fas fa-sync text-danger'></i>
+                    </a>
+                    <a data-id='".$query->clockify_id."' class='rowdelete' data-bs-toggle='tooltip' data-bs-original-title='Delete'>
+                        <i class='fas fa-trash text-danger'></i>
                     </a>";
                 })->editColumn('type', function ($query) {
-                    return ($query->type == 'fulltime') ? 'Full Time' : ucfirst($query->type);
+                    return ucfirst($query->type);
                 })->editColumn('status', function ($query) {
                     if($query->status == 'active'){
                         $status = 'badge-success';
@@ -875,10 +878,17 @@ class EmployeeController extends Controller
                         $status = 'badge-danger';
                     }
                     return '<span class="badge badge-sm '.$status.'">'.$query->status.'</span>';
+                })->editColumn('image', function ($query) {
+                    $image = $query->image ?? asset("assets/img/logo-ct-dark.png");
+                    return '<div class="d-flex px-2 py-1">
+                        <div>
+                            <img src="'.$image.'" class="avatar avatar-sm me-3">
+                        </div>
+                    </div>';
                 })->editColumn('created_at', function ($query) {
                     return Carbon::createFromFormat('Y-m-d H:i:s', $query->created_at)->format('d M, Y');
                 })
-                ->rawColumns(['status','action','created_at'])
+                ->rawColumns(['status','image','action','created_at'])
                 ->make(true);
         }
         return view('employees.index');
@@ -894,7 +904,8 @@ class EmployeeController extends Controller
             $rules = [
                 'name' => 'required|min:3|max:255',
                 'email' => 'required|email|max:255|unique:users,email,'.$request->id.',id',
-                'type' => 'required',
+                'type' => 'nullable',
+                'image' => 'nullable|mimes:jpg,png,jpeg,gif',
                 'status' => 'required|in:active,inactive',
                 'password' => 'required_without:id|confirmed'
             ];
@@ -905,6 +916,10 @@ class EmployeeController extends Controller
             $input = $request->only('name', 'email', 'status', 'type');
             if($request->password) {
                 $input['password']=Hash::make($request->password);
+            }
+            if($request->hasFile('image')) {
+                $imageName = $request->image->store('images/profile');
+                $input['image'] = asset('storage/'. $imageName);
             }
             $id = [
                 'id' => $request->id,
@@ -921,7 +936,8 @@ class EmployeeController extends Controller
                         }
                     }
                 } else {
-                    User::where('id', $user->id)->update(['clockify_id' => $user->id]);
+                    $employee_id = employeeId($user->id);
+                    User::where('id', $user->id)->update(['clockify_id' => $user->id, 'employee_id' => $employee_id]);
                     $leave_types = LeaveType::all();
                     foreach ($leave_types as  $lt) {
                         $lt_id = [
@@ -941,7 +957,9 @@ class EmployeeController extends Controller
                     $data['subject'] = 'Register Successfully.';
                     $data['title'] = 'Register Successfully.';
                     $data['body'] = 'You will successfully registered on Matthew Clockify Portal. <br/> <br/> Your login credentials here:-<br/>username: '.$insert->email.'<br/>password: '.$request->password;
-                    \Mail::to($email, $name)->send(new CommonMail($data));
+
+                    //\Mail::to($email, $name)->send(new CommonMail($data));
+                    $sent = sendgridMail($data);
                 }
                 $message = $request->id ? 'Updated Successfully.' : 'Added Successfully.';
                 return response()->json(['success' => true, 'message' => $message], 200);

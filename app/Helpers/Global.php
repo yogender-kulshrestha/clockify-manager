@@ -17,6 +17,7 @@ use App\Models\Approver;
 use App\Models\Leave;
 use App\Models\Setting;
 use App\Mail\CommonMail;
+use Illuminate\Support\Facades\Http;
 
 /**
  * calculation of total working hours according to project
@@ -351,7 +352,8 @@ function sendMail($type, $data)
             $data['subject'] = $subject;
             $data['title'] = $title;
             $data['body'] = $body;
-            $sent = \Mail::to($email, $name)->send(new CommonMail($data));
+            //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+            $sent = sendgridMail($data);
         }
         /** end send mail to approver/hr section */
 
@@ -385,7 +387,8 @@ function sendMail($type, $data)
         $data['subject'] = $subject;
         $data['title'] = $title;
         $data['body'] = $body;
-        $sent = \Mail::to($email, $name)->send(new CommonMail($data));
+        //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+        $sent = sendgridMail($data);
         /** end send mail to employee section */
     }
     /** end employee mail section */
@@ -426,7 +429,8 @@ function sendMail($type, $data)
         $data['subject'] = $subject;
         $data['title'] = $title;
         $data['body'] = $body;
-        $sent = \Mail::to($email, $name)->send(new CommonMail($data));
+        //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+        $sent = sendgridMail($data);
         /** end sent mail to employee section */
 
         /** start sent mail to approver/hr section */
@@ -460,7 +464,8 @@ function sendMail($type, $data)
         $data['subject'] = $subject;
         $data['title'] = $title;
         $data['body'] = $body;
-        $sent = \Mail::to($email, $name)->send(new CommonMail($data));
+        //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+        $sent = sendgridMail($data);
         /** end sent mail to approver/hr section */
     }
     /** end approver/hr mail section */
@@ -488,7 +493,8 @@ function reminderMail($type, $data)
             $data['subject'] = $subject;
             $data['title'] = $title;
             $data['body'] = $body;
-            $sent = \Mail::to($email, $name)->send(new CommonMail($data));
+            //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+            $sent = sendgridMail($data);
         }
     }
     /** end send mail to approver/hr section */
@@ -506,7 +512,8 @@ function reminderMail($type, $data)
         $data['subject'] = $subject;
         $data['title'] = $title;
         $data['body'] = $body;
-        $sent = \Mail::to($email, $name)->send(new CommonMail($data));
+        //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+        $sent = sendgridMail($data);
     }
     /** end send mail to employee section */
     return $sent ? true : false; //check mail sent or not
@@ -533,4 +540,83 @@ function setting($value)
 {
     $find = Setting::query()->first();
     return $find->$value;
+}
+
+function sendgridMail($details)
+{
+    $params = array (
+        'personalizations' =>
+            array (
+                0 =>
+                    array (
+                        'to' =>
+                            array (
+                                0 =>
+                                    array (
+                                        'email' => $details->to->email,
+                                    ),
+                            ),
+                    ),
+            ),
+        'from' =>
+            array (
+                'email' => env('MAIL_FROM_ADDRESS'),
+            ),
+        'subject' => $details->subject,
+        'content' =>
+            array (
+                0 =>
+                    array (
+                        'type' => 'text/html',
+                        'value' => '<html><head></head><body><table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;background-color:#edf2f7;margin:0;padding:0;width:100%"> <tbody> <tr> <td align="center" style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif"> <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;margin:0;padding:0;width:100%"> <tbody> <tr> <td style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;padding:25px 0;text-align:center"> <a href="#" style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;color:#3d4852;font-size:19px;font-weight:bold;text-decoration:none;display:inline-block" target="_blank" data-saferedirecturl="https://www.google.com/url?q=http://127.0.0.1:8000&amp;source=gmail&amp;ust=1640493248884000&amp;usg=AOvVaw2EqFQveZL2L6spVg7yTTjY"> '.config("app.name", "Clockify").' </a> </td> </tr> <tr> <td width="100%" cellpadding="0" cellspacing="0" style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;background-color:#edf2f7;border-bottom:1px solid #edf2f7;border-top:1px solid #edf2f7;margin:0;padding:0;width:100%"> <table class="m_-3899946647753099578inner-body" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation" style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;background-color:#ffffff;border-color:#e8e5ef;border-radius:2px;border-width:1px;margin:0 auto;padding:0;width:570px"> <tbody> <tr> <td style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;max-width:100vw;padding:32px"> <h1 style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;color:#3d4852;font-size:18px;font-weight:bold;margin-top:0;text-align:left">Hello '.$details->to->name.'!</h1> <p style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5em;margin-top:0;text-align:left">'.$details->body.'</p> <p style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5em;margin-top:0;text-align:left">Regards,<br> '.config("app.name", "Clockify").'</p> </td> </tr> </tbody> </table> </td> </tr> <tr> <td style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif,"> <table class="m_-3899946647753099578footer" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation" style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;margin:0 auto;padding:0;text-align:center;width:570px"> <tbody> <tr> <td align="center" style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;max-width:100vw;padding:32px"> <p style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;line-height:1.5em;margin-top:0;color:#b0adc5;font-size:12px;text-align:center">© 2022 '.config("app.name", "Clockify") .'. All rights reserved.</p> </td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </td> </tr> </tbody></table></body></html>',
+                    ),
+            ),
+    );
+
+    $response = Http::withHeaders([
+        'Authorization' => 'Bearer '.env('MAIL_PASSWORD'),
+        'Content-Type' => 'application/json',
+    ])->post('https://api.sendgrid.com/v3/mail/send', $params);
+
+    //print_r($response);
+
+    if($response) {
+        return true;
+    }
+    return false;
+}
+
+function sendgridMail2($details)
+{
+    $email = new SendGrid\Mail\Mail();
+    $email->setFrom(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+    $email->setSubject($details->subject);
+    $email->addTo($details->to->email, $details->to->name);
+    $email->addContent(
+        "text/html", '<html><head></head><body><table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;background-color:#edf2f7;margin:0;padding:0;width:100%"> <tbody> <tr> <td align="center" style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif"> <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;margin:0;padding:0;width:100%"> <tbody> <tr> <td style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;padding:25px 0;text-align:center"> <a href="#" style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;color:#3d4852;font-size:19px;font-weight:bold;text-decoration:none;display:inline-block" target="_blank" data-saferedirecturl="https://www.google.com/url?q=http://127.0.0.1:8000&amp;source=gmail&amp;ust=1640493248884000&amp;usg=AOvVaw2EqFQveZL2L6spVg7yTTjY"> '.config("app.name", "Clockify").' </a> </td> </tr> <tr> <td width="100%" cellpadding="0" cellspacing="0" style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;background-color:#edf2f7;border-bottom:1px solid #edf2f7;border-top:1px solid #edf2f7;margin:0;padding:0;width:100%"> <table class="m_-3899946647753099578inner-body" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation" style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;background-color:#ffffff;border-color:#e8e5ef;border-radius:2px;border-width:1px;margin:0 auto;padding:0;width:570px"> <tbody> <tr> <td style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;max-width:100vw;padding:32px"> <h1 style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;color:#3d4852;font-size:18px;font-weight:bold;margin-top:0;text-align:left">Hello '.$details->to->name.'!</h1> <p style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5em;margin-top:0;text-align:left">'.$details->body.'</p> <p style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5em;margin-top:0;text-align:left">Regards,<br> '.config("app.name", "Clockify").'</p> </td> </tr> </tbody> </table> </td> </tr> <tr> <td style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif,"> <table class="m_-3899946647753099578footer" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation" style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;margin:0 auto;padding:0;text-align:center;width:570px"> <tbody> <tr> <td align="center" style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;max-width:100vw;padding:32px"> <p style="box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;line-height:1.5em;margin-top:0;color:#b0adc5;font-size:12px;text-align:center">© 2022 '.config("app.name", "Clockify") .'. All rights reserved.</p> </td> </tr> </tbody> </table> </td> </tr> </tbody> </table> </td> </tr> </tbody></table></body></html>',
+    );
+    $sendgrid = new \SendGrid(env('MAIL_PASSWORD'));
+    try {
+        $response = $sendgrid->send($email);
+        //print $response->statusCode() . "\n";
+        //print_r($response->headers());
+        //print $response->body() . "\n";
+        return true;
+    } catch (Exception $e) {
+        //echo 'Caught exception: '. $e->getMessage() ."\n";
+        return false;
+    }
+}
+
+function employeeId($data){
+    if($data < 10) {
+        $newNum = '000'.$data;
+    } elseif($data >=10 || $data < 100) {
+        $newNum = '00'.$data;
+    } elseif($data >=100 || $data < 1000) {
+        $newNum = '0'.$data;
+    } else {
+        $newNum = $data;
+    }
+    return '1PWR'.$newNum;
 }

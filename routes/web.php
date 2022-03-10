@@ -63,6 +63,8 @@ Route::middleware('admin')->prefix('admin')->group(function() {
 
     Route::post('/delete-all-records', [HomeController::class, 'deleteAllRecords'])->name('delete.all-records');
     Route::post('/delete-user-records', [HomeController::class, 'deleteAllRecordsByUser'])->name('delete.user-records');
+    Route::post('/delete-all-users', [HomeController::class, 'deleteAllUsers'])->name('delete.all-users');
+    Route::post('/delete-user', [HomeController::class, 'deleteByUserId'])->name('delete.user');
 
     Route::resource('hr-managers', HrController::class);
     Route::resource('approvers', ApproverController::class);

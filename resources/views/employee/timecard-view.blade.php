@@ -70,7 +70,7 @@
                                             <td>{{$nleave_hours ?? '0'}}</td>
                                         </tr>
                                     @endif
-                                    <tr class="border-bottom">
+                                    <tr class="border-bottom d-none">
                                         <td>Short Hours</td>
                                         <td>{{$short_hours ?? '0'}}</td>
                                     </tr>

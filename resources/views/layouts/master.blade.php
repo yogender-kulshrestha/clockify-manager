@@ -53,11 +53,37 @@
 <!-- End Navbar -->
     <div class="container-fluid py-4">
         <!-- Start Content -->
-    @yield('content')
-    <!-- End Content -->
+        @yield('content')
+        <!-- End Content -->
         <!-- Start Footer -->
-    @include('layouts.footer')
-    <!-- End Footer -->
+        @include('layouts.footer')
+        <!-- End Footer -->
+        <div class="modal fade" id="modalProfileImage" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form id="profile_form" autocomplete="off" enctype="multipart/form-data">
+                        @csrf
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="form_title">Profile Image</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="form-group col-md-12">
+                                    <label for="profile_image">Profile Image <span class="text-danger">*</span></label>
+                                    <input required type="file" class="form-control" name="profile_image" id="profile_image" placeholder="Select Image" accept="image/*">
+                                    <span id="profile_image_error" class="text-danger text-sm"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer text-right">
+                            <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn bg-gradient-primary btn-sm" id="add_profile">Update</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </main>
 @include('layouts.theme')
@@ -113,6 +139,40 @@
                 return false //disable key press
         }
     }
+    const addForm = '{{ route('employee.profile_image') }}';
+    $('#profile_form').submit(function (e) {
+        e.preventDefault();
+        var form_data = new FormData(this);
+        $.ajax({
+            method: "POST",
+            url: addForm,
+            data: form_data,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            headers: {"X-CSRF-Token": $('meta[name="csrf-token"]').attr('content')},
+            beforeSend: function () {
+                $('#add_profile').attr('disabled', 'disabled');
+                $('#profile_image_error').text('');
+            },
+            success: function (data) {
+                $("#profile_form")[0].reset();
+                $('#modalProfileImage').modal('hide');
+                if (data.success === true) {
+                    toastr.success(data.message);
+                    window.location.reload();
+                } else {
+                    toastr.error(data.message);
+                }
+                $('#add_profile').attr('disabled', false);
+            },
+            error: function (data) {
+                $('#add_profile').attr('disabled', false);
+                let responseData = data.responseJSON;
+                $('#profile_image_error').text(responseData.errors['profile_image']);
+            }
+        });
+    });
 </script>
 <!-- End Toastr msg -->
 @yield('script')

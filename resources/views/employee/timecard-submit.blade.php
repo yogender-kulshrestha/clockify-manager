@@ -54,7 +54,6 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
-                                <a href="{{route('employee.timecard', ['week' => $week])}}" class="btn bg-gradient-primary btn-sm mb-0"> Back to Edit </a>
                                 <table class="border text-sm mt-3 w-100" style="min-width: 150px;">
                                     <tbody class="">
                                     <tr class="border-bottom">
@@ -71,7 +70,7 @@
                                         <td>{{$nleave_hours ?? '0'}}</td>
                                     </tr>
                                     @endif
-                                    <tr class="border-bottom">
+                                    <tr class="border-bottom d-none">
                                         <td>Short Hours</td>
                                         <td>{{$short_hours ?? '0'}}</td>
                                     </tr>
@@ -154,8 +153,11 @@
                                                 </form>
                                             </div>
                                         </div>
-                                </div></div>
-                            <div class="col-md-4"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <a href="{{route('employee.timecard', ['week' => $week])}}" class="btn bg-gradient-primary btn-sm mb-0"> Back to Edit </a>
+                            </div>
                         </div>
                     </div>
                 </div>

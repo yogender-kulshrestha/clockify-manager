@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Approver;
 use App\Models\Leave;
 use App\Models\Record;
 use App\Models\Setting;
@@ -75,6 +76,7 @@ class HomeController extends Controller
             TimeCard::query()->delete();
             TimeSheet::query()->delete();
             Leave::query()->delete();
+            Approver::query()->delete();
             Record::query()->delete();
             return response()->json(['success' => true, 'message' => 'All records deleted successfully.'], 200);
         } catch (\Exception $e) {
@@ -101,6 +103,7 @@ class HomeController extends Controller
             $user_id = $request->user_id;
             TimeCard::where('user_id', $user_id)->delete();
             TimeSheet::where('user_id', $user_id)->delete();
+            Approver::where('user_id', $user_id)->where('approver_id', $user_id)->delete();
             Leave::where('user_id', $user_id)->delete();
             Record::where('user_id', $user_id)->delete();
             return response()->json(['success' => true, 'message' => 'All records deleted successfully.'], 200);
@@ -117,6 +120,7 @@ class HomeController extends Controller
             User::where('role', 'user')->delete();
             TimeCard::query()->delete();
             TimeSheet::query()->delete();
+            Approver::query()->delete();
             Leave::query()->delete();
             Record::query()->delete();
             return response()->json(['success' => true, 'message' => 'All users deleted successfully.'], 200);
@@ -145,6 +149,7 @@ class HomeController extends Controller
             User::where('clockify_id', $user_id)->delete();
             TimeCard::where('user_id', $user_id)->delete();
             TimeSheet::where('user_id', $user_id)->delete();
+            Approver::where('user_id', $user_id)->where('approver_id', $user_id)->delete();
             Leave::where('user_id', $user_id)->delete();
             Record::where('user_id', $user_id)->delete();
             return response()->json(['success' => true, 'message' => 'Deleted successfully.'], 200);

@@ -94,6 +94,7 @@ Route::name('employee.')->group(function(){
     });
 
     Route::post('profile', [ProfileController::class, 'store']);
+    Route::post('profile-image', [ProfileController::class, 'profile_image'])->name('profile_image');
 
     Route::post('/request-leave', [EmployeeController::class, 'storeRequestLeave']);
     Route::get('/leave/{id}/view', [EmployeeController::class, 'viewRequestLeave'])->name('leave.view');

@@ -70,7 +70,7 @@
                                             <td>{{$nleave_hours ?? '0'}}</td>
                                         </tr>
                                     @endif
-                                    <tr class="border-bottom">
+                                    <tr class="border-bottom d-none">
                                         <td>Short Hours</td>
                                         <td>{{$short_hours ?? '0'}}</td>
                                     </tr>
@@ -127,7 +127,10 @@
                             </tbody>
                         </table>
                         <div class="row">
-                            <div class="col-md-12 text-center mt-2">
+                            <div class="col-md-4">
+                                <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; Request Leave </button>
+                            </div>
+                            <div class="col-md-4 text-center mt-2">
                                 <a href="{{route('employee.timecard', ['week' => $week])}}" class="btn bg-gradient-primary btn-sm mb-0"> Edit Now </a>
                             </div>
                         </div>

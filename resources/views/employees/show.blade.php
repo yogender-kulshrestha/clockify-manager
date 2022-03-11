@@ -216,8 +216,8 @@
     <!--  Datatable JS  -->
     <script src="{{asset('assets/js/plugins/datatables.js')}}"></script>
     <script>
-        convertToWeekPicker($("#week_from"))
-        convertToWeekPicker($("#week_to"))
+        convertToWeekPicker($("#week_from"));
+        convertToWeekPicker($("#week_to"));
         $(document).ready(function (){
             /*$('#datatable').DataTable({
                 dom: '<"row"<"col-sm-6"l><"float-right col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>',

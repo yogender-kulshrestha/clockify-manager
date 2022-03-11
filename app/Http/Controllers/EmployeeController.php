@@ -1115,11 +1115,15 @@ class EmployeeController extends Controller
         $timecards=TimeCard::where('user_id',$user_id)->where('week',$week)->get();
         $timecard=[];
         foreach ($timecards as $t) {
+            $otHours = CarbonInterval::seconds($t->ot_hours)->cascade()->forHumans();
+            $otHours = ($otHours == '1 second') ? '-' : $otHours;
+            $netHours = CarbonInterval::seconds($t->net_hours)->cascade()->forHumans();
+            $netHours = ($netHours == '1 second') ? '-' : $netHours;
             $timecard[] = [
                 'Date' => $t->date,
                 'Flags' => strip_tags($t->flags),
-                'OT Hours' => CarbonInterval::seconds($t->ot_hours)->cascade()->forHumans(),
-                'Net Hours' => CarbonInterval::seconds($t->net_hours)->cascade()->forHumans(),
+                'OT Hours' => $otHours,
+                'Net Hours' => $netHours,
                 'Employee Remarks' => strip_tags($t->employee_remarks),
                 'Approver Remarks' => strip_tags($t->approver_remarks),
             ];
@@ -1259,6 +1263,72 @@ class EmployeeController extends Controller
             return redirect()->back()->withInput()->withError('Record Not Found.');
         } catch (\Exception $e) {
             return redirect()->back()->withInput()->withError('Record Not Found.');
+        }
+    }
+
+    /**
+     * Export time card of all employees with week range
+     * @param Request $request for getting request data
+     */
+    public function exportTimecardRecordByDate(Request $request)
+    {
+        try {
+            $rules = [
+                'week_from' => 'required',
+                'week_to' => 'required|after_or_equal:week_from',
+            ];
+            $messages=[
+                'week_to.after_or_equal' => 'The week to must be after or equal to week from.',
+            ];
+            $validator = Validator::make($request->all(), $rules, $messages);
+            if ($validator->fails()) {
+                $error = '';
+                if (!empty($validator->errors())) {
+                    $error = $validator->errors()->first();
+                }
+                return redirect()->back()->withInput()->withError($error);
+            }
+            $seletedWeek = explode('-',Str::replace('W','',$request->week_from));
+            $date = Carbon::now();
+            $date->setISODate($seletedWeek[0],$seletedWeek[1]);
+            $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
+
+            $seletedWeek2 = explode('-',Str::replace('W','',$request->week_to));
+            $date2 = Carbon::now();
+            $date2->setISODate($seletedWeek2[0],$seletedWeek2[1]);
+            $endDate=$date2->endOfWeek()->format('Y-m-d H:i:s');
+
+            $users=User::where('role', 'user')->orderBy('id')->get();
+            if($users->count() > 0) {
+                $timecard = [];
+                foreach ($users as $key=>$user) {
+                    $timecard[$key] = [
+                        'Employee ID' => $user->employee_id,
+                        'Employee Name' => $user->name,
+                    ];
+                    /** start - @var $timecards for set timecard day wise entries */
+                    $days = Carbon::parse($endDate)->diffInDays($startDate);
+                    $newDate=$startDate;
+                    for($i=0;$i<=$days;$i++) {
+                        $t = TimeCard::where('user_id', $user->clockify_id)->whereDate('date', $newDate)->first();
+                        if($t) {
+                            $netHours = CarbonInterval::seconds($t->net_hours)->cascade()->forHumans();
+                            $netHours = ($netHours == '1 second' || $netHours == '') ? '-' : $netHours;
+                        } else {
+                            $netHours = '-';
+                        }
+                        $timecard[$key][Carbon::parse($newDate)->format('d-m-Y')] = $netHours;
+
+                        $newDate = Carbon::parse($newDate)->addDay();
+                    }
+                    /** end - @var $timesheets for set timecard day wise entries */
+                }
+                $arrays = [$timecard]; //create export data array
+                return Excel::download(new TimecardExport($arrays), 'Records-'.Carbon::now()->format('Ymd').'-timecard.xlsx'); //export excel
+            }
+            return redirect()->back()->withInput()->withError('Record Not Found.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->withError($e->getMessage());
         }
     }
 }

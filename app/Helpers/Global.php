@@ -480,9 +480,10 @@ function reminderMail($type, $data)
     /** start approver mail section */
     if($type == 'approver') {
         $owner = User::where('clockify_id', $data->user_id)->first();
-        $approver = Approver::select('approver_id')->where('user_id', $owner->clockify_id)->get();
-        $users = User::whereIn('role', ['user'])->orWhereIn('clockify_id', $approver)->get();
-        foreach($users as $user) {
+        $approver = Approver::select('approver_id')->where('user_id', $owner->clockify_id)->first();
+        //$users = User::whereIn('role', ['user'])->orWhereIn('clockify_id', $approver)->get();
+        //foreach($users as $user) {
+        $user = User::where('clockify_id', $approver->approver_id)->firts();
             $email = $user->email;
             $name = $user->name;
             $subject = 'Reminder for approve submitted '.$data->record_type;
@@ -495,7 +496,7 @@ function reminderMail($type, $data)
             $data['body'] = $body;
             //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
             $sent = sendgridMail($data);
-        }
+        //}
     }
     /** end send mail to approver section */
     /** start send mail to employee section */

@@ -47,6 +47,7 @@ Route::get('/clockify/user/times', [ClockifyController::class, 'timeSheets']);
 
 //Export time entries excel routes
 Route::get('export-timecard/{user_id}/{week}', [EmployeeController::class, 'exportTimecard'])->name('export.timecard');
+Route::get('export-timecard/all', [EmployeeController::class, 'exportTimecardRecordByDate'])->name('export.timecard.all');
 Route::get('export-timecard', [EmployeeController::class, 'exportTimecardByDate'])->name('export.timesheet');
 
 //Employee routes

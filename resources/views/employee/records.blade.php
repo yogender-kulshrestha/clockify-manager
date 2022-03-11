@@ -6,6 +6,8 @@
 @section('title', 'All Records')
 
 @section('style')
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css">
+    <link href="https://www.jqueryscript.net/css/jquerysctipttop.css" rel="stylesheet" type="text/css">
 @endsection
 
 @section('breadcrumb')
@@ -78,6 +80,34 @@
                     </div>
                 </div>
                 <div class="card-body px-0 pb-0">
+                    @if(auth()->user()->role == 'admin' || auth()->user()->role == 'hr')
+                    <div class="px-3">
+                        <form action="{{ route('export.timecard.all') }}" id="add_form" autocomplete="off" enctype="multipart/form-data">
+                            @csrf
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="date_from">Week From <span class="text-danger">*</span></label>
+                                        <input required type="text" value="{{ old('week_from') }}" class="form-control" name="week_from" id="week_from" placeholder="Select Week From">
+                                        <span id="week_from_error" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="week_to">Week To <span class="text-danger">*</span></label>
+                                        <input required type="text" value="{{ old('week_to') }}" class="form-control" name="week_to" id="week_to" placeholder="Select Week To">
+                                        <span id="week_to_error" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <button type="submit" style="margin-top: 37px;" class="btn bg-gradient-primary btn-sm" id="add_button">Export</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    @endif
                     <div class="table-responsive p-3">
                         <table class="table table-flush" id="datatable">
                             <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
@@ -146,9 +176,14 @@
 @endsection
 
 @section('script')
+    {{--<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>--}}
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="{{asset('js/weekPicker.min.js')}}"></script>
     <!--  Datatable JS  -->
     <script src="{{asset('assets/js/plugins/datatables.js')}}"></script>
     <script>
+        convertToWeekPicker($("#week_from"));
+        convertToWeekPicker($("#week_to"));
         $(document).ready(function (){
             var url = '{{ (auth()->user()->role == 'admin') ? route('records') : route('employee.records') }}'
             var datatable = $('#datatable').DataTable({

@@ -229,7 +229,7 @@ class ClockifyController extends Controller
     public function mailNotifications()
     {
         $date = Carbon::now();
-        $records = Record::where('status', 'Submitted')->whereDate('updated_at', '<', $date)->get();
+        $records = Record::whereIn('status', ['Submitted','Resubmitted'])->whereDate('updated_at', '<', $date)->get();
         foreach ($records as $record) {
             reminderMail('approver', $record);
         }

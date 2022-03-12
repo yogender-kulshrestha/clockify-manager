@@ -606,15 +606,16 @@ class EmployeeController extends Controller
             $ot_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('ot_hours');
             $short_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('short_hours');
             $unpaid_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('unpaid_hours');
-            $net_hour = $dt->diffInHours($dt->copy()->addSeconds($net_hour));
+            $net_hours = $dt->diffInHours($dt->copy()->addSeconds($net_hour));
             $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($ot_hours));
             $short_hours = $dt->diffInHours($dt->copy()->addSeconds($short_hours));
             $unpaid_hours = $dt->diffInHours($dt->copy()->addSeconds($unpaid_hours));
             $leave_hours = leave_hours($user_id, $startDate, $endDate, 'Approved');
             $nleave_hours = leave_hours($user_id, $startDate, $endDate, 'NotApproved');
-            $net_hours = $net_hour+$leave_hours;
+            $holiday_hours = holiday_hours($startDate, $endDate);
+            //$net_hours = $net_hours+$leave_hours;
             $leave_categories = LeaveType::all();
-            return view('employee.timecard-submit', compact('leave_categories','week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours','leave_hours','nleave_hours'));
+            return view('employee.timecard-submit', compact('holiday_hours','leave_categories','week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours','leave_hours','nleave_hours'));
         }
         return redirect()->back()->withError('Please create timecard first.');
     }
@@ -687,14 +688,15 @@ class EmployeeController extends Controller
             $ot_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('ot_hours');
             $short_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('short_hours');
             $unpaid_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('unpaid_hours');
-            $net_hour = $dt->diffInHours($dt->copy()->addSeconds($net_hour));
+            $net_hours = $dt->diffInHours($dt->copy()->addSeconds($net_hour));
             $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($ot_hours));
             $short_hours = $dt->diffInHours($dt->copy()->addSeconds($short_hours));
             $unpaid_hours = $dt->diffInHours($dt->copy()->addSeconds($unpaid_hours));
             $leave_hours = leave_hours($user_id, $startDate, $endDate, 'Approved');
             $nleave_hours = leave_hours($user_id, $startDate, $endDate, 'NotApproved');
-            $net_hours = $net_hour+$leave_hours;
-            return view('employee.timecard-view', compact('data','week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours', 'leave_hours', 'nleave_hours'));
+            $holiday_hours = holiday_hours($startDate, $endDate);
+            //$net_hours = $net_hours+$leave_hours;
+            return view('employee.timecard-view', compact('holiday_hours','data','week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours', 'leave_hours', 'nleave_hours'));
         }
         return redirect()->to(route('employee.records'))->withError('Please create timecard first.');
     }
@@ -721,14 +723,15 @@ class EmployeeController extends Controller
             $ot_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('ot_hours');
             $short_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('short_hours');
             $unpaid_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('unpaid_hours');
-            $net_hour = $dt->diffInHours($dt->copy()->addSeconds($net_hour));
+            $net_hours = $dt->diffInHours($dt->copy()->addSeconds($net_hour));
             $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($ot_hours));
             $short_hours = $dt->diffInHours($dt->copy()->addSeconds($short_hours));
             $unpaid_hours = $dt->diffInHours($dt->copy()->addSeconds($unpaid_hours));
             $leave_hours = leave_hours($user_id, $startDate, $endDate, 'Approved');
             $nleave_hours = leave_hours($user_id, $startDate, $endDate, 'NotApproved');
-            $net_hours = $net_hour+$leave_hours;
-            return view('employee.timecard-edit', compact('data','week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours', 'leave_hours', 'nleave_hours'));
+            $holiday_hours = holiday_hours($startDate, $endDate);
+            //$net_hours = $net_hours+$leave_hours;
+            return view('employee.timecard-edit', compact('holiday_hours','data','week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours', 'leave_hours', 'nleave_hours'));
         }
         return redirect()->to(route('employee.records'))->withError('Record not found.');
     }
@@ -755,14 +758,15 @@ class EmployeeController extends Controller
             $ot_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('ot_hours');
             $short_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('short_hours');
             $unpaid_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('unpaid_hours');
-            $net_hour = $dt->diffInHours($dt->copy()->addSeconds($net_hour));
+            $net_hours = $dt->diffInHours($dt->copy()->addSeconds($net_hour));
             $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($ot_hours));
             $short_hours = $dt->diffInHours($dt->copy()->addSeconds($short_hours));
             $unpaid_hours = $dt->diffInHours($dt->copy()->addSeconds($unpaid_hours));
             $leave_hours = leave_hours($user_id, $startDate, $endDate, 'Approved');
             $nleave_hours = leave_hours($user_id, $startDate, $endDate, 'NotApproved');
-            $net_hours = $net_hour+$leave_hours;
-            return view('employee.timecard-review', compact('data','week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours', 'leave_hours', 'nleave_hours'));
+            $holiday_hours = holiday_hours($startDate, $endDate);
+            //$net_hours = $net_hours+$leave_hours;
+            return view('employee.timecard-review', compact('holiday_hours','data','week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours', 'leave_hours', 'nleave_hours'));
         }
         return redirect()->to(route('employee.records'))->withError('Please create timecard first.');
     }
@@ -1043,14 +1047,15 @@ class EmployeeController extends Controller
             $ot_hours = TimeCard::where('user_id', $user_id)->sum('ot_hours');
             $short_hours = TimeCard::where('user_id', $user_id)->sum('short_hours');
             $unpaid_hours = TimeCard::where('user_id', $user_id)->sum('unpaid_hours');
-            $net_hour = $dt->diffInHours($dt->copy()->addSeconds($net_hour));
+            $net_hours = $dt->diffInHours($dt->copy()->addSeconds($net_hour));
             $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($ot_hours));
             $short_hours = $dt->diffInHours($dt->copy()->addSeconds($short_hours));
             $unpaid_hours = $dt->diffInHours($dt->copy()->addSeconds($unpaid_hours));
             $leave_hours = leave_hours($user_id, $startDate, $dt, 'Approved');
             $nleave_hours = leave_hours($user_id, $startDate, $dt, 'NotApproved');
-            $net_hours = $net_hour+$leave_hours;
-            return view('employees.show', compact('data','net_hours','ot_hours','short_hours','unpaid_hours','leave_hours','nleave_hours'));
+            $holiday_hours = holiday_hours($startDate, $dt);
+            //$net_hours = $net_hours+$leave_hours;
+            return view('employees.show', compact('holiday_hours','data','net_hours','ot_hours','short_hours','unpaid_hours','leave_hours','nleave_hours'));
         }
         abort(404);
     }
@@ -1093,7 +1098,8 @@ class EmployeeController extends Controller
         $unpaid_hours = $dt->diffInHours($dt->copy()->addSeconds($unpaid_hours));
         $leave_hours = leave_hours($user_id, $startDate, $endDate, 'Approved');
         $nleave_hours = leave_hours($user_id, $startDate, $endDate, 'NotApproved');
-        $net_hours = $net_hour+$leave_hours;
+        $holiday_hours = holiday_hours($startDate, $endDate);
+        $total_hours = $net_hour+$leave_hours+$holiday_hours;
         /** end - calculate the net_hour, ot_hours, short_hours, leave_hours and pending leave_hours */
 
         /** start - @var $data for set timecard employee details */
@@ -1102,11 +1108,12 @@ class EmployeeController extends Controller
                 'Name' => $user->name,
                 'Email' => $user->email,
                 'Description' => 'Time Card Report of '.Carbon::parse($startDate)->format('d M, Y').' - '.Carbon::parse($endDate)->format('d M, Y').' ['.$week.']',
-                'Total Hours' => $net_hours ?? 0,
+                'Total Hours' => $total_hours ?? 0,
                 'OT Hours' => $ot_hours ?? 0,
                 'Leave Hours' => $leave_hours ?? 0,
                 'Unapproved Leave Hours' => $nleave_hours ?? 0,
-                'Short Hours' => $short_hours ?? 0,
+                'Holiday Hours' => $holiday_hours ?? 0,
+                //'Short Hours' => $short_hours ?? 0,
                 'Unpaid Hours' => $unpaid_hours ?? 0,
             ]
         ];

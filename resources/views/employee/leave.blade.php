@@ -77,7 +77,7 @@
                                 </div>--}}
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label for="leave_type_id">Leave Type <span class="text-danger">*</span></label>
+                                        <label for="leave_type_id">Leave Type <span class="text-danger">*</span> </label>@if(auth()->user()->role == 'user')<i class="fas fa-question-circle mx-2" data-bs-toggle="modal" data-bs-target="#leaveBalance"></i> @endif
                                         <select required class="form-control" name="leave_type_id" id="leave_type_id" placeholder="Select Leave Type">
                                             <option value="" disabled selected>-- Select --</option>
                                             @foreach($leave_categories as $category)
@@ -87,7 +87,9 @@
                                                 $balance = $total_balance - $leave;
                                                 $balance = ($balance > 0) ? $balance : 0;
                                                 @endphp
-                                                <option value="{{$category->id}}">{{$category->name}} [balance {{ $balance ?? 0 }}]</option>
+                                                @if($total_balance > 0)
+                                                <option value="{{$category->id}}">{{$category->name}}</option>
+                                                @endif
                                             @endforeach
                                         </select>
                                         <span id="leave_type_id_error" class="text-danger"></span>
@@ -131,6 +133,51 @@
             </div>
         </div>
     </div>
+    @if(auth()->user()->role == 'user')
+        <div class="modal fade" id="leaveBalance" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="ModalLabel">LEAVE ALLOCATIONS FOR THIS YEAR</h5>
+                        <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    </div>
+                    <div class="modal-body">
+                        <table width="100%"  class="table table-flush">
+                            <thead class="thead-light text-uppercase text-secondary text-xs font-weight-bolder opacity-7">
+                            <tr>
+                                <td></td>
+                                <td>Earned</td>
+                                <td>Used</td>
+                                <td>Available</td>
+                            </tr>
+                            </thead>
+                            <tbody class="thead-light text-uppercase text-secondary text-xs font-weight-bolder opacity-7">
+                            @foreach(auth()->user()->leave_balances as $balance)
+                                @php
+                                    $leave = leave_count(auth()->user()->clockify_id, startOfYear(), endOfYear(), null, $balance->leave_type->id);
+                                    $available = $balance->balance-$leave;
+                                    $available = ($available > 0) ? $available : 0;
+                                @endphp
+                                @if($balance->balance > 0)
+                                <tr>
+                                    <td>{{ $balance->leave_type->name ?? '' }}</td>
+                                    <td>{{ $balance->balance ?? 0 }}</td>
+                                    <td>{{ $leave ?? 0 }}</td>
+                                    <td>{{ $available ?? 0 }}</td>
+                                </tr>
+                                @endif
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    {{--<div class="modal-footer">
+                        <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn bg-gradient-primary btn-sm">Upload</button>
+                    </div>--}}
+                </div>
+            </div>
+        </div>
+    @endif
 @endsection
 
 @section('script')

@@ -78,15 +78,15 @@
                                         @enderror
                                     </div>
                                 </div>
-                               {{-- <div class="col-md-3">
+                                <div class="col-md-3">
                                     <div class="form-group">
-                                        <label for="day_working_hours">Day Working Hours <span class="text-danger">*</span></label>
+                                        <label for="day_working_hours">A Day Working Hours <span class="text-danger">*</span></label>
                                         <input required type="number" value="{{setting('day_working_hours')}}" class="form-control" name="day_working_hours" min="1" max="24" id="day_working_hours" placeholder="Enter Day Working Hours"></input>
                                         @error('day_working_hours')
                                         <span id="day_working_hours_error" class="text-danger"></span>
                                         @enderror
                                     </div>
-                                </div>--}}
+                                </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="overclocking_hours">Overclocking Hours <span class="text-danger">*</span></label>

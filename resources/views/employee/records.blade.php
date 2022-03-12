@@ -135,17 +135,17 @@
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="ModalLabel">Leave Balance</h5>
+                        <h5 class="modal-title" id="ModalLabel">LEAVE ALLOCATIONS FOR THIS YEAR</h5>
                         <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
                     </div>
                     <div class="modal-body">
                         <table width="100%"  class="table table-flush">
                             <thead class="thead-light text-uppercase text-secondary text-xs font-weight-bolder opacity-7">
                             <tr>
-                                <td>Leave Type</td>
-                                <td>Leave Balance</td>
-                                <td>Approved Leave</td>
-                                <td>Available Balance</td>
+                                <td></td>
+                                <td>Earned</td>
+                                <td>Used</td>
+                                <td>Available</td>
                             </tr>
                             </thead>
                             <tbody class="thead-light text-uppercase text-secondary text-xs font-weight-bolder opacity-7">
@@ -155,12 +155,14 @@
                                     $available = $balance->balance-$leave;
                                     $available = ($available > 0) ? $available : 0;
                                 @endphp
-                                <tr>
-                                    <td>{{ $balance->leave_type->name ?? '' }}</td>
-                                    <td>{{ $balance->balance ?? 0 }}</td>
-                                    <td>{{ $leave ?? 0 }}</td>
-                                    <td>{{ $available ?? 0 }}</td>
-                                </tr>
+                                @if($balance->balance > 0)
+                                    <tr>
+                                        <td>{{ $balance->leave_type->name ?? '' }}</td>
+                                        <td>{{ $balance->balance ?? 0 }}</td>
+                                        <td>{{ $leave ?? 0 }}</td>
+                                        <td>{{ $available ?? 0 }}</td>
+                                    </tr>
+                                @endif
                             @endforeach
                             </tbody>
                         </table>

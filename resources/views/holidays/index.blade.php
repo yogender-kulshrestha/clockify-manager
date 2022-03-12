@@ -1,6 +1,6 @@
 @extends('employee.master')
 
-@section('title', 'All Leave Types')
+@section('title', 'All Holidays')
 
 @section('style')
 @endsection
@@ -25,9 +25,9 @@
                     </svg>
                 </a>
             </li>
-            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Leave</li>
+            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Holidays</li>
         </ol>
-        <h6 class="font-weight-bolder mb-0">All Leave Types</h6>
+        <h6 class="font-weight-bolder mb-0">All Holidays</h6>
     </nav>
 @endsection
 
@@ -39,7 +39,7 @@
                 <div class="card-header pb-0">
                     <div class="d-lg-flex">
                         <div>
-                            <h5 class="mb-0">All Leave Types</h5>
+                            <h5 class="mb-0">All Holidays</h5>
                             <p class="text-sm mb-0">
 
                             </p>
@@ -51,13 +51,8 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
-                                {{--<button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
-                                <button type="button" class="btn bg-gradient-primary btn-sm mb-0"><i class="fa fa-rotate-270"></i> @</button>
-                               --}} {{--<button type="button" class="btn btn-outline-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#import">
-                                    Import
-                                </button>
-                                <button class="btn btn-outline-primary btn-sm export mb-0 mt-sm-0 mt-1" data-type="csv" type="button" name="button">Export</button>
-                            --}}</div>
+                                <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; New </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -68,8 +63,8 @@
                             <tr>
                                 <td>#</td>
                                 <th>ID</th>
-                                <td>Name</td>
-                                {{--<td>Balance</td>--}}
+                                <td>Date</td>
+                                <td>Description</td>
                                 <td>Action</td>
                             </tr>
                             </thead>
@@ -77,29 +72,6 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="import" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog mt-lg-10">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="ModalLabel">Import CSV</h5>
-                    <i class="fas fa-upload ms-3"></i>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>You can browse your computer for a file.</p>
-                    <input type="text" placeholder="Browse file..." class="form-control mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="" id="importCheck" checked="">
-                        <label class="custom-control-label" for="importCheck">I accept the terms and conditions</label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn bg-gradient-primary btn-sm">Upload</button>
                 </div>
             </div>
         </div>
@@ -116,15 +88,15 @@
                     <div class="modal-body">
                         <input type="hidden" name="id" id="id"/>
                         <div class="form-group">
-                            <label for="name">Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="name" id="name" placeholder="Enter Name">
-                            <span id="name_error" class="text-danger text-sm"></span>
+                            <label for="date">Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="date" id="date" placeholder="Enter Date">
+                            <span id="date_error" class="text-danger text-sm"></span>
                         </div>
-                        {{--<div class="form-group">
-                            <label for="balance">Balance <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" name="balance" id="balance" placeholder="Enter Leave Balance" >
-                            <span id="balance_error" class="text-danger text-sm"></span>
-                        </div>--}}
+                        <div class="form-group">
+                            <label for="description">Description <span class="text-danger">*</span></label>
+                            <textarea class="form-control" name="description" id="description" placeholder="Enter Description"></textarea>
+                            <span id="description_error" class="text-danger text-sm"></span>
+                        </div>
                     </div>
                     <div class="modal-footer text-right">
                         <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
@@ -165,7 +137,7 @@
                 "autoWidth": false,
                 "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
                 "ajax": {
-                    url: '{{ route('leave-types.index') }}',
+                    url: '{{ route('holidays.index') }}',
                 },
                 "order": [[ 1, "asc" ]],
                 "columns": [
@@ -180,15 +152,15 @@
                         visible: false
                     },
                     {
-                        data: 'name',
-                        name: 'name',
+                        data: 'date',
+                        name: 'date',
                         defaultContent: ''
                     },
-                    /*{
-                        data: 'balance',
-                        name: 'balance',
+                    {
+                        data: 'description',
+                        name: 'description',
                         defaultContent: ''
-                    },*/
+                    },
                     {
                         data: 'action',
                         name: 'action',
@@ -201,24 +173,24 @@
             $(document).on("click", ".rowadd", function () {
                 $("#form_title").text('Create');
                 $("#id").val('');
-                $("#name").val('');
-                $("#balance").val('');
-                $('#name_error').text('');
-                $('#balance_error').text('');
+                $("#date").val('');
+                $("#description").val('');
+                $('#date_error').text('');
+                $('#description_error').text('');
                 $('.text-danger.hidden').text('*');
                 $("#add_button").text('Add');
             });
             $(document).on("click", ".rowedit", function () {
                 $("#form_title").text('Edit');
                 $("#id").val($(this).data('id'));
-                $("#name").val($(this).data('name'));
-                $("#balance").val($(this).data('balance'));
-                $('#name_error').text('');
-                $('#balance_error').text('');
+                $("#date").val($(this).data('date'));
+                $("#description").val($(this).data('description'));
+                $('#date_error').text('');
+                $('#description_error').text('');
                 $('.text-danger.hidden').text('');
                 $("#add_button").text('Update');
             });
-            const addForm = '{{ route('leave-types.store') }}';
+            const addForm = '{{ route('holidays.store') }}';
             $('#add_form').submit(function (e) {
                 e.preventDefault();
                 var form_data = new FormData(this);
@@ -232,8 +204,8 @@
                     headers: {"X-CSRF-Token": $('meta[name="csrf-token"]').attr('content')},
                     beforeSend: function () {
                         $('#add_button').attr('disabled', 'disabled');
-                        $('#name_error').text('');
-                        $('#balance_error').text('');
+                        $('#date_error').text('');
+                        $('#description_error').text('');
                     },
                     success: function (data) {
                         $("#add_form")[0].reset();
@@ -249,14 +221,14 @@
                     error: function (data) {
                         $('#add_button').attr('disabled', false);
                         let responseData = data.responseJSON;
-                        $('#name_error').text(responseData.errors['name']);
-                        $('#balance_error').text(responseData.errors['balance']);
+                        $('#date_error').text(responseData.errors['date']);
+                        $('#description_error').text(responseData.errors['description']);
                     }
                 });
             });
             $(document).on('click', '.rowdelete', function() {
                 var id = $(this).data('id');
-                var url = '{{ route('leave-types.destroy', ':id') }}';
+                var url = '{{ route('holidays.destroy', ':id') }}';
                 url = url.replace(':id', id);
                 Swal.fire({
                     title: 'Are you sure?',

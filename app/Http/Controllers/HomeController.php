@@ -59,11 +59,12 @@ class HomeController extends Controller
         $request->validate([
             'working_time_from' => 'required',
             'working_time_to' => 'required|after:working_time_from',
+            'day_working_hours' => 'required|numeric|min:1|max:24',
             'overclocking_hours' => 'required|numeric|min:1|max:24',
             'weekly_hours' => 'required|numeric|min:1|max:84'
         ]);
 
-        $input = $request->only('working_time_from', 'working_time_to', 'overclocking_hours', 'weekly_hours');
+        $input = $request->only('working_time_from', 'working_time_to', 'day_working_hours', 'overclocking_hours', 'weekly_hours');
         Setting::query()->update($input);
         return redirect()->back()->withSuccess('Setting updated successfully.');
     }

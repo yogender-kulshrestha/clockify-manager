@@ -146,7 +146,7 @@
                             <span id="password_confirmation_error" class="text-danger text-sm"></span>
                         </div>
                         @endif
-                        @if(auth()->user()->role == 'hr')
+                        @if(auth()->user()->role == 'admin' || auth()->user()->role == 'hr')
                             <div class="col-md-12">
                                 <div id="leave_balances" class="row"></div>
                             </div>
@@ -249,11 +249,13 @@
                 $("#id").val('');
                 $("#name").val('');
                 $("#email").val('');
-                //$("#email").attr('disabled', false);
+                $('#type').val('');
                 $("#status").val('');
+                $('#leave_balances').html('');
                 $('#image_error').text('');
                 $('#name_error').text('');
                 $('#email_error').text('');
+                $('#type_error').text('');
                 $('#status_error').text('');
                 $('#password_error').text('');
                 $('#password_confirmation_error').text('');
@@ -261,11 +263,11 @@
                 $("#add_button").text('Add');
             });
             $(document).on("click", ".rowedit", function () {
-                $('#leave_balances').html('<span>Leave Balance</span>');
+                $('#leave_balances').html('<hr/><span>LEAVE ALLOCATIONS FOR THIS YEAR</span>');
                 let leave_balances = $(this).data('leave_balances');
                 $.each(leave_balances, function (key, val) {
                     $('#leave_balances').append('<div class="form-group col-md-6"> ' +
-                        '<label for="leave_balances'+key+'">' +val.leave_type.name+ ' Balance <span class="text-danger">*</span></label> ' +
+                        '<label for="leave_balances'+key+'">' +val.leave_type.name+ ' <span class="text-danger">*</span></label> ' +
                         '<input type="hidden" name="leave_balances['+key+'][leave_type_id]" value="'+val.leave_type.id+'"/>' +
                         '<input required type="number" min="0" class="form-control" value="'+val.balance+'" name="leave_balances['+key+'][balance]" id="leave_balances'+key+'" placeholder="Enter '+val.leave_type.name+' Balance"> ' +
                         '</div>');

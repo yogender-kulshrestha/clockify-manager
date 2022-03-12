@@ -17,6 +17,7 @@ use App\Models\Approver;
 use App\Models\Leave;
 use App\Models\Setting;
 use App\Mail\CommonMail;
+use App\Models\Holiday;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -112,7 +113,7 @@ function leave_hours($user_id,$startDate,$endDate,$type=null){
     foreach($rows as $row){
         $leave+=$row->leave_days;
     }
-    return $leave*9;
+    return $leave*setting('day_working_hours');
 }
 
 /**
@@ -180,64 +181,72 @@ function verify_working_hours($week, $start, $end, $user_id) {
     foreach ($rows as $row) {
         /** start overlay entry testing */
         //error_eo
-        $overlap = TimeSheet::select('id')->where(function ($q) use($row){
-            $q->where(function ($q) use($row){
+        $overlap = TimeSheet::select('id')->where(function ($q) use ($row) {
+            $q->where(function ($q) use ($row) {
                 $q->where('start_time', '<=', $row->start_time)
                     ->where('end_time', '>=', $row->start_time);
-            })->orWhere(function ($q) use($row){
+            })->orWhere(function ($q) use ($row) {
                 $q->where('start_time', '<=', $row->end_time)
                     ->where('end_time', '>=', $row->end_time);
-            })->orWhere(function ($q) use($row){
+            })->orWhere(function ($q) use ($row) {
                 $q->where('start_time', '>=', $row->start_time)->where('end_time', '<=', $row->end_time);
             });
         })->where('user_id', $user_id)->get();
 
-        if($overlap->count() > 1){
+        if ($overlap->count() > 1) {
             TimeSheet::whereIn('id', $overlap)
-                ->where('user_id', $user_id)->update(['error_eo'=>'Entry Overlap.']);
+                ->where('user_id', $user_id)->update(['error_eo' => 'Entry Overlap.']);
         } else {
             TimeSheet::whereIn('id', $overlap)
-                ->where('user_id', $user_id)->update(['error_eo'=>NULL]);
+                ->where('user_id', $user_id)->update(['error_eo' => NULL]);
         }
         /** end overlay entry testing */
 
         /** start ot hours testing */
         //error_ot
-        $start=Carbon::parse($row->start_time);
-        $time=$start->startOfDay()->format('Y-m-d');
-        $startTime = Carbon::parse($time.setting('working_time_from'))->format('Y-m-d H:i:s');
-        $endTime = Carbon::parse($time.setting('working_time_to'))->format('Y-m-d H:i:s');
+        $start = Carbon::parse($row->start_time);
+        $time = $start->startOfDay()->format('Y-m-d');
+        $startTime = Carbon::parse($time . setting('working_time_from'))->format('Y-m-d H:i:s');
+        $endTime = Carbon::parse($time . setting('working_time_to'))->format('Y-m-d H:i:s');
         $h_hours = 0;
-        if($startTime > $row->start_time || $endTime < $row->end_time) {
-            if($startTime > $row->start_time) {
-                if($startTime > $row->end_time) {
-                    $h_hours += Carbon::parse($row->end_time)->diffInSeconds($row->start_time);
-                } else {
-                    $h_hours += Carbon::parse($startTime)->diffInSeconds($row->start_time);
+        $h_diff = Carbon::parse($endDate)->diffInDays($startDate);
+        if ($h_diff > setting('day_working_hours') || $startTime > $row->start_time || $endTime < $row->end_time) {
+            if ($h_diff > setting('day_working_hours')) {
+                $h_hours = Carbon::parse($endDate)->diffInSeconds(Carbon::parse($startDate)->addDays(setting('day_working_hours')));
+            } else {
+                if ($startTime > $row->start_time) {
+                    if ($startTime > $row->end_time) {
+                        $h_hours += Carbon::parse($row->end_time)->diffInSeconds($row->start_time);
+                    } else {
+                        $h_hours += Carbon::parse($startTime)->diffInSeconds($row->start_time);
+                    }
                 }
-            }
-            if($endTime < $row->end_time) {
-                if($startTime < $row->end_time) {
-                    $h_hours += Carbon::parse($row->end_time)->diffInSeconds($endTime);
-                } elseif($startTime < $row->start_time) {
-                    $h_hours += Carbon::parse($row->end_time)->diffInSeconds($startTime);
-                } else {
-                    $h_hours += Carbon::parse($row->end_time)->diffInSeconds($endTime);
+                if ($endTime < $row->end_time) {
+                    if ($startTime < $row->end_time) {
+                        $h_hours += Carbon::parse($row->end_time)->diffInSeconds($endTime);
+                    } elseif ($startTime < $row->start_time) {
+                        $h_hours += Carbon::parse($row->end_time)->diffInSeconds($startTime);
+                    } else {
+                        $h_hours += Carbon::parse($row->end_time)->diffInSeconds($endTime);
+                    }
                 }
             }
             $dt = Carbon::now();
             $d_hours = $dt->diffInHours($dt->copy()->addSeconds($h_hours));
             $d_minutes = $dt->diffInMinutes($dt->copy()->subHours($d_hours)->addSeconds($h_hours));
-            $message = 'OT:';
-            if($d_hours > 0){
-                $message .=' '.$d_hours.' hours';
+            $message = NULL;
+            if ($d_hours > 0 || $d_minutes > 0) {
+                $message = 'OT:';
+                if ($d_hours > 0) {
+                    $message .= ' ' . $d_hours . ' hours';
+                }
+                if ($d_minutes > 0) {
+                    $message .= ' ' . $d_minutes . ' minutes';
+                }
             }
-            if($d_minutes > 0){
-                $message .=' '.$d_minutes.' minutes';
-            }
-            TimeSheet::where('id', $row->id)->update(['error_ot'=>$message]);
+            TimeSheet::where('id', $row->id)->update(['error_ot' => $message]);
         } else {
-            TimeSheet::where('id', $row->id)->update(['error_ot'=>NULL]);
+            TimeSheet::where('id', $row->id)->update(['error_ot' => NULL]);
         }
         /** end ot hours testing */
 
@@ -598,4 +607,15 @@ function employeeId($data){
         $newNum = $data;
     }
     return '1PWR'.$newNum;
+}
+
+function is_holiday($date)
+{
+    return Holiday::whereDate('date', $date)->count();
+}
+
+function holiday_hours($date_from,$date_to)
+{
+    $count = Holiday::whereDate('date', '>=', $date_from)->whereDate('date', '<=', $date_to)->count();
+    return $count*setting('day_working_hours');
 }

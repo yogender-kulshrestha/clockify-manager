@@ -13,6 +13,8 @@ use App\Http\Controllers\RecordController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\HolidayController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -53,14 +55,14 @@ Route::get('export-timecard', [EmployeeController::class, 'exportTimecardByDate'
 //Employee routes
 Route::resource('employees', EmployeeController::class);
 
-//Leave type routes
-Route::resource('leave-types', LeaveTypeController::class)->only(['index', 'store', 'destroy']);
-
 //Admin routes
 Route::middleware('admin')->prefix('admin')->group(function() {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/settings', [HomeController::class, 'settings'])->name('settings');
     Route::post('/settings', [HomeController::class, 'settingsPost']);
+
+    //Leave type routes
+    Route::resource('leave-types', LeaveTypeController::class)->only(['index', 'store', 'destroy']);
 
     Route::post('/delete-all-records', [HomeController::class, 'deleteAllRecords'])->name('delete.all-records');
     Route::post('/delete-user-records', [HomeController::class, 'deleteAllRecordsByUser'])->name('delete.user-records');
@@ -73,9 +75,11 @@ Route::middleware('admin')->prefix('admin')->group(function() {
 
     Route::resource('time-sheets', TimeSheetController::class);
     Route::resource('time-cards', TimeCardController::class);
-    Route::resource('records', RecordController::class);
+    //Route::resource('records', RecordController::class);
     Route::resource('leaves', LeaveController::class);
     Route::get('profile', [ProfileController::class, 'index'])->name('profile');
+
+    Route::resource('holidays', HolidayController::class);
 });
 
 //Employee & Hr routes

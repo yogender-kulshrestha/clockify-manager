@@ -61,6 +61,10 @@
                                     <tbody class="">
                                     <tr class="border-bottom">
                                         <td>Total Hours</td>
+                                        <td>{{$leave_hours+$net_hours+$holiday_hours ?? '0'}}</td>
+                                    </tr>
+                                    <tr class="border-bottom">
+                                        <td>Net Hours</td>
                                         <td>{{$net_hours ?? '0'}}</td>
                                     </tr>
                                     <tr class="border-bottom">
@@ -73,6 +77,10 @@
                                             <td>{{$nleave_hours ?? '0'}}</td>
                                         </tr>
                                     @endif
+                                    <tr class="border-bottom">
+                                        <td>Holiday Hours</td>
+                                        <td>{{$holiday_hours ?? '0'}}</td>
+                                    </tr>
                                     <tr class="border-bottom d-none">
                                         <td>Short Hours</td>
                                         <td>{{$short_hours ?? '0'}}</td>
@@ -170,22 +178,23 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="ModalLabel">Leave Balance</h5>
+                    <h5 class="modal-title" id="ModalLabel">LEAVE ALLOCATIONS FOR THIS YEAR</h5>
                     <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
                 </div>
                 <div class="modal-body">
                     <table width="100%"  class="table table-flush">
                         <thead class="thead-light text-uppercase text-secondary text-xs font-weight-bolder opacity-7">
                             <tr>
-                                <td>Leave Type</td>
-                                <td>Leave Balance</td>
-                                <td>Approved Leave</td>
-                                <td>Available Balance</td>
+                                <td></td>
+                                <td>Earned</td>
+                                <td>Used</td>
+                                <td>Available</td>
                             </tr>
                         </thead>
                         <tbody class="thead-light text-uppercase text-secondary text-xs font-weight-bolder opacity-7">
                             @foreach($data->leave_balances as $balance)
                             @php
+                                $leave = leave_count($data->clockify_id, startOfYear(), endOfYear(), null, $balance->leave_type->id);
                                 $leave = leave_count($data->clockify_id, startOfYear(), endOfYear(), null, $balance->leave_type->id);
                                 $available = $balance->balance-$leave;
                                 $available = ($available > 0) ? $available : 0;

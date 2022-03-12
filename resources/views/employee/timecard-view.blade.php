@@ -54,10 +54,18 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
+                                <span class="p-2" style="background-color: rgba(0,255,0,0.3);">Holiday</span>
+                                <span class="p-2" style="background-color: rgba(255,255,0,0.5);">Leave</span>
+                                <span class="p-2" style="background-color: rgba(255,0,0,0.3);">Exception</span>
+                                <span class="p-2" style="background-color: rgba(1,0,0,0.2);">Exception Fixed</span>
                                 <table class="border text-sm mt-3 w-100" style="min-width: 150px;">
                                     <tbody class="">
                                     <tr class="border-bottom">
                                         <td>Total Hours</td>
+                                        <td>{{$leave_hours+$net_hours+$holiday_hours ?? '0'}}</td>
+                                    </tr>
+                                    <tr class="border-bottom">
+                                        <td>Net Hours</td>
                                         <td>{{$net_hours ?? '0'}}</td>
                                     </tr>
                                     <tr class="border-bottom">
@@ -70,6 +78,10 @@
                                             <td>{{$nleave_hours ?? '0'}}</td>
                                         </tr>
                                     @endif
+                                    <tr class="border-bottom">
+                                        <td>Holiday Hours</td>
+                                        <td>{{$holiday_hours ?? '0'}}</td>
+                                    </tr>
                                     <tr class="border-bottom d-none">
                                         <td>Short Hours</td>
                                         <td>{{$short_hours ?? '0'}}</td>
@@ -112,14 +124,14 @@
                                     $ot_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->ot_hours)->subHours($ot_hours));
                                     $net_hours2 = $dt->diffInHours($dt->copy()->addSeconds($row->net_hours));
                                     $net_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->net_hours)->subHours($net_hours2));
-                                    $leave_hours = leave_hours($row->user_id, $row->date, $row->date, 'Approved');
-                                    $total_net_hours = $net_hours2+$leave_hours;
+                                    $is_holiday = is_holiday($row->date);
+                                    $is_leave = leave_count($row->user_id, $row->date, $row->date, null, null, null);
                                 @endphp
-                                <tr style="@if($row->exception == 1 && empty($row->flags)) background-color: rgba(1,0,0,0.2); @elseif($row->exception == 1) background-color: rgba(255,0,0,0.3); @endif">
+                                <tr style="@if($is_holiday > 0) background-color: rgba(0,255,0,0.3); @elseif($is_leave > 0) background-color: rgba(255,255,0,0.5); @elseif($row->exception == 1 && empty($row->flags)) background-color: rgba(1,0,0,0.2); @elseif($row->exception == 1) background-color: rgba(255,0,0,0.3); @endif">
                                     <td>{{$row->date}}</td>
                                     <td>{!! $row->flags !!}</td>
                                     <td>{{$ot_hours}}:{{$ot_minutes}}</td>
-                                    <td>{{$total_net_hours}}:{{$net_minutes}}</td>
+                                    <td>{{$net_hours2}}:{{$net_minutes}}</td>
                                     <td>{!! $row->employee_remarks !!}</td>
                                     <td>{{$row->approver_remarks}}</td>
                                 </tr>

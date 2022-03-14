@@ -14,6 +14,7 @@ use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\HolidayController;
+use App\Http\Controllers\EmailAlertController;
 
 /*
 |--------------------------------------------------------------------------
@@ -80,6 +81,7 @@ Route::middleware('admin')->prefix('admin')->group(function() {
     Route::get('profile', [ProfileController::class, 'index'])->name('profile');
 
     Route::resource('holidays', HolidayController::class);
+    Route::resource('email-alerts', EmailAlertController::class);
 });
 
 //Employee & Hr routes

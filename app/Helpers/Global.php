@@ -18,6 +18,7 @@ use App\Models\Leave;
 use App\Models\Setting;
 use App\Mail\CommonMail;
 use App\Models\Holiday;
+use App\Models\EmailAlert;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -552,6 +553,9 @@ function setting($value)
     return $find->$value;
 }
 
+/**
+ * mail send by sendgrid
+ */
 function sendgridMail($details)
 {
     $params = array (
@@ -596,6 +600,9 @@ function sendgridMail($details)
     return false;
 }
 
+/**
+ * Generate Employee ID
+ */
 function employeeId($data){
     if($data < 10) {
         $newNum = '000'.$data;
@@ -609,13 +616,28 @@ function employeeId($data){
     return '1PWR'.$newNum;
 }
 
+/**
+ * check by date is holiday or not
+ */
 function is_holiday($date)
 {
     return Holiday::whereDate('date', $date)->count();
 }
 
+/**
+ * get holiday hours
+ */
 function holiday_hours($date_from,$date_to)
 {
     $count = Holiday::whereDate('date', '>=', $date_from)->whereDate('date', '<=', $date_to)->count();
     return $count*setting('day_working_hours');
+}
+
+/**
+ * get email alerts status
+ */
+function email_alerts($type)
+{
+    $find = EmailAlert::where('type',$type)->first();
+    return $find->status ?? 0;
 }

@@ -81,7 +81,7 @@ class HomeController extends Controller
             Record::query()->delete();
             return response()->json(['success' => true, 'message' => 'All records deleted successfully.'], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+            return response()->json(['success' => false, 'message' => 'Something went wrong.'], 200);
         }
     }
 
@@ -109,7 +109,7 @@ class HomeController extends Controller
             Record::where('user_id', $user_id)->delete();
             return response()->json(['success' => true, 'message' => 'All records deleted successfully.'], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+            return response()->json(['success' => false, 'message' => 'Something went wrong.'], 200);
         }
     }
 
@@ -126,7 +126,7 @@ class HomeController extends Controller
             Record::query()->delete();
             return response()->json(['success' => true, 'message' => 'All users deleted successfully.'], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+            return response()->json(['success' => false, 'message' => 'Something went wrong.'], 200);
         }
     }
 
@@ -155,7 +155,7 @@ class HomeController extends Controller
             Record::where('user_id', $user_id)->delete();
             return response()->json(['success' => true, 'message' => 'Deleted successfully.'], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+            return response()->json(['success' => false, 'message' => 'Something went wrong.'], 200);
         }
     }
 }

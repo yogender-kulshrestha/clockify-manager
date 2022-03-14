@@ -100,12 +100,17 @@
                         <div class="row">
                         <input type="hidden" name="id" id="id"/>
                         <div class="form-group col-md-6">
+                            <label for="employee_id">Employee ID <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="employee_id" id="employee_id" placeholder="Enter Employee ID">
+                            <span id="employee_id_error" class="text-danger text-sm"></span>
+                        </div>
+                        <div class="form-group col-md-6">
                             <label for="name">Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="name" id="name" placeholder="Enter Name">
                             <span id="name_error" class="text-danger text-sm"></span>
                         </div>
                         <div class="form-group col-md-6">
-                            <label for="email">Email <span class="text-danger hidden">*</span></label>
+                            <label for="email">Email <span class="text-danger">*</span></label>
                             <input type="email" class="form-control" name="email" id="email" placeholder="Enter Email">
                             <span id="email_error" class="text-danger text-sm"></span>
                         </div>
@@ -247,12 +252,14 @@
             $(document).on("click", ".rowadd", function () {
                 $("#form_title").text('Create');
                 $("#id").val('');
+                $("#employee_id").val('');
                 $("#name").val('');
                 $("#email").val('');
                 $('#type').val('');
                 $("#status").val('');
                 $('#leave_balances').html('');
                 $('#image_error').text('');
+                $('#employee_id_error').text('');
                 $('#name_error').text('');
                 $('#email_error').text('');
                 $('#type_error').text('');
@@ -274,12 +281,14 @@
                 });
                 $("#form_title").text('Edit');
                 $("#id").val($(this).data('id'));
+                $("#employee_id").val($(this).data('employee_id'));
                 $("#name").val($(this).data('name'));
                 $("#email").val($(this).data('email'));
                 //$("#email").attr('disabled', 'disabled');
                 $("#type").val($(this).data('type'));
                 $("#status").val($(this).data('status'));
                 $('#image_error').text('');
+                $('#employee_id_error').text('');
                 $('#name_error').text('');
                 $('#email_error').text('');
                 $('#type_error').text('');
@@ -305,6 +314,7 @@
                     beforeSend: function () {
                         $('#add_button').attr('disabled', 'disabled');
                         $('#image_error').text('');
+                        $('#employee_id_error').text('');
                         $('#name_error').text('');
                         $('#email_error').text('');
                         $('#type_error').text('');
@@ -327,6 +337,7 @@
                         $('#add_button').attr('disabled', false);
                         let responseData = data.responseJSON;
                         $('#image_error').text(responseData.errors['image']);
+                        $('#employee_id_error').text(responseData.errors['employee_id']);
                         $('#name_error').text(responseData.errors['name']);
                         $('#email_error').text(responseData.errors['email']);
                         $('#type_error').text(responseData.errors['type']);

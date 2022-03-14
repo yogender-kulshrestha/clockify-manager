@@ -72,7 +72,7 @@ class ProfileController extends Controller
             }
             return response()->json(['success' => false, 'message' => 'Password Updating Failed.'], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+            return response()->json(['success' => false, 'message' => 'Something went wrong.'], 200);
         }
     }
 
@@ -101,7 +101,7 @@ class ProfileController extends Controller
             }
             return response()->json(['success' => false, 'message' => 'Profile image updating failed.'], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+            return response()->json(['success' => false, 'message' => 'Something went wrong.'], 200);
         }
     }
 }

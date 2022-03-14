@@ -135,7 +135,7 @@ class TimeCardController extends Controller
             $message = $request->id ? 'Updating Failed.' : 'Adding Failed.';
             return response()->json(['success' => false, 'message' => $message], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+            return response()->json(['success' => false, 'message' => 'Something went wrong.'], 200);
         }
     }
 

@@ -86,14 +86,15 @@ class ClockifyController extends Controller
                         'password' => $password,
                         'memberships' => $user->memberships,
                         'settings' => $user->settings,
+                        'employee_id' => employeeId(time().rand(1111, 9999)),
                         'status' => (Str::lower($user->status) == 'active') ? 'active' : 'inactive',
                     ];
 
                     $insert = User::create($input);
                     $leave_types = LeaveType::all();
                     if($insert) {
-                        $employee_id = employeeId($user->id);
-                        User::where('id', $user->id)->update(['employee_id' => $employee_id]);
+                        //$employee_id = employeeId($user->id);
+                        //User::where('id', $user->id)->update(['employee_id' => $employee_id]);
                         foreach ($leave_types as $lt) {
                             $lt_id = [
                                 'user_id' => $user->id,

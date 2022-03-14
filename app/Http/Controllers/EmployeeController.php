@@ -305,7 +305,7 @@ class EmployeeController extends Controller
             }
             return response()->json(['success' => false, 'type' => '1', 'message' => 'Request leave failed.'], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'type' => '1', 'message' => $e->getMessage()], 200);
+            return response()->json(['success' => false, 'type' => '1', 'message' => 'Something went wrong.'], 200);
         }
     }
 
@@ -463,7 +463,7 @@ class EmployeeController extends Controller
             $message = $request->id ? 'Updating Failed.' : 'Adding Failed.';
             return response()->json(['success' => false, 'message' => $message], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+            return response()->json(['success' => false, 'message' => 'Something went wrong.'], 200);
         }
     }
 
@@ -476,7 +476,7 @@ class EmployeeController extends Controller
             TimeSheet::where('id',$request->id)->delete();
             return response()->json(['success' => true, 'message' => 'Delete successfully.'], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+            return response()->json(['success' => false, 'message' => 'Something went wrong.'], 200);
         }
     }
 
@@ -490,7 +490,7 @@ class EmployeeController extends Controller
             $exception_text = ($request->status == '1') ? 'Requested' : 'Removed';
             return response()->json(['success' => true, 'message' => 'Exception '.$exception_text.' successfully.'], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+            return response()->json(['success' => false, 'message' => 'Something went wrong.'], 200);
         }
     }
 
@@ -861,7 +861,7 @@ class EmployeeController extends Controller
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function($query){
-                    return "<a data-leave_balances='".$query->leave_balances."' data-id='".$query->id."' data-name='".$query->name."' data-email='".$query->email."' data-type='".$query->type."' data-status='".$query->status."' class='mx-1 rowedit' data-bs-toggle='modal' data-bs-target='#modal-create' data-bs-toggle='tooltip' data-bs-original-title='Edit'>
+                    return "<a data-employee_id='".$query->employee_id."' data-leave_balances='".$query->leave_balances."' data-id='".$query->id."' data-name='".$query->name."' data-email='".$query->email."' data-type='".$query->type."' data-status='".$query->status."' class='mx-1 rowedit' data-bs-toggle='modal' data-bs-target='#modal-create' data-bs-toggle='tooltip' data-bs-original-title='Edit'>
                         <i class='fas fa-edit text-primary'></i>
                     </a>
                     <a href='".route('employees.show',['employee'=>$query->clockify_id])."' data-bs-toggle='tooltip' data-bs-original-title='View'>
@@ -906,6 +906,7 @@ class EmployeeController extends Controller
     {
         try {
             $rules = [
+                'employee_id' => 'required|max:255|unique:users,employee_id,'.$request->id.',id',
                 'name' => 'required|min:3|max:255',
                 'email' => 'required|email|max:255|unique:users,email,'.$request->id.',id',
                 'type' => 'nullable',
@@ -917,7 +918,7 @@ class EmployeeController extends Controller
             if ($validator->fails()) {
                 return response()->json(['success' => false, 'errors' => $validator->getMessageBag(), 'message' => 'Something went wrong.'], 422);
             }
-            $input = $request->only('name', 'email', 'status', 'type');
+            $input = $request->only('employee_id', 'name', 'email', 'status', 'type');
             if($request->password) {
                 $input['password']=Hash::make($request->password);
             }
@@ -940,8 +941,8 @@ class EmployeeController extends Controller
                         }
                     }
                 } else {
-                    $employee_id = employeeId($user->id);
-                    User::where('id', $user->id)->update(['clockify_id' => $user->id, 'employee_id' => $employee_id]);
+                    //$employee_id = employeeId($user->id);
+                    //User::where('id', $user->id)->update(['clockify_id' => $user->id, 'employee_id' => $employee_id]);
                     $leave_types = LeaveType::all();
                     foreach ($leave_types as  $lt) {
                         $lt_id = [
@@ -971,7 +972,7 @@ class EmployeeController extends Controller
             $message = $request->id ? 'Updating Failed.' : 'Adding Failed.';
             return response()->json(['success' => false, 'message' => $message], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 200);
+            return response()->json(['success' => false, 'message' => 'Something went wrong.'], 200);
         }
     }
 

@@ -122,9 +122,9 @@ function leave_hours($user_id,$startDate,$endDate,$type=null){
  */
 function my_employees() {
     if(auth()->user()->role == 'admin' || auth()->user()->role == 'hr') { //if admin or hr
-        return User::with('leave_balances.leave_type')->where('role', 'user')->latest()->get();
+        return User::with('leaves_balances')->where('role', 'user')->latest()->get();
     } elseif(auth()->user()->role == 'user') { //if approver
-        return User::with('leave_balances.leave_type')->where('role', 'user')->whereIn('id', Approver::select('user_id')->where('approver_id', auth()->user()->id)->get())->latest()->get();
+        return User::with('leaves_balances')->where('role', 'user')->whereIn('id', Approver::select('user_id')->where('approver_id', auth()->user()->id)->get())->latest()->get();
     } else {
         return [];
     }

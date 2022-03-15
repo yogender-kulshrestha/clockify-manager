@@ -56,4 +56,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(LeaveBalance::class, 'user_id', 'clockify_id');
     }
+
+    public function leaves_balances()
+    {
+        return $this->hasMany(LeaveBalance::class, 'user_id', 'clockify_id')->with('leave_type')
+            ->whereHas('leave_type', function ($q) {
+                $q->where('balance','1');
+            });
+    }
 }

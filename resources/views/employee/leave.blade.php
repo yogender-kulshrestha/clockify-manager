@@ -55,6 +55,7 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
+                                <a href="javascript:" class="btn bg-gradient-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#leaveBalance"> View Leave Balance</a>
                             </div>
                         </div>
                     </div>
@@ -87,9 +88,7 @@
                                                 $balance = $total_balance - $leave;
                                                 $balance = ($balance > 0) ? $balance : 0;
                                                 @endphp
-                                                @if($total_balance > 0)
                                                 <option value="{{$category->id}}">{{$category->name}}</option>
-                                                @endif
                                             @endforeach
                                         </select>
                                         <span id="leave_type_id_error" class="text-danger"></span>
@@ -158,7 +157,7 @@
                                     $available = $balance->balance-$leave;
                                     $available = ($available > 0) ? $available : 0;
                                 @endphp
-                                @if($balance->balance > 0)
+                                @if($balance->leave_type->balance == 1)
                                 <tr>
                                     <td>{{ $balance->leave_type->name ?? '' }}</td>
                                     <td>{{ $balance->balance ?? 0 }}</td>

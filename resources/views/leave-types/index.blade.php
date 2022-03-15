@@ -69,7 +69,7 @@
                                 <td>#</td>
                                 <th>ID</th>
                                 <td>Name</td>
-                                {{--<td>Balance</td>--}}
+                                <td>Allow Balance</td>
                                 <td>Action</td>
                             </tr>
                             </thead>
@@ -184,11 +184,11 @@
                         name: 'name',
                         defaultContent: ''
                     },
-                    /*{
+                    {
                         data: 'balance',
                         name: 'balance',
                         defaultContent: ''
-                    },*/
+                    },
                     {
                         data: 'action',
                         name: 'action',
@@ -254,9 +254,34 @@
                     }
                 });
             });
-            $(document).on('click', '.rowdelete', function() {
+
+            const addBalance = '{{ route('leave-types.balance') }}';
+            $('#datatable').on('change', 'tbody input.balance', function() {
+                var balance = $(this).prop('checked') == true ? '1' : '0';
                 var id = $(this).data('id');
-                var url = '{{ route('leave-types.destroy', ':id') }}';
+                $.ajax({
+                    method: "POST",
+                    url: addBalance,
+                    dataType: "json",
+                    data: {
+                        'balance': balance,
+                        'id': id,
+                        '_token': '{{ csrf_token() }}',
+                    },
+                    success: function (data) {
+                        if (data.success === true) {
+                            toastr.success(data.message);
+                        } else {
+                            datatable.draw();
+                            toastr.error(data.message);
+                        }
+                    }
+                });
+            });
+
+            /*$(document).on('click', '.rowdelete', function() {
+                var id = $(this).data('id');
+                var url = '{{-- route('leave-types.destroy', ':id') --}}';
                 url = url.replace(':id', id);
                 Swal.fire({
                     title: 'Are you sure?',
@@ -288,7 +313,7 @@
                         });
                     }
                 })
-            });
+            });*/
         });
     </script>
 @endsection

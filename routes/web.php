@@ -9,7 +9,6 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ApproverController;
 use App\Http\Controllers\TimeSheetController;
 use App\Http\Controllers\TimeCardController;
-use App\Http\Controllers\RecordController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\ProfileController;
@@ -57,18 +56,19 @@ Route::get('export-timecard', [EmployeeController::class, 'exportTimecardByDate'
 Route::resource('employees', EmployeeController::class);
 
 //Admin routes
+Route::post('/delete-user-records', [HomeController::class, 'deleteAllRecordsByUser'])->name('delete.user-records');
+Route::post('/delete-user', [HomeController::class, 'deleteByUserId'])->name('delete.user');
 Route::middleware('admin')->prefix('admin')->group(function() {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/settings', [HomeController::class, 'settings'])->name('settings');
     Route::post('/settings', [HomeController::class, 'settingsPost']);
 
     //Leave type routes
-    Route::resource('leave-types', LeaveTypeController::class)->only(['index', 'store', 'destroy']);
+    Route::resource('leave-types', LeaveTypeController::class)->only(['index', 'store']);
+    Route::post('leave-types/balance/status', [LeaveTypeController::class, 'balance'])->name('leave-types.balance');
 
     Route::post('/delete-all-records', [HomeController::class, 'deleteAllRecords'])->name('delete.all-records');
-    Route::post('/delete-user-records', [HomeController::class, 'deleteAllRecordsByUser'])->name('delete.user-records');
     Route::post('/delete-all-users', [HomeController::class, 'deleteAllUsers'])->name('delete.all-users');
-    Route::post('/delete-user', [HomeController::class, 'deleteByUserId'])->name('delete.user');
 
     Route::resource('hr-managers', HrController::class);
     Route::resource('approvers', ApproverController::class);
@@ -76,7 +76,6 @@ Route::middleware('admin')->prefix('admin')->group(function() {
 
     Route::resource('time-sheets', TimeSheetController::class);
     Route::resource('time-cards', TimeCardController::class);
-    //Route::resource('records', RecordController::class);
     Route::resource('leaves', LeaveController::class);
     Route::get('profile', [ProfileController::class, 'index'])->name('profile');
 

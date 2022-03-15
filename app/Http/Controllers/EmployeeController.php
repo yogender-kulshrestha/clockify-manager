@@ -861,7 +861,7 @@ class EmployeeController extends Controller
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function($query){
-                    return "<a data-employee_id='".$query->employee_id."' data-leave_balances='".$query->leave_balances."' data-id='".$query->id."' data-name='".$query->name."' data-email='".$query->email."' data-type='".$query->type."' data-status='".$query->status."' class='mx-1 rowedit' data-bs-toggle='modal' data-bs-target='#modal-create' data-bs-toggle='tooltip' data-bs-original-title='Edit'>
+                    return "<a data-employee_id='".$query->employee_id."' data-leave_balances='".$query->leaves_balances."' data-id='".$query->id."' data-name='".$query->name."' data-email='".$query->email."' data-type='".$query->type."' data-status='".$query->status."' class='mx-1 rowedit' data-bs-toggle='modal' data-bs-target='#modal-create' data-bs-toggle='tooltip' data-bs-original-title='Edit'>
                         <i class='fas fa-edit text-primary'></i>
                     </a>
                     <a href='".route('employees.show',['employee'=>$query->clockify_id])."' data-bs-toggle='tooltip' data-bs-original-title='View'>

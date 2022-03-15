@@ -155,7 +155,7 @@
                                     $available = $balance->balance-$leave;
                                     $available = ($available > 0) ? $available : 0;
                                 @endphp
-                                @if($balance->balance > 0)
+                                @if($balance->leave_type->balance == 1)
                                     <tr>
                                         <td>{{ $balance->leave_type->name ?? '' }}</td>
                                         <td>{{ $balance->balance ?? 0 }}</td>

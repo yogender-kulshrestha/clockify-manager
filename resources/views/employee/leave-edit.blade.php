@@ -55,6 +55,7 @@
                         </div>
                         <div class="ms-auto my-auto mt-lg-0 mt-4">
                             <div class="ms-auto my-auto">
+                                <a href="javascript:" class="btn bg-gradient-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#leaveBalance"> View Leave Balance</a>
                             </div>
                         </div>
                     </div>
@@ -166,12 +167,14 @@
                                     $available = $balance->balance-$leave;
                                     $available = ($available > 0) ? $available : 0;
                                 @endphp
+                                @if($balance->leave_type->balance == 1)
                                 <tr>
                                     <td>{{ $balance->leave_type->name ?? '' }}</td>
                                     <td>{{ $balance->balance ?? 0 }}</td>
                                     <td>{{ $leave ?? 0 }}</td>
                                     <td>{{ $available ?? 0 }}</td>
                                 </tr>
+                                @endif
                             @endforeach
                             </tbody>
                         </table>

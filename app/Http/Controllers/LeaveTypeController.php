@@ -41,14 +41,28 @@ class LeaveTypeController extends Controller
             $data = LeaveType::get();
             return Datatables::of($data)
                 ->addIndexColumn()
-                ->addColumn('action', function($query){
-                    return '<a data-id="'.$query->id.'" data-name="'.$query->name.'" data-balance="'.$query->balance.'" class="mx-1 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
+                ->editColumn('balance', function ($query) {
+                    $balance = '<div class="form-check form-switch">
+                        <input class="form-check-input balance" style="height: 20px;" type="checkbox" id="flexSwitchCheckDefault'.$query->id.'"  data-id="'.$query->id.'"';
+                    if($query->balance == '1'){
+                        $balance.=' checked';
+                    }
+                    if($query->id == '1'){
+                        $balance.=' disabled';
+                    }
+                    $balance.='>
+                            <label class="form-check-label" for="flexSwitchCheckDefault"'.$query->id.'"></label>
+                        </div>
+                    </div>';
+                    return $balance;
+                })->addColumn('action', function($query){
+                    return ($query->id == 1) ? '' : '<a data-id="'.$query->id.'" data-name="'.$query->name.'" data-balance="'.$query->balance.'" class="mx-1 rowedit" data-bs-toggle="modal" data-bs-target="#modal-create" data-bs-toggle="tooltip" data-bs-original-title="Edit">
                         <i class="fas fa-edit text-primary"></i>
                     </a>';
                 })->editColumn('created_at', function ($query) {
                     return Carbon::createFromFormat('Y-m-d H:i:s', $query->created_at)->format('d M, Y');
                 })
-                ->rawColumns(['action','created_at'])
+                ->rawColumns(['action','balance','created_at'])
                 ->make(true);
         }
         return view('leave-types.index');
@@ -82,6 +96,35 @@ class LeaveTypeController extends Controller
             }
             $message = $request->id ? 'Updating Failed.' : 'Adding Failed.';
             return response()->json(['success' => false, 'message' => $message], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Something went wrong.'], 200);
+        }
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function balance(Request $request)
+    {
+        try {
+            $rules = [
+                'id' => 'required',
+                'balance' => 'required|in:1,0',
+            ];
+            $validator = Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'errors' => $validator->getMessageBag(), 'message' => 'Something went wrong.'], 200);
+            }
+            $input = $request->only('balance');
+            $id = $request->only('id');
+            $insert = LeaveType::where($id)->update($input);
+            if ($insert) {
+                return response()->json(['success' => true, 'message' => 'Updated Successfully.'], 200);
+            }
+            return response()->json(['success' => false, 'message' => 'Updating Failed.'], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Something went wrong.'], 200);
         }

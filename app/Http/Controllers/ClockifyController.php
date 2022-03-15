@@ -158,6 +158,8 @@ class ClockifyController extends Controller
         $subWeek = ($request->week > 0) ? $request->week : 0;
         $start = Carbon::now()->startOfDay()->subWeek($subWeek)->subDay($weekday)->format('Y-m-d\TH:i:s\Z');
         $workspaces = Workspace::get();
+        //$rows = $this->clockify->apiRequest('workspaces/60aadc5c79793e3042ff5272/user/60aaf8f379793e3042ff8873/time-entries?start='.$start);
+        ///return $rows = json_decode($rows);
         foreach ($workspaces as $workspace) {
             $users = User::select('*')
                 ->whereNotNull('clockify_id')->get();

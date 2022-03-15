@@ -43,7 +43,16 @@ class EmailAlertController extends Controller
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->editColumn('status', function ($query) {
-                    return $query->status;
+                    $status = '<div class="form-check form-switch">
+                        <input class="form-check-input status" style="height: 20px;" type="checkbox" id="flexSwitchCheckDefault'.$query->id.'"  data-id="'.$query->id.'"';
+                    if($query->status == '1'){
+                        $status.=' checked';
+                    }
+                    $status.='>
+                            <label class="form-check-label" for="flexSwitchCheckDefault"'.$query->id.'"></label>
+                        </div>
+                    </div>';
+                    return $status;
                 })
                 ->rawColumns(['status'])
                 ->make(true);

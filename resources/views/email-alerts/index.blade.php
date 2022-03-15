@@ -133,22 +133,25 @@
                     },
                 ]
             });
+
             const addForm = '{{ route('email-alerts.store') }}';
-            $('#add_form').submit(function (e) {
-                e.preventDefault();
-                var form_data = new FormData(this);
+            $('#datatable').on('change', 'tbody input.status', function() {
+                var status = $(this).prop('checked') == true ? '1' : '0';
+                var id = $(this).data('id');
                 $.ajax({
                     method: "POST",
                     url: addForm,
-                    data: form_data,
-                    contentType: false,
-                    processData: false,
                     dataType: "json",
-                    headers: {"X-CSRF-Token": $('meta[name="csrf-token"]').attr('content')},
+                    data: {
+                        'status': status,
+                        'id': id,
+                        '_token': '{{ csrf_token() }}',
+                    },
                     success: function (data) {
                         if (data.success === true) {
                             toastr.success(data.message);
                         } else {
+                            datatable.draw();
                             toastr.error(data.message);
                         }
                     }

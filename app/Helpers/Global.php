@@ -330,29 +330,29 @@ function sendMail($type, $data)
     /** start employee mail section */
     if(in_array($type, $types)) {
         /** start send mail to approver/hr section */
-        $owner = User::where('clockify_id', $data->user_id)->first();
-        $approver = Approver::select('approver_id')->where('user_id', $owner->clockify_id)->get();
-        $users = User::whereIn('role', ['user'])->orWhereIn('clockify_id', $approver)->get();
-        foreach($users as $user) {
+        $owner = User::where('clockify_id', $data->user_id)->where('status', 'active')->first();
+        $approver = Approver::select('approver_id')->where('user_id', $owner->clockify_id)->first();
+        $user = User::where('role', 'user')->where('clockify_id', $approver->approver_id ?? '')->where('status', 'active')->first();
+        if($owner && $user) {
             $email = $user->email;
             $name = $user->name;
-            if ($type == 'leaveSubmit') { //leave request submit mail
+            if ($type == 'leaveSubmit' && email_alerts('leaveSubmitToApprover') == 1) { //leave request submit mail
                 $subject = 'Leave Request Submitted';
                 $title = '';
                 $body = 'Leave request submitted by '.$owner->name.'.';
-            } elseif ($type == 'leaveResubmit') { //leave resubmit mail
+            } elseif ($type == 'leaveResubmit' && email_alerts('leaveResubmitToApprover') == 1) { //leave resubmit mail
                 $subject = 'Leave Request Re-Submitted';
                 $title = '';
                 $body = 'Leave request re-submitted by '.$owner->name.'.';
-            } elseif ($type == 'timesheetSubmit') { //timecard submit mail
+            } elseif ($type == 'timesheetSubmit' && email_alerts('timesheetSubmitToApprover') == 1) { //timecard submit mail
                 $subject = 'Timecard Request Submitted';
                 $title = '';
                 $body = 'Timecard submitted by '.$owner->name.'.';
-            } elseif ($type == 'timesheetResubmit') { //timecard resubmit mail
+            } elseif ($type == 'timesheetResubmit' && email_alerts('timesheetResubmitToApprover') == 1) { //timecard resubmit mail
                 $subject = 'Timecard Re-Submitted';
                 $title = '';
                 $body = 'Timecard re-submitted by '.$owner->name.'.';
-            } elseif ($type == 'leaveCancelled') { //leave cancel mail
+            } elseif ($type == 'leaveCancelled' && email_alerts('leaveCancelledToApprover') == 1) { //leave cancel mail
                 $subject = 'Leave Request Cancelled';
                 $title = '';
                 $body = 'Leave request cancelled by '.$owner->name.'.';
@@ -364,119 +364,125 @@ function sendMail($type, $data)
             $data['body'] = $body;
             //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
             $sent = sendgridMail($data);
-        }
-        /** end send mail to approver/hr section */
+            /** end send mail to approver/hr section */
 
-        /** start send mail to employee section */
-        $user = $owner;
-        $email = $user->email;
-        $name = $user->name;
-        if ($type == 'leaveSubmit') { //leave submit mail
-            $subject = 'Leave Request Submitted';
-            $title = '';
-            $body = 'Your leave request submitted successfully.';
-        } elseif ($type == 'leaveResubmit') { //leave resubmit mail
-            $subject = 'Leave Request Re-Submitted';
-            $title = '';
-            $body = 'Your leave request re-submitted successfully.';
-        } elseif ($type == 'timesheetSubmit') { //timecard submit mail
-            $subject = 'Timecard Request Submitted';
-            $title = '';
-            $body = 'Your timecard submitted successfully.';
-        } elseif ($type == 'timesheetResubmit') { //timecard resubmit mail
-            $subject = 'Timecard Re-Submitted';
-            $title = '';
-            $body = 'Your timecard re-submitted successfully.';
-        } elseif ($type == 'leaveCancelled') { //leave cancel mail
-            $subject = 'Leave Request Cancelled';
-            $title = '';
-            $body = 'Your leave request cancelled successfully.';
+            /** start send mail to employee section */
+            $user = $owner;
+            $email = $user->email;
+            $name = $user->name;
+            if ($type == 'leaveSubmit' && email_alerts('leaveSubmitToEmployee') == 1) { //leave submit mail
+                $subject = 'Leave Request Submitted';
+                $title = '';
+                $body = 'Your leave request submitted successfully.';
+            } elseif ($type == 'leaveResubmit' && email_alerts('leaveResubmitToEmployee') == 1) { //leave resubmit mail
+                $subject = 'Leave Request Re-Submitted';
+                $title = '';
+                $body = 'Your leave request re-submitted successfully.';
+            } elseif ($type == 'timesheetSubmit' && email_alerts('timesheetSubmitToEmployee') == 1) { //timecard submit mail
+                $subject = 'Timecard Request Submitted';
+                $title = '';
+                $body = 'Your timecard submitted successfully.';
+            } elseif ($type == 'timesheetResubmit' && email_alerts('timesheetResubmitToEmployee') == 1) { //timecard resubmit mail
+                $subject = 'Timecard Re-Submitted';
+                $title = '';
+                $body = 'Your timecard re-submitted successfully.';
+            } elseif ($type == 'leaveCancelled' && email_alerts('leaveCancelledToEmployee') == 1) { //leave cancel mail
+                $subject = 'Leave Request Cancelled';
+                $title = '';
+                $body = 'Your leave request cancelled successfully.';
+            }
+            $data['to'] = $user;
+            $data['owner'] = $owner;
+            $data['subject'] = $subject;
+            $data['title'] = $title;
+            $data['body'] = $body;
+            //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+            $sent = sendgridMail($data);
+            /** end send mail to employee section */
         }
-        $data['to'] = $user;
-        $data['owner'] = $owner;
-        $data['subject'] = $subject;
-        $data['title'] = $title;
-        $data['body'] = $body;
-        //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
-        $sent = sendgridMail($data);
-        /** end send mail to employee section */
     }
     /** end employee mail section */
     /** start approver/hr mail section */
     elseif(in_array($type, $types_approver)) {
         /** start sent mail to employee section */
-        $user = User::where('clockify_id', $data->user_id)->first();
-        $owner = User::where('clockify_id', auth()->user()->clockify_id)->first();
-        $email = $user->email;
-        $name = $user->name;
-        if($type == 'leaveRevise') { //leave revise and resubmit mail
-            $subject = 'Leave Revise and Re-Submit';
-            $title = '';
-            $body = 'Your leave request disapproved by '.$owner->name.', Please revise and re-submit.';
-        } elseif($type == 'leaveApproved') { //leave approved mail
-            $subject = 'Leave Approved';
-            $title = '';
-            $body = 'Your leave request Approved by '.$owner->name.'.';
-        } elseif($type == 'leaveFinalApproved') { //leave final approved mail
-            $subject = 'Leave Final Approved';
-            $title = '';
-            $body = 'Your leave request Final Approved by '.$owner->name.'.';
-        } elseif ($type == 'timesheetRevise') { //timecard revise and resubmit mail
-            $subject = 'Timecard Revise and Re-Submit';
-            $title = '';
-            $body = 'Your timecard disapproved by '.$owner->name.', Please revise and re-submit.';
-        } elseif ($type == 'timesheetApproved') { //timecard approved mail
-            $subject = 'Timecard Approved';
-            $title = '';
-            $body = 'Your timecard Approved by '.$owner->name.'.';
-        } elseif ($type == 'leaveRejected') { //leave rejected mail
-            $subject = 'Leave Rejected';
-            $title = '';
-            $body = 'Your leave request Rejected by '.$owner->name.'.';
-        }
-        $data['to'] = $user;
-        $data['owner'] = $owner;
-        $data['subject'] = $subject;
-        $data['title'] = $title;
-        $data['body'] = $body;
-        //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
-        $sent = sendgridMail($data);
-        /** end sent mail to employee section */
+        $user = User::where('clockify_id', $data->user_id)->where('status', 'active')->first();
+        $owner = User::where('clockify_id', auth()->user()->clockify_id)->where('status', 'active')->first();
+        if($user && $owner) {
+            $email = $user->email;
+            $name = $user->name;
+            if ($type == 'leaveRevise' && email_alerts('leaveReviseToEmployee') == 1) { //leave revise and resubmit mail
+                $subject = 'Leave Revise and Re-Submit';
+                $title = '';
+                $body = 'Your leave request disapproved by ' . $owner->name . ', Please revise and re-submit.';
+            } elseif ($type == 'leaveApproved' && email_alerts('leaveApprovedToEmployee') == 1) { //leave approved mail
+                $subject = 'Leave Approved';
+                $title = '';
+                $body = 'Your leave request Approved by ' . $owner->name . '.';
+            } elseif ($type == 'leaveFinalApproved' && email_alerts('leaveFinalApprovedToEmployee') == 1) { //leave final approved mail
+                $subject = 'Leave Final Approved';
+                $title = '';
+                $body = 'Your leave request Final Approved by ' . $owner->name . '.';
+            } elseif ($type == 'timesheetRevise' && email_alerts('timesheetReviseToEmployee') == 1) { //timecard revise and resubmit mail
+                $subject = 'Timecard Revise and Re-Submit';
+                $title = '';
+                $body = 'Your timecard disapproved by ' . $owner->name . ', Please revise and re-submit.';
+            } elseif ($type == 'timesheetApproved' && email_alerts('timesheetApprovedToEmployee') == 1) { //timecard approved mail
+                $subject = 'Timecard Approved';
+                $title = '';
+                $body = 'Your timecard Approved by ' . $owner->name . '.';
+            } elseif ($type == 'leaveRejected' && email_alerts('leaveRejectedToEmployee') == 1) { //leave rejected mail
+                $subject = 'Leave Rejected';
+                $title = '';
+                $body = 'Your leave request Rejected by ' . $owner->name . '.';
+            }
+            $data['to'] = $user;
+            $data['owner'] = $owner;
+            $data['subject'] = $subject;
+            $data['title'] = $title;
+            $data['body'] = $body;
+            //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+            $sent = sendgridMail($data);
+            /** end sent mail to employee section */
 
-        /** start sent mail to approver/hr section */
-        $owner = User::where('clockify_id', $data->user_id)->first();
-        $user = User::where('clockify_id', auth()->user()->clockify_id)->first();
-        $email = $user->email;
-        $name = $user->name;
-        if($type == 'leaveRevise') { //leave revise and resubmit mail
-            $subject = 'Leave Revise and Re-Submit';
-            $title = '';
-            $body = 'Leave request disapproved of '.$owner->name.'.';
-        } elseif($type == 'leaveApproved') { //leave approved mail
-            $subject = 'Leave Approved';
-            $title = '';
-            $body = 'Leave request Approved of '.$owner->name.'.';
-        } elseif ($type == 'timesheetRevise') { //timecard revise and resubmit mail
-            $subject = 'Timecard Revise and Re-Submit';
-            $title = '';
-            $body = 'Timecard disapproved of '.$owner->name.'.';
-        } elseif ($type == 'timesheetApproved') { //timecard approved mail
-            $subject = 'Timecard Approved';
-            $title = '';
-            $body = 'Timecard Approved of '.$owner->name.'.';
-        } elseif ($type == 'leaveRejected') { //leave rejected mail
-            $subject = 'Leave Rejected';
-            $title = '';
-            $body = 'Leave request Rejected of '.$owner->name.'.';
+            /** start sent mail to approver/hr section */
+            $owner = User::where('clockify_id', $data->user_id)->first();
+            $user = User::where('clockify_id', auth()->user()->clockify_id)->first();
+            $email = $user->email;
+            $name = $user->name;
+            if ($type == 'leaveRevise' && email_alerts('leaveReviseToApprover') == 1) { //leave revise and resubmit mail
+                $subject = 'Leave Revise and Re-Submit';
+                $title = '';
+                $body = 'Leave request disapproved of ' . $owner->name . '.';
+            } elseif ($type == 'leaveApproved' && email_alerts('leaveApprovedToApprover') == 1) { //leave approved mail
+                $subject = 'Leave Approved';
+                $title = '';
+                $body = 'Leave request Approved of ' . $owner->name . '.';
+            } elseif ($type == 'leaveFinalApproved' && email_alerts('leaveFinalApprovedToApprover') == 1) { //leave approved mail
+                $subject = 'Leave Final Approved';
+                $title = '';
+                $body = 'Leave request Approved of ' . $owner->name . '.';
+            } elseif ($type == 'timesheetRevise' && email_alerts('timesheetReviseToApprover') == 1) { //timecard revise and resubmit mail
+                $subject = 'Timecard Revise and Re-Submit';
+                $title = '';
+                $body = 'Timecard disapproved of ' . $owner->name . '.';
+            } elseif ($type == 'timesheetApproved' && email_alerts('timesheetApprovedToApprover') == 1) { //timecard approved mail
+                $subject = 'Timecard Approved';
+                $title = '';
+                $body = 'Timecard Approved of ' . $owner->name . '.';
+            } elseif ($type == 'leaveRejected' && email_alerts('leaveRejectedToApprover') == 1) { //leave rejected mail
+                $subject = 'Leave Rejected';
+                $title = '';
+                $body = 'Leave request Rejected of ' . $owner->name . '.';
+            }
+            $data['to'] = $user;
+            $data['owner'] = $owner;
+            $data['subject'] = $subject;
+            $data['title'] = $title;
+            $data['body'] = $body;
+            //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+            $sent = sendgridMail($data);
+            /** end sent mail to approver/hr section */
         }
-        $data['to'] = $user;
-        $data['owner'] = $owner;
-        $data['subject'] = $subject;
-        $data['title'] = $title;
-        $data['body'] = $body;
-        //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
-        $sent = sendgridMail($data);
-        /** end sent mail to approver/hr section */
     }
     /** end approver/hr mail section */
     return $sent ? true : false; //check mail sent or not
@@ -488,7 +494,7 @@ function sendMail($type, $data)
 function reminderMail($type, $data)
 {
     /** start approver mail section */
-    if($type == 'approver') {
+    if($type == 'approver' && email_alerts('reminderToApprover') == 1) {
         $owner = User::where('clockify_id', $data->user_id)->first();
         $approver = Approver::select('approver_id')->where('user_id', $owner->clockify_id)->first();
         //$users = User::whereIn('role', ['user'])->orWhereIn('clockify_id', $approver)->get();
@@ -510,7 +516,7 @@ function reminderMail($type, $data)
     }
     /** end send mail to approver section */
     /** start send mail to employee section */
-    elseif($type == 'employee') {
+    elseif($type == 'employee' && email_alerts('reminderToEmployee') == 1) {
         $user = User::where('clockify_id', $data->clockify_id)->first();
         $owner = $user;
         $email = $user->email;

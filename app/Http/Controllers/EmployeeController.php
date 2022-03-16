@@ -233,21 +233,81 @@ class EmployeeController extends Controller
                     return response()->json(['success' => false, 'type' => '1', 'message' => 'Leave request already exists between date from and date to.'], 200);
                 }
 
-                if($request->exception != '1') {
-                    //leave type balance validation
-                    $total_leave = LeaveBalance::where('user_id', auth()->user()->clockify_id)->where('leave_type_id',$request->leave_type_id)->sum('balance');
-                    if($request->id){
+                //leave type balance validation
+                $leave_type=LeaveType::where('id',$request->leave_type_id)->where('balance','1')->first();
+                if($leave_type) {
+                    //month balance validation
+                    if($request->leave_type_id == '1') {
+                        $date_from_start = Carbon::parse($request->date_from)->startOfMonth();
+                        $date_from_end = Carbon::parse($request->date_from)->endOfMonth();
+                        $date_to_start = Carbon::parse($request->date_to)->startOfMonth();
+                        $date_to_end = Carbon::parse($request->date_to)->endOfMonth();
+                        if($date_from_start == $date_to_start && $date_from_end == $date_to_end) {
+                            if ($request->id) {
+                                $month_leave = leave_count($request->user_id, $date_from_start, $date_from_end, $request->id, $request->leave_type_id);
+                            } else {
+                                $month_leave = leave_count($request->user_id, $date_from_start, $date_from_end, null, $request->leave_type_id);
+                            }
+                            $month_leave_p = auth()->user()->paid_holidays;
+                            $month_leave_t = $month_leave + Carbon::parse($request->date_from)->diffInDays($request->date_to) + 1;
+                            if ($month_leave_t > $month_leave_p) {
+                                if ($month_leave >= $month_leave_p) {
+                                    return response()->json(['success' => false, 'message' => 'Monthly accrued paid leave already used of '.Carbon::parse($date_from_start)->format('M'). ' month, Please select another one.'], 200);
+                                } else {
+                                    $mle = $month_leave_p - $month_leave;
+                                    return response()->json(['success' => false, 'message' => 'Monthly accrued paid leave remaining ' . $mle . ' only of '.Carbon::parse($date_from_start)->format('M'). ' month, Please edit or choose another leave type.'], 200);
+                                }
+                            }
+                        } else {
+                            if ($request->id) {
+                                $month_leave = leave_count($request->user_id, $date_from_start, $date_from_end, $request->id, $request->leave_type_id);
+                            } else {
+                                $month_leave = leave_count($request->user_id, $date_from_start, $date_from_end, null, $request->leave_type_id);
+                            }
+                            $month_leave_p = auth()->user()->paid_holidays;
+                            $month_leave_t = $month_leave + Carbon::parse($request->date_from)->diffInDays($date_from_end) + 1;
+                            if ($month_leave_t > $month_leave_p) {
+                                if ($month_leave >= $month_leave_p) {
+                                    return response()->json(['success' => false, 'message' => 'Monthly accrued paid leave already used of '.Carbon::parse($date_from_start)->format('M'). ' month, Please select another one.'], 200);
+                                } else {
+                                    $mle = $month_leave_p - $month_leave;
+                                    return response()->json(['success' => false, 'message' => 'Monthly accrued paid leave remaining ' . $mle . ' only of '.Carbon::parse($date_from_start)->format('M'). ' month, Please edit or choose another leave type.'], 200);
+                                }
+                            }
+
+                            if ($request->id) {
+                                $month_leave = leave_count($request->user_id, $date_to_start, $date_to_end, $request->id, $request->leave_type_id);
+                            } else {
+                                $month_leave = leave_count($request->user_id, $date_to_start, $date_to_end, null, $request->leave_type_id);
+                            }
+                            $month_leave_p = auth()->user()->paid_holidays;
+                            $month_leave_t = $month_leave + Carbon::parse($date_to_start)->diffInDays($request->date_to) + 1;
+                            if ($month_leave_t > $month_leave_p) {
+                                if ($month_leave >= $month_leave_p) {
+                                    return response()->json(['success' => false, 'message' => 'Monthly accrued paid leave already used of '.Carbon::parse($date_to_start)->format('M'). ' month, Please select another one.'], 200);
+                                } else {
+                                    $mle = $month_leave_p - $month_leave;
+                                    return response()->json(['success' => false, 'message' => 'Monthly accrued paid leave remaining ' . $mle . ' only of '.Carbon::parse($date_to_start)->format('M'). ' month, Please edit or choose another leave type.'], 200);
+                                }
+                            }
+                        }
+                    }
+
+                    //year balance validation
+                    $total_leave = LeaveBalance::where('user_id', auth()->user()->clockify_id)
+                    ->where('leave_type_id',$request->leave_type_id)->sum('balance');
+                    if ($request->id) {
                         $year_leave = leave_count($request->user_id, startOfYear(), endOfYear(), $request->id, $request->leave_type_id);
                     } else {
                         $year_leave = leave_count($request->user_id, startOfYear(), endOfYear(), null, $request->leave_type_id);
                     }
-                    $year_leave_t=$year_leave+Carbon::parse($request->date_from)->diffInDays($request->date_to)+1;
-                    if($year_leave_t > $total_leave) {
-                        if($year_leave >= $total_leave) {
-                            return response()->json(['success' => false, 'type' => '2', 'message' => 'This leave type balance already used, Please select another one or submit with Exception.'], 200);
+                    $year_leave_t = $year_leave + Carbon::parse($request->date_from)->diffInDays($request->date_to) + 1;
+                    if ($year_leave_t > $total_leave) {
+                        if ($year_leave >= $total_leave) {
+                            return response()->json(['success' => false, 'message' => 'This leave type balance already used, Please select another one.'], 200);
                         } else {
-                            $le=$total_leave-$year_leave;
-                            return response()->json(['success' => false, 'type' => '2', 'message' => 'This leave type balance remaining '.$le.' only, Please edit or submit with Exception'], 200);
+                            $le = $total_leave - $year_leave;
+                            return response()->json(['success' => false, 'message' => 'This leave type balance remaining ' . $le . ' only, Please edit or choose another leave type.'], 200);
                         }
                     }
                 }
@@ -305,7 +365,7 @@ class EmployeeController extends Controller
             }
             return response()->json(['success' => false, 'type' => '1', 'message' => 'Request leave failed.'], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'type' => '1', 'message' => 'Something went wrong.'], 200);
+            return response()->json(['success' => false, 'type' => '1', 'message' => $e->getMessage()]);//'Something went wrong.'], 200);
         }
     }
 
@@ -861,7 +921,7 @@ class EmployeeController extends Controller
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function($query){
-                    return "<a data-employee_id='".$query->employee_id."' data-leave_balances='".$query->leaves_balances."' data-id='".$query->id."' data-name='".$query->name."' data-email='".$query->email."' data-type='".$query->type."' data-status='".$query->status."' class='mx-1 rowedit' data-bs-toggle='modal' data-bs-target='#modal-create' data-bs-toggle='tooltip' data-bs-original-title='Edit'>
+                    return "<a data-paid_holidays='".$query->paid_holidays."' data-employee_id='".$query->employee_id."' data-leave_balances='".$query->leaves_balances."' data-id='".$query->id."' data-name='".$query->name."' data-email='".$query->email."' data-type='".$query->type."' data-status='".$query->status."' class='mx-1 rowedit' data-bs-toggle='modal' data-bs-target='#modal-create' data-bs-toggle='tooltip' data-bs-original-title='Edit'>
                         <i class='fas fa-edit text-primary'></i>
                     </a>
                     <a href='".route('employees.show',['employee'=>$query->clockify_id])."' data-bs-toggle='tooltip' data-bs-original-title='View'>
@@ -918,7 +978,7 @@ class EmployeeController extends Controller
             if ($validator->fails()) {
                 return response()->json(['success' => false, 'errors' => $validator->getMessageBag(), 'message' => 'Something went wrong.'], 422);
             }
-            $input = $request->only('employee_id', 'name', 'email', 'status', 'type');
+            $input = $request->only('employee_id', 'name', 'email', 'status', 'type', 'paid_holidays');
             if($request->password) {
                 $input['password']=Hash::make($request->password);
             }

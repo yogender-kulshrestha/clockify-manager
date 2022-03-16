@@ -155,25 +155,37 @@
                             <thead class="thead-light text-uppercase text-secondary text-xs font-weight-bolder opacity-7">
                             <tr>
                                 <td></td>
-                                <td>Earned</td>
-                                <td>Used</td>
-                                <td>Available</td>
+                                <td>TOTAL</td>
+                                <td>ACCRUED</td>
+                                <td>USED</td>
+                                <td>AVAILABLE</td>
                             </tr>
                             </thead>
                             <tbody class="thead-light text-uppercase text-secondary text-xs font-weight-bolder opacity-7">
                             @foreach(auth()->user()->leave_balances as $balance)
-                                @php
-                                    $leave = leave_count(auth()->user()->clockify_id, startOfYear(), endOfYear(), null, $balance->leave_type->id);
-                                    $available = $balance->balance-$leave;
-                                    $available = ($available > 0) ? $available : 0;
-                                @endphp
+                                @if($balance->leave_type->id == '1')
+                                    @php
+                                        $leave = leave_count(auth()->user()->clockify_id, startOfMonth(), endOfMonth(), null, $balance->leave_type->id);
+                                        $available = auth()->user()->paid_holidays-$leave;
+                                        $available = ($available > 0) ? $available : 0;
+                                        $paid_holidays = auth()->user()->paid_holidays;
+                                    @endphp
+                                @else
+                                    @php
+                                        $leave = leave_count(auth()->user()->clockify_id, startOfYear(), endOfYear(), null, $balance->leave_type->id);
+                                        $available = $balance->balance-$leave;
+                                        $available = ($available > 0) ? $available : 0;
+                                        $paid_holidays = '-';
+                                    @endphp
+                                @endif
                                 @if($balance->leave_type->balance == 1)
-                                <tr>
-                                    <td>{{ $balance->leave_type->name ?? '' }}</td>
-                                    <td>{{ $balance->balance ?? 0 }}</td>
-                                    <td>{{ $leave ?? 0 }}</td>
-                                    <td>{{ $available ?? 0 }}</td>
-                                </tr>
+                                    <tr>
+                                        <td>{{ $balance->leave_type->name ?? '' }}</td>
+                                        <td>{{ $balance->balance ?? 0 }}</td>
+                                        <td>{{ $paid_holidays ?? '-' }}</td>
+                                        <td>{{ $leave ?? 0 }}</td>
+                                        <td>{{ $available ?? 0 }}</td>
+                                    </tr>
                                 @endif
                             @endforeach
                             </tbody>
@@ -198,6 +210,8 @@
         $(document).ready(function (){
             $('#date_from').attr('min', new Date($('#date_from').val()).toISOString().split('T')[0]);
             $('#date_to').attr('min', new Date($('#date_from').val()).toISOString().split('T')[0]);
+            $('#date_from').attr('max', new Date('{{Carbon\Carbon::parse(endOfYear())}}').toISOString().split('T')[0]);
+            $('#date_to').attr('max', new Date('{{Carbon\Carbon::parse(endOfYear())}}').toISOString().split('T')[0]);
 
             $("#date_from").on('change', function () {
                 var minDate = new Date($(this).val()).toISOString().split('T')[0];

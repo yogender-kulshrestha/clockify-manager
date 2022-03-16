@@ -135,6 +135,20 @@
                                     <td>{!! $row->employee_remarks !!}</td>
                                     <td>{{$row->approver_remarks}}</td>
                                 </tr>
+                                <tr>
+                                    <td colspan="6" style="@if($is_holiday > 0) background-color: rgba(0,255,0,0.3); @elseif($is_leave > 0) background-color: rgba(255,255,0,0.5); @elseif($row->exception == 1 && empty($row->flags)) background-color: rgba(1,0,0,0.2); @elseif($row->exception == 1) background-color: rgba(255,0,0,0.3); @endif">
+                                        <table>
+                                            <tr>
+                                                <td>{{$row->date}}</td>
+                                                <td>{!! $row->flags !!}</td>
+                                                <td>{{$ot_hours}}:{{$ot_minutes}}</td>
+                                                <td>{{$net_hours2}}:{{$net_minutes}}</td>
+                                                <td>{!! $row->employee_remarks !!}</td>
+                                                <td>{{$row->approver_remarks}}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
                             @endforeach
                             </tbody>
                         </table>

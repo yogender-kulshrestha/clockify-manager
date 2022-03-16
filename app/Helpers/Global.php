@@ -137,11 +137,11 @@ function leave_description($leave_id) {
     $leave = Leave::find($leave_id);
     if($leave) {
         if($leave->user_id == auth()->user()->clockify_id) { //if your leave
-            $date = ($leave->date_from == $leave->date_to) ? Carbon::parse($leave->date_from)->format('M d Y') : Carbon::parse($leave->date_from)->format('M d').'-'.Carbon::parse($leave->date_to)->format('d Y');
+            $date = ($leave->date_from == $leave->date_to) ? Carbon::parse($leave->date_from)->format('M d Y') : Carbon::parse($leave->date_from)->format('M d').'-'.Carbon::parse($leave->date_to)->format('M d Y');
             return 'Leave Request '.$date;
         } else { //if leave for approval
             $user = $leave->user->name;
-            $date = ($leave->date_from == $leave->date_to) ? Carbon::parse($leave->date_from)->format('M d Y') : Carbon::parse($leave->date_from)->format('M d').'-'.Carbon::parse($leave->date_to)->format('d Y');
+            $date = ($leave->date_from == $leave->date_to) ? Carbon::parse($leave->date_from)->format('M d Y') : Carbon::parse($leave->date_from)->format('M d').'-'.Carbon::parse($leave->date_to)->format('M d Y');
             return '['.$user.'] Leave Request '.$date;
         }
     }
@@ -548,6 +548,20 @@ function startOfYear(){
  */
 function endOfYear(){
     return Carbon::now()->endOfYear();
+}
+
+/**
+ * get start date of the current month
+ */
+function startOfMonth(){
+    return Carbon::now()->startOfMonth();
+}
+
+/**
+ * get last date of the current month
+ */
+function endOfMonth(){
+    return Carbon::now()->endOfMonth();
 }
 
 /**

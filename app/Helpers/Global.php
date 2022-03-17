@@ -9,6 +9,8 @@
 |
 */
 
+use App\Models\Record;
+use App\Models\TimeCard;
 use App\Models\TimeSheet;
 use Carbon\CarbonInterval;
 use Carbon\Carbon;
@@ -660,4 +662,109 @@ function email_alerts($type)
 {
     $find = EmailAlert::where('type',$type)->first();
     return $find->status ?? 0;
+}
+
+function time_entries($date, $user_id)
+{
+    $start_time = Carbon::parse($date)->startOfDay();
+    $end_time = Carbon::parse($date)->endOfDay();
+    return TimeSheet::query()->where('start_time', '>=', $start_time)
+        ->where('start_time', '<=', $end_time)
+        ->where('user_id', $user_id)->orderBy('start_time')->get();
+}
+
+function time_entries_hour($week, $user_id)
+{
+    $seletedWeek = explode('-',Str::replace('W','',$week));
+    $date = Carbon::now();
+    $date->setISODate($seletedWeek[0],$seletedWeek[1]);
+    $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
+    $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
+
+    $net_seconds = 0;
+    $ot_seconds = 0;
+    $leave_seconds = 0;
+    $holiday_seconds = 0;
+    $unpaid_seconds = 0;
+    $short_seconds = 0;
+
+    $dt = Carbon::now();
+    $rows = TimeCard::where('user_id', $user_id)->where('week', $week)->get();
+    foreach ($rows as $key=>$row) {
+        $is_holiday = is_holiday($row->date);
+        $is_leave = leave_count($row->user_id, $row->date, $row->date, null, null, null);
+
+        if($is_holiday > 0 || $is_leave > 0) {
+            $ot_seconds += $row->net_hours;
+            $net_seconds += $row->net_hours;
+            $day_second = $dt->diffInSeconds($dt->copy()->addHours(setting('day_working_hours')));
+            if($row->net_hours < $day_second) {
+                $is_seconds = $day_second-$row->net_hours;
+                if($is_leave > 0) {
+                    $leave_seconds += $is_seconds;
+                } elseif($is_holiday > 0) {
+                    $holiday_seconds += $is_seconds;
+                }
+            }
+        } else {
+            $ot_seconds += $row->ot_hours;
+            $net_seconds += $row->net_hours;
+        }
+
+        $short_seconds += $row->short_hours;
+        $unpaid_seconds += $row->unpaid_hours;
+    }
+
+    $t_days = $dt->diffInHours($dt->copy()->addSeconds($net_seconds)->addSeconds($holiday_seconds)->addSeconds($leave_seconds));
+    $th = $dt->diffInMinutes($dt->copy()->subHours($t_days)->addSeconds($net_seconds)->addSeconds($holiday_seconds)->addSeconds($leave_seconds));
+    $td = $t_days.':'.$th;
+    $n_days = $dt->diffInHours($dt->copy()->addSeconds($net_seconds));
+    $nh = $dt->diffInMinutes($dt->copy()->subHours($n_days)->addSeconds($net_seconds));
+    $nd = $n_days.':'.$nh;
+    $o_days = $dt->diffInHours($dt->copy()->addSeconds($ot_seconds));
+    $oh = $dt->diffInMinutes($dt->copy()->subHours($o_days)->addSeconds($ot_seconds));
+    $od = $o_days.':'.$oh;
+    $h_days = $dt->diffInHours($dt->copy()->addSeconds($holiday_seconds));
+    $hh = $dt->diffInMinutes($dt->copy()->subHours($h_days)->addSeconds($holiday_seconds));
+    $hd = $h_days.':'.$hh;
+    $s_days = $dt->diffInHours($dt->copy()->addSeconds($short_seconds));
+    $sh = $dt->diffInMinutes($dt->copy()->subHours($s_days)->addSeconds($short_seconds));
+    $sd = $s_days.':'.$sh;
+    $u_days = $dt->diffInHours($dt->copy()->addSeconds($unpaid_seconds));
+    $uh = $dt->diffInMinutes($dt->copy()->subHours($u_days)->addSeconds($unpaid_seconds));
+    $ud = $u_days.':'.$uh;
+    $l_days = $dt->diffInHours($dt->copy()->addSeconds($leave_seconds));
+    $lh = $dt->diffInMinutes($dt->copy()->subHours($l_days)->addSeconds($leave_seconds));
+    $ld = $l_days.':'.$lh;
+    $nl_days = $dt->diffInHours($dt->copy()->addHours(leave_hours($user_id, $startDate, $endDate, 'NotApproved')));
+    $nlh = $dt->diffInMinutes($dt->copy()->subHours($nl_days)->addHours(leave_hours($user_id, $startDate, $endDate, 'NotApproved')));
+    $nld = $nl_days.':'.$nlh;
+    $data = [
+        'total_hours' => $td,
+        'net_hours' => $nd,
+        'ot_hours' => $od,
+        'holiday_hours' => $hd,
+        'short_hours' => $sd,
+        'unpaid_hours' => $ud,
+        'leave_hours' => $ld,
+        'nleave_hours' => $nld,
+    ];
+
+    return $data;
+}
+
+function minutes_to_float_hours($minutes=0)
+{
+    $m=0;
+    $minutes = intval($minutes);
+    if($minutes >= 8 && $minutes < 23) {
+        $m = 0.25;
+    } elseif($minutes >= 23 && $minutes < 38) {
+        $m = 0.5;
+    } elseif($minutes >= 38 && $minutes < 53) {
+        $m = 0.75;
+    } elseif ($minutes >= 53) {
+        $m = 1;
+    }
+    return floatval($m);
 }

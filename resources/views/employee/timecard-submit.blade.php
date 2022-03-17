@@ -62,33 +62,33 @@
                                     <tbody class="">
                                     <tr class="border-bottom">
                                         <td>Total Hours</td>
-                                        <td>{{$leave_hours+$net_hours+$holiday_hours ?? '0'}}</td>
+                                        <td>{{$hours['total_hours'] ?? '0:0'}}</td>
                                     </tr>
                                     <tr class="border-bottom">
                                         <td>Net Hours</td>
-                                        <td>{{$net_hours ?? '0'}}</td>
+                                        <td>{{$hours['net_hours'] ?? '0:0'}}</td>
                                     </tr>
                                     <tr class="border-bottom">
                                         <td>Leave Hours</td>
-                                        <td>{{$leave_hours ?? '0'}}</td>
+                                        <td>{{$hours['leave_hours'] ?? '0:0'}}</td>
                                     </tr>
-                                    @if($nleave_hours > 0)
-                                    <tr class="border-bottom">
-                                        <td>Unapproved <br/>Leave Hours</td>
-                                        <td>{{$nleave_hours ?? '0'}}</td>
-                                    </tr>
+                                    @if($hours['nleave_hours'] > '0:0')
+                                        <tr class="border-bottom">
+                                            <td>Unapproved <br/>Leave Hours</td>
+                                            <td>{{$hours['nleave_hours'] ?? '0'}}</td>
+                                        </tr>
                                     @endif
                                     <tr class="border-bottom">
                                         <td>Holiday Hours</td>
-                                        <td>{{$holiday_hours ?? '0'}}</td>
+                                        <td>{{$hours['holiday_hours'] ?? '0:0'}}</td>
                                     </tr>
                                     <tr class="border-bottom d-none">
                                         <td>Short Hours</td>
-                                        <td>{{$short_hours ?? '0'}}</td>
+                                        <td>{{$hours['short_hours'] ?? '0:0'}}</td>
                                     </tr>
                                     <tr>
                                         <td>Unpaid Hours</td>
-                                        <td>{{$unpaid_hours ?? '0'}}</td>
+                                        <td>{{$hours['unpaid_hours'] ?? '0:0'}}</td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -101,75 +101,159 @@
                         <h5>Name :- {{auth()->user()->name ?? ''}}</h5>
                         <h5>Date &nbsp; :- {{\Carbon\Carbon::parse($startDate)->format('d-M-Y')}} - {{\Carbon\Carbon::parse($endDate)->format('d-M-Y')}}</h5>
                     </div>
-                    <div class="table-responsive p-3">
-                        <table class="table table-flush" id="datatable">
-                            <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                            <tr>
-                                <td>Date</td>
-                                <td>Flags</td>
-                                <td>OT Hours</td>
-                                <td>Net Hours</td>
-                                <td>Employee Remarks</td>
-                                <td>Approver Remarks</td>
-                            </tr>
-                            </thead>
-                            <tbody class="text-xs">
-                            @foreach($rows as $row)
+                    <div class="accordion-1 p-3">
+                        <div class="accordion" id="accordionRental">
+                            @foreach($rows as $key=>$row)
                                 @php
-                                    $dt = \Carbon\Carbon::now();
-                                    $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($row->ot_hours));
-                                    $ot_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->ot_hours)->subHours($ot_hours));
-                                    $net_hours2 = $dt->diffInHours($dt->copy()->addSeconds($row->net_hours));
-                                    $net_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->net_hours)->subHours($net_hours2));
                                     $is_holiday = is_holiday($row->date);
                                     $is_leave = leave_count($row->user_id, $row->date, $row->date, null, null, null);
+                                    $dt = Carbon\Carbon::now();
+                                    $leave_hours = '0:0';
+                                    $holiday_hours = '0:0';
+                                    if($is_holiday > 0 || $is_leave > 0) {
+                                        $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($row->net_hours));
+                                        $ot_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->net_hours)->subHours($ot_hours));
+                                        $total_hours =$net_hours = $ot_hours;
+                                        $total_minutes = $net_minutes = $ot_minutes;
+                                        if($ot_hours < setting('day_working_hours')) {
+                                            $total_hours = $dt->diffInHours($dt->copy()->addHours(setting('day_working_hours')));
+                                            $total_minutes = $dt->diffInMinutes($dt->copy()->addHours(setting('day_working_hours'))->subHours($total_hours));
+                                            $is_hours = $dt->diffInHours($dt->copy()->addHours(setting('day_working_hours'))->subHours($ot_hours)->subMinutes($ot_minutes));
+                                            $is_minutes = $dt->diffInMinutes($dt->copy()->addHours(setting('day_working_hours'))->subHours($ot_hours)->subMinutes($ot_minutes)->subHours($is_hours));
+                                            if($is_leave > 0) {
+                                                $leave_hours = $is_hours.':'.$is_minutes;
+                                            }
+                                            if($is_holiday > 0) {
+                                                $holiday_hours = $is_hours.':'.$is_minutes;
+                                            }
+                                        }
+                                    } else {
+                                        $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($row->ot_hours));
+                                        $ot_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->ot_hours)->subHours($ot_hours));
+                                        $net_hours = $dt->diffInHours($dt->copy()->addSeconds($row->net_hours));
+                                        $net_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->net_hours)->subHours($net_hours));
+                                        $total_hours = $net_hours;
+                                        $total_minutes = $net_minutes;
+                                    }
                                 @endphp
-                                <tr style="@if($is_holiday > 0) background-color: rgba(0,255,0,0.3); @elseif($is_leave > 0) background-color: rgba(255,255,0,0.5); @elseif($row->exception == 1 && empty($row->flags)) background-color: rgba(1,0,0,0.2); @elseif($row->exception == 1) background-color: rgba(255,0,0,0.3); @endif">
-                                    <td>{{$row->date}}</td>
-                                    <td>{!! $row->flags !!}</td>
-                                    <td>{{$ot_hours}}:{{$ot_minutes}}</td>
-                                    <td>{{$net_hours2}}:{{$net_minutes}}</td>
-                                    <td>{!! $row->employee_remarks !!}</td>
-                                    <td>{{$row->approver_remarks}}</td>
-                                </tr>
-                            @endforeach
-                            </tbody>
-                        </table>
-                        <div class="row">
-                            <div class="col-md-4">
-                                <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; Request Leave </button>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="text-center">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <form id="add_form" method="POST" action="{{route('employee.timecard.submit', ['week' => $week])}}">
-                                                    @csrf
-                                                    <input type="hidden" name="start_time" value="{{$startDate}}"/>
-                                                    <input type="hidden" name="end_time" value="{{$endDate}}"/>
-                                                    <input type="hidden" name="week" value="{{$week}}"/>
-                                                    <input type="hidden" name="user_id" value="{{auth()->user()->clockify_id}}"/>
-                                                    <input type="hidden" name="status" id="status" value="Submitted"/>
-                                                    <input type="submit" value="Submit Timecard" id="submit_button" class="btn btn-success btn-sm"/>
-                                                </form>
+                                <div class="accordion-item mb-3" style="@if($is_holiday > 0) background-color: rgba(0,255,0,0.3); @elseif($is_leave > 0) background-color: rgba(255,255,0,0.5); @elseif($row->exception == 1 && empty($row->flags)) background-color: rgba(1,0,0,0.2); @elseif($row->exception == 1) background-color: rgba(255,0,0,0.3); @else background-color: rgba(214,234,248,0.2); @endif">
+                                    <h5 class="accordion-header" id="heading{{$key}}">
+                                        <button class="accordion-button border-bottom font-weight-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{$key}}" aria-expanded="false" aria-controls="collapse{{$key}}">
+                                            <div class="table-responsive" style="width: -webkit-fill-available">
+                                                <table class="table table-flush" id="datatable">
+                                                    <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                                    <tr>
+                                                        <td>Date</td>
+                                                        <td>Flags</td>
+                                                        <td>OT Hours</td>
+                                                        <td>Net Hours</td>
+                                                        <td>Leave Hours</td>
+                                                        <td>Holiday Hours</td>
+                                                        <td>Total Hours</td>
+                                                        <td>Employee Remarks</td>
+                                                        <td>Approver Remarks</td>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody class="text-xs">
+                                                    <tr>
+                                                        <td>{{$row->date}}</td>
+                                                        <td>{!! $row->flags !!}</td>
+                                                        <td>{{$ot_hours}}:{{$ot_minutes}}</td>
+                                                        <td>{{$net_hours}}:{{$net_minutes}}</td>
+                                                        <td>{{$leave_hours}}</td>
+                                                        <td>{{$holiday_hours}}</td>
+                                                        <td>{{$total_hours}}:{{$total_minutes}}</td>
+                                                        <td>{!! $row->employee_remarks !!}</td>
+                                                        <td>{{$row->approver_remarks}}</td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
                                             </div>
-                                            <div class="col-md-6">
-                                                <form id="add_form3" method="POST" action="{{route('employee.timecard.submit', ['week' => $week])}}">
-                                                    @csrf
-                                                    <input type="hidden" name="start_time" value="{{$startDate}}"/>
-                                                    <input type="hidden" name="end_time" value="{{$endDate}}"/>
-                                                    <input type="hidden" name="week" value="{{$week}}"/>
-                                                    <input type="hidden" name="user_id" value="{{auth()->user()->clockify_id}}"/>
-                                                    <input type="hidden" name="status" id="status" value="Edit Later"/>
-                                                    <input type="submit" value="Save & Edit Later" id="submit_button2" class="btn btn-info btn-sm"/>
-                                                </form>
-                                            </div>
+                                            <i class="collapse-close fa fa-plus text-xs pt-1 position-absolute end-0 me-3" aria-hidden="true"></i>
+                                            <i class="collapse-open fa fa-minus text-xs pt-1 position-absolute end-0 me-3" aria-hidden="true"></i>
+                                        </button>
+                                    </h5>
+                                    <div id="collapse{{$key}}" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionRental" style="">
+                                        <div class="accordion-body text-sm opacity-8">
+                                            <table class="table table-flush" id="datatable">
+                                                <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                                <tr>
+                                                    <td>#</td>
+                                                    <td style="max-width: 40% !important;">Description</td>
+                                                    <td>Start Date</td>
+                                                    <td>Start Time</td>
+                                                    <td>End Date</td>
+                                                    <td>End Time</td>
+                                                    <td>Duration</td>
+                                                    <td>Error</td>
+                                                    <td>Remarks</td>
+                                                </tr>
+                                                </thead>
+                                                <tbody class="text-xs">
+                                                @php
+                                                    $time_entries = time_entries($row->date, $row->user_id);
+                                                @endphp
+                                                @if(count($time_entries)>0)
+                                                    @foreach($time_entries as $k=>$entry)
+                                                        <tr>
+                                                            <td>{{$k+1}}</td>
+                                                            <td>{{ $entry->description }}</td>
+                                                            <td>{{Carbon\Carbon::parse($entry->start_time)->format('d-M-Y')}}</td>
+                                                            <td>{{Carbon\Carbon::parse($entry->start_time)->format('h:i A')}}</td>
+                                                            <td>{{Carbon\Carbon::parse($entry->end_time)->format('d-M-Y')}}</td>
+                                                            <td>{{Carbon\Carbon::parse($entry->end_time)->format('h:i A')}}</td>
+                                                            <td>{{Carbon\CarbonInterval::seconds($entry->duration_time)->cascade()->forHumans()}}</td>
+                                                            <td>{!! $entry->error_eo.'<br/>'.$entry->error_ot.'<br/>'.$entry->error_bm.'<br/>'.$entry->error_wh.'<br/>'.$entry->error_le !!}</td>
+                                                            <td>{{ $entry->employee_remarks }}</td>
+                                                        </tr>
+                                                    @endforeach
+                                                @else
+                                                    <tr class="text-center">
+                                                        <td colspan="9">No Record</td>
+                                                    </tr>
+                                                @endif
+                                                </tbody>
+                                            </table>
                                         </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="row p-3">
+                        <div class="col-md-4">
+                            <button type="button" class="btn bg-gradient-primary btn-sm mb-0 rowadd" data-bs-toggle="modal" data-bs-target="#modal-create">+&nbsp; Request Leave </button>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <form id="add_form" method="POST" action="{{route('employee.timecard.submit', ['week' => $week])}}">
+                                            @csrf
+                                            <input type="hidden" name="start_time" value="{{$startDate}}"/>
+                                            <input type="hidden" name="end_time" value="{{$endDate}}"/>
+                                            <input type="hidden" name="week" value="{{$week}}"/>
+                                            <input type="hidden" name="user_id" value="{{auth()->user()->clockify_id}}"/>
+                                            <input type="hidden" name="status" id="status" value="Submitted"/>
+                                            <input type="submit" value="Submit Timecard" id="submit_button" class="btn btn-success btn-sm"/>
+                                        </form>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <form id="add_form3" method="POST" action="{{route('employee.timecard.submit', ['week' => $week])}}">
+                                            @csrf
+                                            <input type="hidden" name="start_time" value="{{$startDate}}"/>
+                                            <input type="hidden" name="end_time" value="{{$endDate}}"/>
+                                            <input type="hidden" name="week" value="{{$week}}"/>
+                                            <input type="hidden" name="user_id" value="{{auth()->user()->clockify_id}}"/>
+                                            <input type="hidden" name="status" id="status" value="Edit Later"/>
+                                            <input type="submit" value="Save & Edit Later" id="submit_button2" class="btn btn-info btn-sm"/>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <a href="{{route('employee.timecard', ['week' => $week])}}" class="btn bg-gradient-primary btn-sm mb-0"> Back to Edit </a>
-                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{route('employee.timecard', ['week' => $week])}}" class="btn bg-gradient-primary btn-sm mb-0"> Back to Edit </a>
                         </div>
                     </div>
                 </div>
@@ -183,10 +267,10 @@
     <script src="{{asset('assets/js/plugins/datatables.js')}}"></script>
     <script>
         $(document).ready(function (){
-            var datatable = $('#datatable').DataTable({
+            /*var datatable = $('#datatable').DataTable({
                 dom: 'f',
                 'ordering': false,
-            });
+            });*/
 
             $('#add_form').submit(function (e) {
                 e.preventDefault();

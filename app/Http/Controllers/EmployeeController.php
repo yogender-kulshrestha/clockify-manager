@@ -621,7 +621,7 @@ class EmployeeController extends Controller
                 }
             }
             $ot_hours = 0;
-            $working_hours = (10*60)*60;
+            $working_hours = (setting('day_working_hours')*60)*60;
             if($net_hours > $working_hours) {
                 $ot_hours = $net_hours-$working_hours;
             }
@@ -660,22 +660,9 @@ class EmployeeController extends Controller
             $date->setISODate($seletedWeek[0],$seletedWeek[1]);
             $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
             $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
-
-            $dt = Carbon::now();
-            $net_hour = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('net_hours');
-            $ot_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('ot_hours');
-            $short_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('short_hours');
-            $unpaid_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('unpaid_hours');
-            $net_hours = $dt->diffInHours($dt->copy()->addSeconds($net_hour));
-            $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($ot_hours));
-            $short_hours = $dt->diffInHours($dt->copy()->addSeconds($short_hours));
-            $unpaid_hours = $dt->diffInHours($dt->copy()->addSeconds($unpaid_hours));
-            $leave_hours = leave_hours($user_id, $startDate, $endDate, 'Approved');
-            $nleave_hours = leave_hours($user_id, $startDate, $endDate, 'NotApproved');
-            $holiday_hours = holiday_hours($startDate, $endDate);
-            //$net_hours = $net_hours+$leave_hours;
             $leave_categories = LeaveType::all();
-            return view('employee.timecard-submit', compact('holiday_hours','leave_categories','week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours','leave_hours','nleave_hours'));
+            $hours = time_entries_hour($week, $user_id);
+            return view('employee.timecard-submit', compact('leave_categories','week', 'startDate', 'endDate', 'rows', 'hours'));
         }
         return redirect()->back()->withError('Please create timecard first.');
     }
@@ -742,21 +729,8 @@ class EmployeeController extends Controller
             $date->setISODate($seletedWeek[0],$seletedWeek[1]);
             $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
             $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
-
-            $dt = Carbon::now();
-            $net_hour = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('net_hours');
-            $ot_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('ot_hours');
-            $short_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('short_hours');
-            $unpaid_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('unpaid_hours');
-            $net_hours = $dt->diffInHours($dt->copy()->addSeconds($net_hour));
-            $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($ot_hours));
-            $short_hours = $dt->diffInHours($dt->copy()->addSeconds($short_hours));
-            $unpaid_hours = $dt->diffInHours($dt->copy()->addSeconds($unpaid_hours));
-            $leave_hours = leave_hours($user_id, $startDate, $endDate, 'Approved');
-            $nleave_hours = leave_hours($user_id, $startDate, $endDate, 'NotApproved');
-            $holiday_hours = holiday_hours($startDate, $endDate);
-            //$net_hours = $net_hours+$leave_hours;
-            return view('employee.timecard-view', compact('holiday_hours','data','week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours', 'leave_hours', 'nleave_hours'));
+            $hours = time_entries_hour($week, $user_id);
+            return view('employee.timecard-view', compact('data','week', 'startDate', 'endDate', 'rows', 'hours'));
         }
         return redirect()->to(route('employee.records'))->withError('Please create timecard first.');
     }
@@ -777,21 +751,8 @@ class EmployeeController extends Controller
             $date->setISODate($seletedWeek[0],$seletedWeek[1]);
             $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
             $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
-
-            $dt = Carbon::now();
-            $net_hour = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('net_hours');
-            $ot_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('ot_hours');
-            $short_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('short_hours');
-            $unpaid_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('unpaid_hours');
-            $net_hours = $dt->diffInHours($dt->copy()->addSeconds($net_hour));
-            $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($ot_hours));
-            $short_hours = $dt->diffInHours($dt->copy()->addSeconds($short_hours));
-            $unpaid_hours = $dt->diffInHours($dt->copy()->addSeconds($unpaid_hours));
-            $leave_hours = leave_hours($user_id, $startDate, $endDate, 'Approved');
-            $nleave_hours = leave_hours($user_id, $startDate, $endDate, 'NotApproved');
-            $holiday_hours = holiday_hours($startDate, $endDate);
-            //$net_hours = $net_hours+$leave_hours;
-            return view('employee.timecard-edit', compact('holiday_hours','data','week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours', 'leave_hours', 'nleave_hours'));
+            $hours = time_entries_hour($week, $user_id);
+            return view('employee.timecard-edit', compact('data','week', 'startDate', 'endDate', 'rows', 'hours'));
         }
         return redirect()->to(route('employee.records'))->withError('Record not found.');
     }
@@ -812,21 +773,8 @@ class EmployeeController extends Controller
             $date->setISODate($seletedWeek[0],$seletedWeek[1]);
             $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
             $endDate=$date->endOfWeek()->format('Y-m-d H:i:s');
-
-            $dt = Carbon::now();
-            $net_hour = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('net_hours');
-            $ot_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('ot_hours');
-            $short_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('short_hours');
-            $unpaid_hours = TimeCard::where('week', $week)->groupBy('week')->where('user_id', $user_id)->sum('unpaid_hours');
-            $net_hours = $dt->diffInHours($dt->copy()->addSeconds($net_hour));
-            $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($ot_hours));
-            $short_hours = $dt->diffInHours($dt->copy()->addSeconds($short_hours));
-            $unpaid_hours = $dt->diffInHours($dt->copy()->addSeconds($unpaid_hours));
-            $leave_hours = leave_hours($user_id, $startDate, $endDate, 'Approved');
-            $nleave_hours = leave_hours($user_id, $startDate, $endDate, 'NotApproved');
-            $holiday_hours = holiday_hours($startDate, $endDate);
-            //$net_hours = $net_hours+$leave_hours;
-            return view('employee.timecard-review', compact('holiday_hours','data','week','startDate','endDate','rows', 'net_hours', 'ot_hours', 'short_hours', 'unpaid_hours', 'leave_hours', 'nleave_hours'));
+            $hours = time_entries_hour($week, $user_id);
+            return view('employee.timecard-review', compact('data','week','startDate', 'endDate', 'rows', 'hours'));
         }
         return redirect()->to(route('employee.records'))->withError('Please create timecard first.');
     }
@@ -1366,7 +1314,7 @@ class EmployeeController extends Controller
             $date2->setISODate($seletedWeek2[0],$seletedWeek2[1]);
             $endDate=$date2->endOfWeek()->format('Y-m-d H:i:s');
 
-            $users=User::where('role', 'user')->orderBy('id')->get();
+            $users=User::where('role', 'user')->where('status', 'active')->orderBy('id')->get();
             if($users->count() > 0) {
                 $timecard = [];
                 foreach ($users as $key=>$user) {
@@ -1378,14 +1326,54 @@ class EmployeeController extends Controller
                     $days = Carbon::parse($endDate)->diffInDays($startDate);
                     $newDate=$startDate;
                     for($i=0;$i<=$days;$i++) {
-                        $t = TimeCard::where('user_id', $user->clockify_id)->whereDate('date', $newDate)->first();
-                        if($t) {
-                            $netHours = CarbonInterval::seconds($t->net_hours)->cascade()->forHumans();
-                            $netHours = ($netHours == '1 second' || $netHours == '') ? '-' : $netHours;
+                        $row = TimeCard::where('user_id', $user->clockify_id)->whereDate('date', $newDate)->first();
+                        if($row) {
+                            $is_holiday = is_holiday($newDate);
+                            $is_leave = leave_count($row->user_id, $newDate, $newDate, null, null, null);
+                            $dt = Carbon::now();
+                            $leave_hours = '0';
+                            $holiday_hours = '0';
+                            if($is_holiday > 0 || $is_leave > 0) {
+                                $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($row->net_hours));
+                                $ot_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->net_hours)->subHours($ot_hours));
+                                $total_hours = $net_hours = $ot_hours;
+                                $total_minutes = $net_minutes = $ot_minutes;
+                                if($ot_hours < setting('day_working_hours')) {
+                                    $total_hours = $dt->diffInHours($dt->copy()->addHours(setting('day_working_hours')));
+                                    $total_minutes = $dt->diffInMinutes($dt->copy()->addHours(setting('day_working_hours'))->subHours($total_hours));
+                                    $is_hours = $dt->diffInHours($dt->copy()->addHours(setting('day_working_hours'))->subHours($ot_hours)->subMinutes($ot_minutes));
+                                    $is_minutes = $dt->diffInMinutes($dt->copy()->addHours(setting('day_working_hours'))->subHours($ot_hours)->subMinutes($ot_minutes)->subHours($is_hours));
+                                    if($is_leave > 0) {
+                                        $leave_hours = floatval($is_hours)+minutes_to_float_hours($is_minutes);
+                                    }
+                                    if($is_holiday > 0) {
+                                        $holiday_hours = floatval($is_hours)+minutes_to_float_hours($is_minutes);
+                                    }
+                                }
+                            } else {
+                                $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($row->ot_hours));
+                                $ot_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->ot_hours)->subHours($ot_hours));
+                                $net_hours = $dt->diffInHours($dt->copy()->addSeconds($row->net_hours));
+                                $net_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->net_hours)->subHours($net_hours));
+                                $total_hours = $net_hours;
+                                $total_minutes = $net_minutes;
+                            }
+                            //$netHours = CarbonInterval::seconds($row->net_hours)->cascade()->forHumans();
+                            //$netHours = ($netHours == '1 second' || $netHours == '') ? '-' : $netHours;
+                            $nh=floatval($net_hours)+minutes_to_float_hours($net_minutes);
+                            $th=floatval($total_hours)+minutes_to_float_hours($total_minutes);
+                            //$netHours = $nh.' | '.$leave_hours.' | '.$holiday_hours.' | '.$th;
                         } else {
-                            $netHours = '-';
+                            //$netHours = 0;
+                            $leave_hours=0;
+                            $holiday_hours=0;
+                            $nh=0;
+                            $th=0;
                         }
-                        $timecard[$key][Carbon::parse($newDate)->format('d-m-Y')] = $netHours;
+                        $timecard[$key][Carbon::parse($newDate)->format('d-m-Y').' - Net Hours'] = ($nh>0) ? $nh : '0';
+                        $timecard[$key][Carbon::parse($newDate)->format('d-m-Y').' - Leave Hours'] = ($leave_hours>0) ? $leave_hours : '0';
+                        $timecard[$key][Carbon::parse($newDate)->format('d-m-Y').' - Holiday Hours'] = ($holiday_hours>0) ? $holiday_hours : '0';
+                        $timecard[$key][Carbon::parse($newDate)->format('d-m-Y').' - Total Hours'] = ($th>0) ? $th : '0';
 
                         $newDate = Carbon::parse($newDate)->addDay();
                     }

@@ -466,6 +466,12 @@ class EmployeeController extends Controller
                 ->rawColumns(['error','status','action','start_date','start_time','end_date','end_time','time_duration','created_at'])
                 ->make(true);
         }
+        $find=Record::where('user_id',auth()->user()->clockify_id)->where('record_type', 'timecard')
+            ->where('record_type', 'timecard')->where('description', $week)
+            ->whereIn('status', ['Submitted','Approved','Resubmitted','Final Approved'])->count();
+        if($find > 0) {
+            return redirect()->to(route('employee.home'))->withError('This week timecard you already submitted.');
+        }
         $currentWeek=$week;
         $seletedWeek = explode('-',Str::replace('W','',$week));
         $date = Carbon::now();

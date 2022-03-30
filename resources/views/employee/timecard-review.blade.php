@@ -62,17 +62,17 @@
                                     <tbody class="">
                                     <tr class="border-bottom">
                                         <td>Total Hours</td>
-                                        <td>{{$hours['total_hours'] ?? '0:0'}}</td>
+                                        <td>{{$hours['total_hours'] ?? '0'}}</td>
                                     </tr>
                                     <tr class="border-bottom">
                                         <td>Net Hours</td>
-                                        <td>{{$hours['net_hours'] ?? '0:0'}}</td>
+                                        <td>{{$hours['net_hours'] ?? '0'}}</td>
                                     </tr>
                                     <tr class="border-bottom">
                                         <td>Leave Hours</td>
-                                        <td>{{$hours['leave_hours'] ?? '0:0'}}</td>
+                                        <td>{{$hours['leave_hours'] ?? '0'}}</td>
                                     </tr>
-                                    @if($hours['nleave_hours'] > '0:0')
+                                    @if($hours['nleave_hours'] > '0')
                                         <tr class="border-bottom">
                                             <td>Unapproved <br/>Leave Hours</td>
                                             <td>{{$hours['nleave_hours'] ?? '0'}}</td>
@@ -80,15 +80,15 @@
                                     @endif
                                     <tr class="border-bottom">
                                         <td>Holiday Hours</td>
-                                        <td>{{$hours['holiday_hours'] ?? '0:0'}}</td>
+                                        <td>{{$hours['holiday_hours'] ?? '0'}}</td>
                                     </tr>
                                     <tr class="border-bottom d-none">
                                         <td>Short Hours</td>
-                                        <td>{{$hours['short_hours'] ?? '0:0'}}</td>
+                                        <td>{{$hours['short_hours'] ?? '0'}}</td>
                                     </tr>
                                     <tr>
                                         <td>Unpaid Hours</td>
-                                        <td>{{$hours['unpaid_hours'] ?? '0:0'}}</td>
+                                        <td>{{$hours['unpaid_hours'] ?? '0'}}</td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -113,8 +113,8 @@
                                         $is_holiday = is_holiday($row->date);
                                         $is_leave = leave_count($row->user_id, $row->date, $row->date, null, null, null);
                                         $dt = Carbon\Carbon::now();
-                                        $leave_hours = '0:0';
-                                        $holiday_hours = '0:0';
+                                        $leave_hours = '0';
+                                        $holiday_hours = '0';
                                         if($is_holiday > 0 || $is_leave > 0) {
                                             $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($row->net_hours));
                                             $ot_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->net_hours)->subHours($ot_hours));
@@ -163,11 +163,11 @@
                                                         <tr>
                                                             <td>{{$row->date}}</td>
                                                             <td>{!! $row->flags !!}</td>
-                                                            <td>{{$ot_hours}}:{{$ot_minutes}}</td>
-                                                            <td>{{$net_hours}}:{{$net_minutes}}</td>
+                                                            <td>{{ $ot_hours+minutes_to_float_hours($ot_minutes) }}</td>
+                                                            <td>{{ $net_hours+minutes_to_float_hours($net_minutes) }}</td>
                                                             <td>{{$leave_hours}}</td>
                                                             <td>{{$holiday_hours}}</td>
-                                                            <td>{{$total_hours}}:{{$total_minutes}}</td>
+                                                            <td>{{ $total_hours+minutes_to_float_hours($total_minutes) }}</td>
                                                             <td>{!! $row->employee_remarks !!}</td>
                                                             <td>
                                                                 <input type="hidden" name="remarks[{{$key}}][id]" value="{{$row->id}}"/>

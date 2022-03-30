@@ -126,7 +126,7 @@ function my_employees() {
     if(auth()->user()->role == 'admin' || auth()->user()->role == 'hr') { //if admin or hr
         return User::with('leaves_balances')->where('role', 'user')->latest()->get();
     } elseif(auth()->user()->role == 'user') { //if approver
-        return User::with('leaves_balances')->where('role', 'user')->whereIn('id', Approver::select('user_id')->where('approver_id', auth()->user()->id)->get())->latest()->get();
+        return User::with('leaves_balances')->where('role', 'user')->whereIn('id', Approver::select('user_id')->where('approver_id', auth()->user()->clockify_id)->get())->latest()->get();
     } else {
         return [];
     }
@@ -447,8 +447,8 @@ function sendMail($type, $data)
             /** end sent mail to employee section */
 
             /** start sent mail to approver/hr section */
-            $owner = User::where('clockify_id', $data->user_id)->first();
-            $user = User::where('clockify_id', auth()->user()->clockify_id)->first();
+            $owner = User::where('clockify_id', $data->user_id)->where('status', 'active')->first();
+            $user = User::where('clockify_id', auth()->user()->clockify_id)->where('status', 'active')->first();
             $email = $user->email;
             $name = $user->name;
             if ($type == 'leaveRevise' && email_alerts('leaveReviseToApprover') == 1) { //leave revise and resubmit mail
@@ -703,7 +703,8 @@ function time_entries_hour($week, $user_id)
                 if($is_leave > 0) {
                     $leave_seconds += $is_seconds;
                 } elseif($is_holiday > 0) {
-                    $holiday_seconds += $is_seconds;
+                    //$holiday_seconds += $is_seconds;
+                    $holiday_seconds += $day_second;
                 }
             }
         } else {

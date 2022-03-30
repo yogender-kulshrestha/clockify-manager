@@ -124,7 +124,8 @@
                                                 $leave_hours = $is_hours+minutes_to_float_hours($is_minutes);
                                             }
                                             if($is_holiday > 0) {
-                                                $holiday_hours = $is_hours+minutes_to_float_hours($is_minutes);
+                                                $holiday_hours = $dt->diffInHours($dt->copy()->addHours(setting('day_working_hours')));//$is_hours+minutes_to_float_hours($is_minutes);
+                                                $total_hours = $net_hours+$holiday_hours;
                                             }
                                         }
                                     } else {

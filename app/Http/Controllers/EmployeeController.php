@@ -387,9 +387,15 @@ class EmployeeController extends Controller
      */
     public function reviewRequestLeave($id)
     {
-        $data = Leave::find($id);
+        $data = Leave::where('user_id', '!=', auth()->user()->clockify_id)->find($id);
         $leave_categories = LeaveType::all();
         if($data) {
+            if(auth()->user()->role == 'user') {
+                $approver=Approver::where('approver_id', auth()->user()->clockify_id)->where('user_id',$data->user_id)->count();
+                if($approver == 0) {
+                    return redirect()->to(route('employee.records'))->withError('Leave not found.');            
+                }
+            }
             return view('employee.leave-review', compact('data', 'leave_categories'));
         }
         abort(404);
@@ -401,7 +407,7 @@ class EmployeeController extends Controller
      */
     public function editRequestLeave($id)
     {
-        $data = Leave::find($id);
+        $data = Leave::where('user_id', auth()->user()->clockify_id)->find($id);
         $leave_categories = LeaveType::all();
         if($data) {
             $total_leave = LeaveType::sum('balance');
@@ -747,7 +753,7 @@ class EmployeeController extends Controller
      */
     public function editTimecard($id)
     {
-        $data = Record::where('record_type', 'timecard')->where('id', $id)->first();
+        $data = Record::where('user_id', auth()->user()->clockify_id)->where('record_type', 'timecard')->where('id', $id)->whereIn('status', ['Revise and Resubmit','Edit Later'])->first();
         if($data !== null) {
             $week=$data->description;
             $user_id=$data->user_id;
@@ -769,8 +775,14 @@ class EmployeeController extends Controller
      */
     public function reviewTimecard($id)
     {
-        $data = Record::where('record_type', 'timecard')->where('id', $id)->first();
+        $data = Record::where('user_id', '!=', auth()->user()->clockify_id)->where('record_type', 'timecard')->where('id', $id)->whereIn('status', ['Submitted','Resubmitted'])->first();
         if($data !== null) {
+            if(auth()->user()->role == 'user') {
+                $approver=Approver::where('approver_id', auth()->user()->clockify_id)->where('user_id',$data->user_id)->count();
+                if($approver == 0) {
+                    return redirect()->to(route('employee.records'))->withError('Timecard not found.');            
+                }
+            }
             $week=$data->description;
             $user_id=$data->user_id;
             $rows=TimeCard::where('user_id', $user_id)->where('week', $week)->get();
@@ -782,7 +794,7 @@ class EmployeeController extends Controller
             $hours = time_entries_hour($week, $user_id);
             return view('employee.timecard-review', compact('data','week','startDate', 'endDate', 'rows', 'hours'));
         }
-        return redirect()->to(route('employee.records'))->withError('Please create timecard first.');
+        return redirect()->to(route('employee.records'))->withError('Timecard not found.');
     }
 
     /**
@@ -956,7 +968,7 @@ class EmployeeController extends Controller
                     }
                 } else {
                     //$employee_id = employeeId($user->id);
-                    //User::where('id', $user->id)->update(['clockify_id' => $user->id, 'employee_id' => $employee_id]);
+                    User::where('id', $user->id)->update(['clockify_id' => $user->id]);
                     $leave_types = LeaveType::all();
                     foreach ($leave_types as  $lt) {
                         $lt_id = [

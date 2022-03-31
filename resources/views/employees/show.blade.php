@@ -98,7 +98,7 @@
                 <div class="card-body px-0 pb-0">
                     <div class="px-3 mt-lg-n6">
                         <h5>Name :- {{$data->name ?? ''}}</h5>
-                        <form action="{{ route('export.timesheet') }}" id="add_form" autocomplete="off" enctype="multipart/form-data">
+                        <form action="{{ route('export.timecard.all') }}" id="add_form" autocomplete="off" enctype="multipart/form-data">
                             @csrf
                             <input type="hidden" value="{{$data->clockify_id}}" name="user_id"/>
                         <div class="row">

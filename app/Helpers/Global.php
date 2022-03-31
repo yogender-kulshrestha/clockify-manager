@@ -85,6 +85,27 @@ function leave_count($user_id,$startDate,$endDate,$type=null,$leave_type_id=null
     return $leave;
 }
 
+function leave_type($user_id,$startDate,$endDate){
+    $query = DB::raw("*, (CASE WHEN (date_from >= '$startDate' AND date_to <= '$endDate') THEN datediff(date_to, date_from)+1
+    WHEN (date_from <= '$startDate' AND date_to >= '$endDate') THEN datediff('$endDate', '$startDate')+1
+    WHEN (date_from >= '$startDate' AND date_from <= '$endDate') THEN datediff('$endDate', date_from)+1
+    WHEN (date_to >= '$startDate' AND date_to <= '$endDate') THEN datediff(date_to, '$startDate')+1
+    ELSE '1' END) as leave_days");
+    $leaves = Leave::where('user_id', $user_id)->select($query)->where(function ($q) use($startDate, $endDate) {
+        $q->where(function ($q) use ($startDate, $endDate) {
+            $q->whereDate('date_from', '>=', $startDate)->whereDate('date_to', '<=', $endDate);
+        })->orWhere(function ($q) use ($startDate, $endDate) {
+            $q->whereDate('date_from', '<=', $startDate)->whereDate('date_to', '>=', $endDate);
+        })->orWhere(function ($q) use ($startDate, $endDate) {
+            $q->whereDate('date_from', '>=', $startDate)->whereDate('date_from', '<=', $endDate);
+        })->orWhere(function ($q) use ($startDate, $endDate) {
+            $q->whereDate('date_to', '>=', $startDate)->whereDate('date_to', '<=', $endDate);
+        });
+    });
+    $row=$leaves->first();
+    return $row->leave_type_id ?? '';
+}
+
 /**
  * calculation of total hours of leaves between to dates
  */
@@ -768,4 +789,80 @@ function minutes_to_float_hours($minutes=0)
         $m = 1;
     }
     return floatval($m);
+}
+
+function excelExport($startDate, $endDate, $user)
+{
+    $timecard = [];
+    /** start - @var $timecards for set timecard day wise entries */
+    $days = Carbon::parse($endDate)->diffInDays($startDate);
+    $newDate=$startDate;
+    $leave_types = \App\Models\LeaveType::query()->orderBy('id')->get();
+    $key=0;
+    $timecard[$key++]['Date'] = 'Hours worked';
+    $timecard[$key++]['Date'] = 'Holiday hours';
+    foreach ($leave_types as $lt) {
+        $timecard[$key++]['Date'] = $lt->name ? $lt->name.' hours' : 'Leave hours';
+    }
+    $timecard[$key++]['Date'] = 'Unpaid leave hours';
+    $timecard[$key]['Date'] = 'Total hours';
+    for($i=0;$i<=$days;$i++) {
+        $row = TimeCard::where('user_id', $user->clockify_id)->whereDate('date', $newDate)->first();
+        if($row) {
+            $is_holiday = is_holiday($newDate);
+            $is_leave = leave_count($row->user_id, $newDate, $newDate, null, null, null);
+            $leave_type = leave_type($row->user_id, $newDate, $newDate);
+            $dt = Carbon::now();
+            $leave_hours = '0';
+            $holiday_hours = '0';
+            if($is_holiday > 0 || $is_leave > 0) {
+                $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($row->net_hours));
+                $ot_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->net_hours)->subHours($ot_hours));
+                $total_hours = $net_hours = $ot_hours;
+                $total_minutes = $net_minutes = $ot_minutes;
+                if($ot_hours < setting('day_working_hours')) {
+                    $total_hours = $dt->diffInHours($dt->copy()->addHours(setting('day_working_hours')));
+                    $total_minutes = $dt->diffInMinutes($dt->copy()->addHours(setting('day_working_hours'))->subHours($total_hours));
+                    $is_hours = $dt->diffInHours($dt->copy()->addHours(setting('day_working_hours'))->subHours($ot_hours)->subMinutes($ot_minutes));
+                    $is_minutes = $dt->diffInMinutes($dt->copy()->addHours(setting('day_working_hours'))->subHours($ot_hours)->subMinutes($ot_minutes)->subHours($is_hours));
+                    if($is_leave > 0) {
+                        $leave_hours = floatval($is_hours)+minutes_to_float_hours($is_minutes);
+                    }
+                    if($is_holiday > 0) {
+                        $holiday_hours = setting('day_working_hours');//floatval($is_hours)+minutes_to_float_hours($is_minutes);
+                        $total_hours=$net_hours+$holiday_hours;
+                    }
+                }
+            } else {
+                $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($row->ot_hours));
+                $ot_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->ot_hours)->subHours($ot_hours));
+                $net_hours = $dt->diffInHours($dt->copy()->addSeconds($row->net_hours));
+                $net_minutes = $dt->diffInMinutes($dt->copy()->addSeconds($row->net_hours)->subHours($net_hours));
+                $total_hours = $net_hours;
+                $total_minutes = $net_minutes;
+            }
+            //$netHours = CarbonInterval::seconds($row->net_hours)->cascade()->forHumans();
+            //$netHours = ($netHours == '1 second' || $netHours == '') ? '-' : $netHours;
+            $nh=floatval($net_hours)+minutes_to_float_hours($net_minutes);
+            $th=floatval($total_hours)+minutes_to_float_hours($total_minutes);
+            //$netHours = $nh.' | '.$leave_hours.' | '.$holiday_hours.' | '.$th;
+        } else {
+            //$netHours = 0;
+            $leave_hours=0;
+            $holiday_hours=0;
+            $nh=0;
+            $th=0;
+        }
+        $keys=0;
+        $timecard[$keys++][Carbon::parse($newDate)->format('d-m-Y')] = ($nh>0) ? $nh : '0';
+        $timecard[$keys++][Carbon::parse($newDate)->format('d-m-Y').' - Holiday Hours'] = ($holiday_hours>0) ? $holiday_hours : '0';
+        foreach ($leave_types as $lt) {
+            $timecard[$keys++][Carbon::parse($newDate)->format('d-m-Y') . ' - ' . $lt->name] = ($leave_hours > 0 && $leave_type == $lt->id) ? $leave_hours : '0';
+        }
+        $timecard[$keys++][Carbon::parse($newDate)->format('d-m-Y').' - Unpaid Leave Hours'] = '0';
+        $timecard[$keys][Carbon::parse($newDate)->format('d-m-Y').' - Total Hours'] = ($th>0) ? $th : '0';
+
+        $newDate = Carbon::parse($newDate)->addDay();
+    }
+    return $timecard;
 }

@@ -40,93 +40,93 @@
 @section('content')
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <!-- Card header -->
-                <div class="card-header pb-0">
-                    <div class="d-lg-flex">
-                        <div>
-                            <h5 class="mb-0">All Records</h5>
-                            <p class="text-sm mb-0">
+            <form action="{{ route('export.timecard.all') }}" id="add_form" autocomplete="off" enctype="multipart/form-data">
+                @csrf
+                <div class="card">
+                    <!-- Card header -->
+                    <div class="card-header pb-0">
+                        <div class="d-lg-flex">
+                            <div>
+                                <h5 class="mb-0">All Records</h5>
+                                <p class="text-sm mb-0">
 
-                            </p>
-                        </div>
-                        <div class="ms-auto my-auto mt-lg-0 mt-4">
-                            <div class="ms-auto my-auto">
-                                {{--@if(auth()->user()->role != 'admin')--}}
-                                <a href="{{route('employee.home')}}" class="btn bg-gradient-primary btn-sm mb-0"> Return to Dashboard </a>
-                                {{--@endif--}}
+                                </p>
                             </div>
-                        </div>
-                        <div class="ms-auto my-auto mt-lg-0 mt-4">
-                            <div class="ms-auto my-auto">
-                                @if(auth()->user()->role == 'user')
-                                    <a href="javascript:" class="btn bg-gradient-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#leaveBalance"> View Leave Balance</a>
-                                @endif
-                                @if($users->count() > 0)
-                                <div class="form-group mt-2">
-                                    <select class="form-control" name="user_id" id="user_id" placeholder="Select an Employee">
-                                        <option value="" selected>-- Select an Employee --</option>
-                                        @if(auth()->user()->role != 'admin')
-                                        <option value="{{auth()->user()->clockify_id}}">{{auth()->user()->name}} (Self)</option>
-                                        @endif
-                                        @foreach($users as $user)
-                                        <option value="{{$user->clockify_id}}">{{$user->name}}</option>
-                                        @endforeach
-                                    </select>
+                            <div class="ms-auto my-auto mt-lg-0 mt-4">
+                                <div class="ms-auto my-auto">
+                                    {{--@if(auth()->user()->role != 'admin')--}}
+                                    <a href="{{route('employee.home')}}" class="btn bg-gradient-primary btn-sm mb-0"> Return to Dashboard </a>
+                                    {{--@endif--}}
                                 </div>
-                                @endif
                             </div>
+                            <div class="ms-auto my-auto mt-lg-0 mt-4">
+                                <div class="ms-auto my-auto">
+                                    @if(auth()->user()->role == 'user')
+                                        <a href="javascript:" class="btn bg-gradient-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#leaveBalance"> View Leave Balance</a>
+                                    @endif
+                                    @if($users->count() > 0)
+                                    <div class="form-group mt-2">
+                                        <select class="form-control" name="user_id" id="user_id" placeholder="Select an Employee">
+                                            <option value="" selected>-- Select an Employee --</option>
+                                            @if(auth()->user()->role != 'admin')
+                                            <option value="{{auth()->user()->clockify_id}}">{{auth()->user()->name}} (Self)</option>
+                                            @endif
+                                            @foreach($users as $user)
+                                            <option value="{{$user->clockify_id}}">{{$user->name}}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body px-0 pb-0">
+                        @if(auth()->user()->role == 'admin' || auth()->user()->role == 'hr')
+                        <div class="px-3">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="date_from">Week From <span class="text-danger">*</span></label>
+                                            <input required type="text" value="{{ old('week_from') }}" class="form-control" name="week_from" id="week_from" placeholder="Select Week From">
+                                            <span id="week_from_error" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="week_to">Week To <span class="text-danger">*</span></label>
+                                            <input required type="text" value="{{ old('week_to') }}" class="form-control" name="week_to" id="week_to" placeholder="Select Week To">
+                                            <span id="week_to_error" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <button type="submit" style="margin-top: 37px;" class="btn bg-gradient-primary btn-sm" id="add_button">Export</button>
+                                        </div>
+                                    </div>
+                                </div>
+                        </div>
+                        @endif
+                        <div class="table-responsive p-3">
+                            <table class="table table-flush" id="datatable">
+                                <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                <tr>
+                                    <td>#</td>
+                                    <td>Record Type</td>
+                                    <td>Modified Date</td>
+                                    <td>Description</td>
+                                    {{--<td>Remarks</td>--}}
+                                    <td>Status</td>
+                                    <td>Action</td>
+                                </tr>
+                                </thead>
+                                <tbody class="text-xs">
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-                <div class="card-body px-0 pb-0">
-                    @if(auth()->user()->role == 'admin' || auth()->user()->role == 'hr')
-                    <div class="px-3">
-                        <form action="{{ route('export.timecard.all') }}" id="add_form" autocomplete="off" enctype="multipart/form-data">
-                            @csrf
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="date_from">Week From <span class="text-danger">*</span></label>
-                                        <input required type="text" value="{{ old('week_from') }}" class="form-control" name="week_from" id="week_from" placeholder="Select Week From">
-                                        <span id="week_from_error" class="text-danger"></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="week_to">Week To <span class="text-danger">*</span></label>
-                                        <input required type="text" value="{{ old('week_to') }}" class="form-control" name="week_to" id="week_to" placeholder="Select Week To">
-                                        <span id="week_to_error" class="text-danger"></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <button type="submit" style="margin-top: 37px;" class="btn bg-gradient-primary btn-sm" id="add_button">Export</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    @endif
-                    <div class="table-responsive p-3">
-                        <table class="table table-flush" id="datatable">
-                            <thead class="thead-light text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                            <tr>
-                                <td>#</td>
-                                <td>Record Type</td>
-                                <td>Modified Date</td>
-                                <td>Description</td>
-                                {{--<td>Remarks</td>--}}
-                                <td>Status</td>
-                                <td>Action</td>
-                            </tr>
-                            </thead>
-                            <tbody class="text-xs">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\TimecardExport;
+use App\Exports\TimeSheetExport;
 use App\Mail\CommonMail;
 use App\Models\Approver;
 use App\Models\Leave;
@@ -393,7 +394,7 @@ class EmployeeController extends Controller
             if(auth()->user()->role == 'user') {
                 $approver=Approver::where('approver_id', auth()->user()->clockify_id)->where('user_id',$data->user_id)->count();
                 if($approver == 0) {
-                    return redirect()->to(route('employee.records'))->withError('Leave not found.');            
+                    return redirect()->to(route('employee.records'))->withError('Leave not found.');
                 }
             }
             return view('employee.leave-review', compact('data', 'leave_categories'));
@@ -780,7 +781,7 @@ class EmployeeController extends Controller
             if(auth()->user()->role == 'user') {
                 $approver=Approver::where('approver_id', auth()->user()->clockify_id)->where('user_id',$data->user_id)->count();
                 if($approver == 0) {
-                    return redirect()->to(route('employee.records'))->withError('Timecard not found.');            
+                    return redirect()->to(route('employee.records'))->withError('Timecard not found.');
                 }
             }
             $week=$data->description;
@@ -1310,6 +1311,7 @@ class EmployeeController extends Controller
             $rules = [
                 'week_from' => 'required',
                 'week_to' => 'required|after_or_equal:week_from',
+                'user_id' => 'nullable',
             ];
             $messages=[
                 'week_to.after_or_equal' => 'The week to must be after or equal to week from.',
@@ -1331,7 +1333,39 @@ class EmployeeController extends Controller
             $date2 = Carbon::now();
             $date2->setISODate($seletedWeek2[0],$seletedWeek2[1]);
             $endDate=$date2->endOfWeek()->format('Y-m-d H:i:s');
+            return Excel::download(new TimeSheetExport($startDate, $endDate, $request->user_id), 'Records-'.Carbon::now()->format('Ymd').'-timecard.xlsx');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->withError($e->getMessage());
+        }
+    }
 
+    public function exportTimecardRecordByDateold(Request $request)
+    {
+        try {
+            $rules = [
+                'week_from' => 'required',
+                'week_to' => 'required|after_or_equal:week_from',
+            ];
+            $messages=[
+                'week_to.after_or_equal' => 'The week to must be after or equal to week from.',
+            ];
+            $validator = Validator::make($request->all(), $rules, $messages);
+            if ($validator->fails()) {
+                $error = '';
+                if (!empty($validator->errors())) {
+                    $error = $validator->errors()->first();
+                }
+                return redirect()->back()->withInput()->withError($error);
+            }
+            $seletedWeek = explode('-',Str::replace('W','',$request->week_from));
+            $date = Carbon::now();
+            $date->setISODate($seletedWeek[0],$seletedWeek[1]);
+            $startDate=$date->startOfWeek()->format('Y-m-d H:i:s');
+
+            $seletedWeek2 = explode('-',Str::replace('W','',$request->week_to));
+            $date2 = Carbon::now();
+            $date2->setISODate($seletedWeek2[0],$seletedWeek2[1]);
+            $endDate=$date2->endOfWeek()->format('Y-m-d H:i:s');
             $users=User::where('role', 'user')->where('status', 'active')->orderBy('id')->get();
             if($users->count() > 0) {
                 $timecard = [];
@@ -1388,10 +1422,10 @@ class EmployeeController extends Controller
                             $nh=0;
                             $th=0;
                         }
-                        $timecard[$key][Carbon::parse($newDate)->format('d-m-Y').' - Net Hours'] = ($nh>0) ? $nh : '0';
-                        $timecard[$key][Carbon::parse($newDate)->format('d-m-Y').' - Leave Hours'] = ($leave_hours>0) ? $leave_hours : '0';
-                        $timecard[$key][Carbon::parse($newDate)->format('d-m-Y').' - Holiday Hours'] = ($holiday_hours>0) ? $holiday_hours : '0';
-                        $timecard[$key][Carbon::parse($newDate)->format('d-m-Y').' - Total Hours'] = ($th>0) ? $th : '0';
+                        $timecard[$key][Carbon::parse($newDate)->format('d-m-Y')] = ($nh>0) ? $nh : '0';
+                        //$timecard[$key][Carbon::parse($newDate)->format('d-m-Y').' - Leave Hours'] = ($leave_hours>0) ? $leave_hours : '0';
+                        //$timecard[$key][Carbon::parse($newDate)->format('d-m-Y').' - Holiday Hours'] = ($holiday_hours>0) ? $holiday_hours : '0';
+                        //$timecard[$key][Carbon::parse($newDate)->format('d-m-Y').' - Total Hours'] = ($th>0) ? $th : '0';
 
                         $newDate = Carbon::parse($newDate)->addDay();
                     }

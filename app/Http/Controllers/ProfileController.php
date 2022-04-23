@@ -86,20 +86,24 @@ class ProfileController extends Controller
     {
         try {
             $rules = [
-                'profile_image' => 'required|mimes:jpg,png,jpeg,gif',
+                'name' => 'required|min:3',
+                'profile_image' => 'nullable|mimes:jpg,png,jpeg,gif',
             ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
                 return response()->json(['success' => false, 'errors' => $validator->getMessageBag(), 'message' => 'Something went wrong.'], 422);
             }
 
-            $imageName = $request->profile_image->store('images/profile');
-            $image = asset('storage/'. $imageName);
-            $insert = User::where('id',auth()->user()->id)->update(['image' => $image]);
-            if ($insert) {
-                return response()->json(['success' => true, 'message' => 'Profile image updated successfully.'], 200);
+            $input = $request->only('name');
+            if($request->hasFile('profile_image')) {
+                $imageName = $request->profile_image->store('images/profile');
+                $input['image'] = asset('storage/' . $imageName);
             }
-            return response()->json(['success' => false, 'message' => 'Profile image updating failed.'], 200);
+            $insert = User::where('id',auth()->user()->id)->update($input);
+            if ($insert) {
+                return response()->json(['success' => true, 'message' => 'Profile updated successfully.'], 200);
+            }
+            return response()->json(['success' => false, 'message' => 'Profile updating failed.'], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Something went wrong.'], 200);
         }

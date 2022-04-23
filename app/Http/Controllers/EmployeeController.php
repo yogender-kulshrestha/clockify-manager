@@ -580,8 +580,14 @@ class EmployeeController extends Controller
         $request->validate($rules);
         $count = TimeSheet::where('start_time', '>=', $request->start_time)
             ->where('start_time', '<=', $request->end_time)
-            ->where('time_error', '1')->where('exception', '!=', '1')
-            ->where('user_id', auth()->user()->clockify_id)->count();
+            ->where('time_error', '1')
+            ->where('user_id', auth()->user()->clockify_id)
+            ->where(function ($q) {
+                $q->where('exception', '!=', '1')
+                    ->orWhere(function ($q) {
+                        $q->where('exception', '1')->whereNull('employee_remarks');
+                    });
+            })->count();
         if($count > 0){
             return redirect()->back()->withError('Please fixed the all errors or Request Exception.');
         }
@@ -1400,6 +1406,10 @@ class EmployeeController extends Controller
                                     }
                                     if($is_holiday > 0) {
                                         $holiday_hours = floatval($is_hours)+minutes_to_float_hours($is_minutes);
+                                    }
+                                } else {
+                                    if($is_holiday > 0) {
+                                        $holiday_hours = setting('day_working_hours');
                                     }
                                 }
                             } else {

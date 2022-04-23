@@ -127,6 +127,11 @@
                                                 $holiday_hours = $dt->diffInHours($dt->copy()->addHours(setting('day_working_hours')));//$is_hours+minutes_to_float_hours($is_minutes);
                                                 $total_hours = $net_hours+$holiday_hours;
                                             }
+                                        } else {
+                                            if($is_holiday > 0) {
+                                                $holiday_hours = setting('day_working_hours');
+                                                $total_hours = $net_hours+$holiday_hours;
+                                            }
                                         }
                                     } else {
                                         $ot_hours = $dt->diffInHours($dt->copy()->addSeconds($row->ot_hours));

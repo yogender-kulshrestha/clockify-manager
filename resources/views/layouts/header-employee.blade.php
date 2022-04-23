@@ -5,9 +5,9 @@
             </div>
             <ul class="navbar-nav  justify-content-end">
                 <li class="nav-item d-flex align-items-center">
-                    <a href="javascript:;" class="nav-link text-body p-0" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="{{auth()->user()->image ?? asset("assets/img/logo-ct-dark.png")}}" class="avatar avatar-sm me-1" alt="user image" data-bs-toggle="modal" data-bs-target="#modalProfileImage">
-                        <span class="d-sm-inline d-none me-1">{{auth()->user()->name}} [{{auth()->user()->employee_id}}]</span>
+                    <a href="javascript:;" class="nav-link text-body p-0" {{--id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false"--}} data-bs-toggle="modal" data-bs-target="#modalProfileImage">
+                        <img src="{{auth()->user()->image ?? asset("assets/img/logo-ct-dark.png")}}" class="avatar avatar-sm me-1" alt="user image">
+                        <span class="d-sm-inline d-none me-1">{{auth()->user()->name}} @if(auth()->user()->role != 'admin') [{{auth()->user()->employee_id}}] @endif</span>
                     </a>
                 </li>
                 <li class="nav-item d-flex align-items-center">

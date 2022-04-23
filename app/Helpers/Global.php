@@ -233,10 +233,11 @@ function verify_working_hours($week, $start, $end, $user_id) {
         $startTime = Carbon::parse($time . setting('working_time_from'))->format('Y-m-d H:i:s');
         $endTime = Carbon::parse($time . setting('working_time_to'))->format('Y-m-d H:i:s');
         $h_hours = 0;
-        $h_diff = Carbon::parse($endDate)->diffInDays($startDate);
-        if ($h_diff > setting('day_working_hours') || $startTime > $row->start_time || $endTime < $row->end_time) {
-            if ($h_diff > setting('day_working_hours')) {
-                $h_hours = Carbon::parse($endDate)->diffInSeconds(Carbon::parse($startDate)->addDays(setting('day_working_hours')));
+        $h_diff = Carbon::parse($row->end_time)->diffInHours($row->start_time);
+        if ($h_diff >= setting('day_working_hours') || $startTime > $row->start_time || $endTime < $row->end_time) {
+            if ($h_diff >= setting('day_working_hours')) {
+                $eTime=Carbon::parse($row->start_time)->addHours(setting('day_working_hours'));
+                $h_hours = Carbon::parse($row->end_time)->diffInSeconds($eTime);
             } else {
                 if ($startTime > $row->start_time) {
                     if ($startTime > $row->end_time) {
@@ -348,6 +349,7 @@ function verify_working_hours($week, $start, $end, $user_id) {
  */
 function sendMail($type, $data)
 {
+    $sent = false;
     $types = ['leaveSubmit', 'leaveResubmit', 'timesheetSubmit', 'timesheetResubmit', 'leaveCancelled']; //mail type for employee
     $types_approver = ['leaveRevise', 'leaveApproved', 'leaveFinalApproved', 'timesheetRevise', 'timesheetApproved', 'leaveRejected']; //mail type for approver
     /** start employee mail section */
@@ -363,30 +365,58 @@ function sendMail($type, $data)
                 $subject = 'Leave Request Submitted';
                 $title = '';
                 $body = 'Leave request submitted by '.$owner->name.'.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             } elseif ($type == 'leaveResubmit' && email_alerts('leaveResubmitToApprover') == 1) { //leave resubmit mail
                 $subject = 'Leave Request Re-Submitted';
                 $title = '';
                 $body = 'Leave request re-submitted by '.$owner->name.'.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             } elseif ($type == 'timesheetSubmit' && email_alerts('timesheetSubmitToApprover') == 1) { //timecard submit mail
                 $subject = 'Timecard Request Submitted';
                 $title = '';
                 $body = 'Timecard submitted by '.$owner->name.'.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             } elseif ($type == 'timesheetResubmit' && email_alerts('timesheetResubmitToApprover') == 1) { //timecard resubmit mail
                 $subject = 'Timecard Re-Submitted';
                 $title = '';
                 $body = 'Timecard re-submitted by '.$owner->name.'.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             } elseif ($type == 'leaveCancelled' && email_alerts('leaveCancelledToApprover') == 1) { //leave cancel mail
                 $subject = 'Leave Request Cancelled';
                 $title = '';
                 $body = 'Leave request cancelled by '.$owner->name.'.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             }
-            $data['to'] = $user;
-            $data['owner'] = $owner;
-            $data['subject'] = $subject;
-            $data['title'] = $title;
-            $data['body'] = $body;
-            //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
-            $sent = sendgridMail($data);
             /** end send mail to approver/hr section */
 
             /** start send mail to employee section */
@@ -397,30 +427,58 @@ function sendMail($type, $data)
                 $subject = 'Leave Request Submitted';
                 $title = '';
                 $body = 'Your leave request submitted successfully.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             } elseif ($type == 'leaveResubmit' && email_alerts('leaveResubmitToEmployee') == 1) { //leave resubmit mail
                 $subject = 'Leave Request Re-Submitted';
                 $title = '';
                 $body = 'Your leave request re-submitted successfully.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             } elseif ($type == 'timesheetSubmit' && email_alerts('timesheetSubmitToEmployee') == 1) { //timecard submit mail
                 $subject = 'Timecard Request Submitted';
                 $title = '';
                 $body = 'Your timecard submitted successfully.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             } elseif ($type == 'timesheetResubmit' && email_alerts('timesheetResubmitToEmployee') == 1) { //timecard resubmit mail
                 $subject = 'Timecard Re-Submitted';
                 $title = '';
                 $body = 'Your timecard re-submitted successfully.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             } elseif ($type == 'leaveCancelled' && email_alerts('leaveCancelledToEmployee') == 1) { //leave cancel mail
                 $subject = 'Leave Request Cancelled';
                 $title = '';
                 $body = 'Your leave request cancelled successfully.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             }
-            $data['to'] = $user;
-            $data['owner'] = $owner;
-            $data['subject'] = $subject;
-            $data['title'] = $title;
-            $data['body'] = $body;
-            //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
-            $sent = sendgridMail($data);
             /** end send mail to employee section */
         }
     }
@@ -437,18 +495,46 @@ function sendMail($type, $data)
                 $subject = 'Leave Revise and Re-Submit';
                 $title = '';
                 $body = 'Your leave request disapproved by ' . $owner->name . ', Please revise and re-submit.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             } elseif ($type == 'leaveApproved' && email_alerts('leaveApprovedToEmployee') == 1) { //leave approved mail
                 $subject = 'Leave Approved';
                 $title = '';
                 $body = 'Your leave request Approved by ' . $owner->name . '.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             } elseif ($type == 'leaveFinalApproved' && email_alerts('leaveFinalApprovedToEmployee') == 1) { //leave final approved mail
                 $subject = 'Leave Final Approved';
                 $title = '';
                 $body = 'Your leave request Final Approved by ' . $owner->name . '.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             } elseif ($type == 'timesheetRevise' && email_alerts('timesheetReviseToEmployee') == 1) { //timecard revise and resubmit mail
                 $subject = 'Timecard Revise and Re-Submit';
                 $title = '';
                 $body = 'Your timecard disapproved by ' . $owner->name . ', Please revise and re-submit.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             } elseif ($type == 'timesheetApproved' && email_alerts('timesheetApprovedToEmployee') == 1) { //timecard approved mail
                 $subject = 'Timecard Approved';
                 $title = '';
@@ -457,14 +543,14 @@ function sendMail($type, $data)
                 $subject = 'Leave Rejected';
                 $title = '';
                 $body = 'Your leave request Rejected by ' . $owner->name . '.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             }
-            $data['to'] = $user;
-            $data['owner'] = $owner;
-            $data['subject'] = $subject;
-            $data['title'] = $title;
-            $data['body'] = $body;
-            //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
-            $sent = sendgridMail($data);
             /** end sent mail to employee section */
 
             /** start sent mail to approver/hr section */
@@ -476,34 +562,69 @@ function sendMail($type, $data)
                 $subject = 'Leave Revise and Re-Submit';
                 $title = '';
                 $body = 'Leave request disapproved of ' . $owner->name . '.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             } elseif ($type == 'leaveApproved' && email_alerts('leaveApprovedToApprover') == 1) { //leave approved mail
                 $subject = 'Leave Approved';
                 $title = '';
                 $body = 'Leave request Approved of ' . $owner->name . '.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             } elseif ($type == 'leaveFinalApproved' && email_alerts('leaveFinalApprovedToApprover') == 1) { //leave approved mail
                 $subject = 'Leave Final Approved';
                 $title = '';
                 $body = 'Leave request Approved of ' . $owner->name . '.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             } elseif ($type == 'timesheetRevise' && email_alerts('timesheetReviseToApprover') == 1) { //timecard revise and resubmit mail
                 $subject = 'Timecard Revise and Re-Submit';
                 $title = '';
                 $body = 'Timecard disapproved of ' . $owner->name . '.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             } elseif ($type == 'timesheetApproved' && email_alerts('timesheetApprovedToApprover') == 1) { //timecard approved mail
                 $subject = 'Timecard Approved';
                 $title = '';
                 $body = 'Timecard Approved of ' . $owner->name . '.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             } elseif ($type == 'leaveRejected' && email_alerts('leaveRejectedToApprover') == 1) { //leave rejected mail
                 $subject = 'Leave Rejected';
                 $title = '';
                 $body = 'Leave request Rejected of ' . $owner->name . '.';
+                $data['to'] = $user;
+                $data['owner'] = $owner;
+                $data['subject'] = $subject;
+                $data['title'] = $title;
+                $data['body'] = $body;
+                //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
+                $sent = sendgridMail($data);
             }
-            $data['to'] = $user;
-            $data['owner'] = $owner;
-            $data['subject'] = $subject;
-            $data['title'] = $title;
-            $data['body'] = $body;
-            //$sent = \Mail::to($email, $name)->send(new CommonMail($data));
-            $sent = sendgridMail($data);
             /** end sent mail to approver/hr section */
         }
     }
@@ -727,6 +848,10 @@ function time_entries_hour($week, $user_id)
                     //$holiday_seconds += $is_seconds;
                     $holiday_seconds += $day_second;
                 }
+            } else {
+                if($is_holiday > 0) {
+                    $holiday_seconds += $day_second;
+                }
             }
         } else {
             $ot_seconds += $row->ot_hours;
@@ -831,6 +956,11 @@ function excelExport($startDate, $endDate, $user)
                     if($is_holiday > 0) {
                         $holiday_hours = setting('day_working_hours');//floatval($is_hours)+minutes_to_float_hours($is_minutes);
                         $total_hours=$net_hours+$holiday_hours;
+                    }
+                } else {
+                    if($is_holiday > 0) {
+                        $holiday_hours = setting('day_working_hours');
+                        $total_hours = $net_hours+$holiday_hours;
                     }
                 }
             } else {

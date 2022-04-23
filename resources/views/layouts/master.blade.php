@@ -64,14 +64,19 @@
                     <form id="profile_form" autocomplete="off" enctype="multipart/form-data">
                         @csrf
                         <div class="modal-header">
-                            <h5 class="modal-title" id="form_title">Profile Image</h5>
+                            <h5 class="modal-title" id="form_title">Profile Update</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <div class="row">
                                 <div class="form-group col-md-12">
+                                    <label for="profile_name">Name <span class="text-danger">*</span></label>
+                                    <input type="text" value="{{ auth()->user()->name ?? '' }}" class="form-control" name="name" id="profile_name" placeholder="Enter Name">
+                                    <span id="profile_name_error" class="text-danger text-sm"></span>
+                                </div>
+                                <div class="form-group col-md-12">
                                     <label for="profile_image">Profile Image <span class="text-danger">*</span></label>
-                                    <input required type="file" class="form-control" name="profile_image" id="profile_image" placeholder="Select Image" accept="image/*">
+                                    <input type="file" class="form-control" name="profile_image" id="profile_image" placeholder="Select Image" accept="image/*">
                                     <span id="profile_image_error" class="text-danger text-sm"></span>
                                 </div>
                             </div>
@@ -153,6 +158,7 @@
             headers: {"X-CSRF-Token": $('meta[name="csrf-token"]').attr('content')},
             beforeSend: function () {
                 $('#add_profile').attr('disabled', 'disabled');
+                $('#profile_name_error').text('');
                 $('#profile_image_error').text('');
             },
             success: function (data) {
@@ -169,6 +175,7 @@
             error: function (data) {
                 $('#add_profile').attr('disabled', false);
                 let responseData = data.responseJSON;
+                $('#profile_name_error').text(responseData.errors['name']);
                 $('#profile_image_error').text(responseData.errors['profile_image']);
             }
         });

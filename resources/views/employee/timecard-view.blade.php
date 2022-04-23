@@ -101,7 +101,14 @@
                         <h5>Name :- {{$data->user->name ?? ''}}</h5>
                         <h5>Date &nbsp; :- {{\Carbon\Carbon::parse($startDate)->format('d-M-Y')}} - {{\Carbon\Carbon::parse($endDate)->format('d-M-Y')}}</h5>
                         @if(auth()->user()->role == 'admin' || auth()->user()->role == 'hr')
-                        <a href="{{route('export.timecard',['user_id' => $data->user->clockify_id,'week' => $week])}}" class="btn bg-gradient-primary btn-sm mb-0"> Export </a>
+                            <form action="{{ route('export.timecard.all') }}" id="add_form" autocomplete="off" enctype="multipart/form-data">
+                                @csrf
+                                <input type="hidden" value="{{ $data->user->clockify_id }}" name="user_id" id="user_id">
+                                <input type="hidden" value="{{ $week }}" name="week_from" id="week_from">
+                                <input type="hidden" value="{{ $week }}" name="week_to" id="week_to">
+                                <button type="submit" style="margin-top: 37px;" class="btn bg-gradient-primary btn-sm" id="add_button">Export</button>
+                            </form>
+                            {{--<a href="{{route('export.timecard',['user_id' => $data->user->clockify_id,'week' => $week])}}" class="btn bg-gradient-primary btn-sm mb-0"> Export </a>--}}
                         @endif
                     </div>
                     <div class="accordion-1 p-3">
@@ -128,6 +135,11 @@
                                         }
                                         if($is_holiday > 0) {
                                             $holiday_hours = $dt->diffInHours($dt->copy()->addHours(setting('day_working_hours')));//$is_hours+minutes_to_float_hours($is_minutes);
+                                            $total_hours = $net_hours+$holiday_hours;
+                                        }
+                                    } else {
+                                        if($is_holiday > 0) {
+                                            $holiday_hours = setting('day_working_hours');
                                             $total_hours = $net_hours+$holiday_hours;
                                         }
                                     }

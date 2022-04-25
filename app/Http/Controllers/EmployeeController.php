@@ -605,6 +605,7 @@ class EmployeeController extends Controller
             $flags = '';
             $description = '';
             $net_hours = 0;
+            $net_ot_hours = 0;
             $employee_remarks = '';
             $exception = '0';
             $error_eo='';
@@ -620,6 +621,7 @@ class EmployeeController extends Controller
                 $error_le .= ($error_le == '') ? $sheet->error_le : '';
                 $description .= $sheet->description ? $sheet->description.'<br/> ' : '';
                 $net_hours += $sheet->duration_time ?? 0;
+                $net_ot_hours += $sheet->ot_time ?? 0;
                 $employee_remarks .= $sheet->employee_remarks ? $sheet->employee_remarks.'<br/> ' : '';
                 if($sheet->exception == '1') {
                     $exception = '1';
@@ -643,6 +645,8 @@ class EmployeeController extends Controller
             $working_hours = (setting('day_working_hours')*60)*60;
             if($net_hours > $working_hours) {
                 $ot_hours = $net_hours-$working_hours;
+            } else {
+                $ot_hours = $net_ot_hours;
             }
             $id = [
                 'user_id' => auth()->user()->clockify_id,

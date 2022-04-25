@@ -69,6 +69,10 @@
                                         <td>{{$hours['net_hours'] ?? '0'}}</td>
                                     </tr>
                                     <tr class="border-bottom">
+                                        <td>OT Hours</td>
+                                        <td>{{$hours['ot_hours'] ?? '0'}}</td>
+                                    </tr>
+                                    <tr class="border-bottom">
                                         <td>Leave Hours</td>
                                         <td>{{$hours['leave_hours'] ?? '0'}}</td>
                                     </tr>

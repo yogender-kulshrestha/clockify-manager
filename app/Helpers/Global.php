@@ -269,9 +269,9 @@ function verify_working_hours($week, $start, $end, $user_id) {
                     $message .= ' ' . $d_minutes . ' minutes';
                 }
             }
-            TimeSheet::where('id', $row->id)->update(['error_ot' => $message]);
+            TimeSheet::where('id', $row->id)->update(['ot_time' => $h_hours, 'error_ot' => $message]);
         } else {
-            TimeSheet::where('id', $row->id)->update(['error_ot' => NULL]);
+            TimeSheet::where('id', $row->id)->update(['ot_time' => NULL, 'error_ot' => NULL]);
         }
         /** end ot hours testing */
 

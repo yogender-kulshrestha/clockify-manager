@@ -75,7 +75,7 @@
                                     <span id="profile_name_error" class="text-danger text-sm"></span>
                                 </div>
                                 <div class="form-group col-md-12">
-                                    <label for="profile_image">Profile Image <span class="text-danger">*</span></label>
+                                    <label for="profile_image">Profile Image {{--<span class="text-danger">*</span>--}}</label>
                                     <input type="file" class="form-control" name="profile_image" id="profile_image" placeholder="Select Image" accept="image/*">
                                     <span id="profile_image_error" class="text-danger text-sm"></span>
                                 </div>

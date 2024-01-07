@@ -1,4 +1,4 @@
-# Matthew Clockify
+# Clockify Manager
 
 ## Change DB config in .env
 
